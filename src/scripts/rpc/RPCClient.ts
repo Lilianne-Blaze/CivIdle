@@ -123,10 +123,10 @@ export function getUser(): IUser | null {
 }
 
 export function isOnlineUser(): boolean {
-   if (import.meta.env.DEV) {
+   //if (import.meta.env.DEV) {
       return true;
-   }
-   return (user?.level ?? AccountLevel.Tribune) > AccountLevel.Tribune;
+   //}
+   //return (user?.level ?? AccountLevel.Tribune) > AccountLevel.Tribune;
 }
 
 export function getUserLevel(): AccountLevel {
@@ -135,11 +135,11 @@ export function getUserLevel(): AccountLevel {
 
 // TODO: Need to properly implement this after supporting offline run
 export function canEarnGreatPeopleFromReborn(): boolean {
-   if (isOnlineUser()) {
+   //if (isOnlineUser()) {
       getGameState().isOffline = false;
-   } else {
-      getGameState().isOffline = true;
-   }
+   //} else {
+      //getGameState().isOffline = true;
+   //}
    return true;
 }
 

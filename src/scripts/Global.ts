@@ -126,12 +126,30 @@ export async function saveGame(): Promise<void> {
 
 export async function doSaveGame(task: ISaveGameTask): Promise<void> {
    try {
+
+
+   console.warn("doSaveGame 1");
+// addSystemMessage(`doSaveGame 1`);
+
       const compressed = await compressSave(savedGame);
       if (isSteam()) {
+
+   console.warn("doSaveGame 11");
+// addSystemMessage(`doSaveGame 11`);
+
          await SteamClient.fileWriteBytes(SAVE_KEY, compressed);
       } else {
+
+   console.warn("doSaveGame 111");
+// addSystemMessage(`doSaveGame 111`);
+
          await idbSet(SAVE_KEY, compressed);
       }
+
+
+   console.warn("doSaveGame 111 1");
+// addSystemMessage(`doSaveGame 111 1`);
+
       task.resolve();
    } catch (error) {
       task.reject(error);

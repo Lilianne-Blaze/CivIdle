@@ -31,6 +31,10 @@ import {
    clearSystemMessages,
    client,
    getPlayerMap,
+
+getUserLevel,
+isOnlineUser
+
 } from "../rpc/RPCClient";
 import { PlayerMapScene } from "../scenes/PlayerMapScene";
 import { WorldScene } from "../scenes/WorldScene";
@@ -53,8 +57,73 @@ function requireDevelopment(): void {
 export async function handleChatCommand(command: string): Promise<void> {
    const parts = command.split(" ");
    switch (parts[0]) {
+
+case "chv":{
+addSystemMessage(`import.meta.env.DEV = `+import.meta.env.DEV);
+addSystemMessage(`import.meta.env.PROD = `+import.meta.env.PROD);
+addSystemMessage(`canEarnGreatPeopleFromReborn() = `+canEarnGreatPeopleFromReborn());
+
+addSystemMessage(`getUserLevel() = `+getUserLevel());
+addSystemMessage(`getGameState().isOffline = `+getGameState().isOffline);
+addSystemMessage(`isOnlineUser() = `+isOnlineUser());
+
+
+
+break;
+}
+
+      case "x1": {
+         Singleton().ticker.speedUp = 1;
+         addSystemMessage(`Speed x1`);
+         break;
+      }
+      case "x4": {
+         Singleton().ticker.speedUp = 4;
+         addSystemMessage(`Speed x4`);
+         break;
+      }
+      case "x9": {
+         Singleton().ticker.speedUp = 9;
+         addSystemMessage(`Speed x9`);
+         break;
+      }
+      case "x16": {
+         Singleton().ticker.speedUp = 16;
+         addSystemMessage(`Speed x16`);
+         break;
+      }
+
+      case "chtt24": {
+         const time = 60*24;
+         addSystemMessage(`Time travel ${time} minutes. This could take a while, please be patient...`);
+         setTimeout(() => {
+            const now = performance.now();
+            const gs = getGameState();
+            for (let i = 0; i < 60 * time; i++) {
+               tickEverySecond(gs, true);
+            }
+            addSystemMessage(`Completed in ${formatNumber((performance.now() - now) / 1000)}s`);
+         }, 500);
+         break;
+}
+
+      case "tt": {
+         //requireOfflineRun();
+         //const time = clamp(safeParseInt(parts[1], 30), 0, 60 * 4);
+         const time = 60*6;
+         addSystemMessage(`Time travel ${time} minutes. This could take a while, please be patient...`);
+         setTimeout(() => {
+            const now = performance.now();
+            const gs = getGameState();
+            for (let i = 0; i < 60 * time; i++) {
+               tickEverySecond(gs, true);
+            }
+            addSystemMessage(`Completed in ${formatNumber((performance.now() - now) / 1000)}s`);
+         }, 500);
+         break;
+      }
       case "timetravel": {
-         requireOfflineRun();
+         //requireOfflineRun();
          const time = clamp(safeParseInt(parts[1], 30), 0, 60 * 4);
          addSystemMessage(`Time travel ${time} minutes. This could take a while, please be patient...`);
          setTimeout(() => {

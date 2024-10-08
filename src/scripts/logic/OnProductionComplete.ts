@@ -347,17 +347,27 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          break;
       }
       case "Petra": {
-         if (offline) {
-            break;
-         }
+         //if (offline) {
+            //break;
+         //}
          const petra = building as IPetraBuildingData;
          petra.speedUp = clamp(petra.speedUp, 1, MAX_PETRA_SPEED_UP);
+
+         //safeAdd(petra.building.resources, "Warp", 10);
+
+         //if(petra.resources.Warp < 1000)
+         //{
+         //petra.resources.Warp = 1000;
+         //safeAdd(petra.building.resources, "Warp", 10);
+         //}
 
          if (petra.speedUp > 1 && (petra.resources.Warp ?? 0) > 0) {
             --petra.resources.Warp!;
          } else {
-            petra.speedUp = 1;
+            //petra.speedUp = 1;
          }
+         //petra.resources.Warp = petra.resources.Warp + 30;
+
          Singleton().ticker.speedUp = petra.speedUp;
 
          for (const res of keysOf(petra.resources)) {
@@ -1338,7 +1348,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
                const { total, used } = getStorageFor(petra.tile, gs);
                const amount = gs.festival ? 40 : 20;
                if (total - used >= amount) {
-                  safeAdd(petra.building.resources, "Warp", amount);
+                  safeAdd(petra.building.resources, "Warp", amount*100);
                }
             }
          } else {

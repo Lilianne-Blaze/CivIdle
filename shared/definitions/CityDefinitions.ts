@@ -154,7 +154,7 @@ export class CityDefinitions {
       },
       naturalWonders: { Shenandoah: true, NiagaraFalls: true },
       requireGreatPeopleLevel: 20,
-      requireSupporterPack: true,
+      requireSupporterPack: false,
       festivalDesc: () => t(L.Thanksgiving),
    };
    Babylon: ICityDefinition = {
@@ -214,7 +214,7 @@ export class CityDefinitions {
       uniqueMultipliers: {},
       naturalWonders: { Kanagawa: true, MountFuji: true },
       requireGreatPeopleLevel: 40,
-      requireSupporterPack: true,
+      requireSupporterPack: false,
       festivalDesc: () => t(L.AoiMatsuri),
    };
 }

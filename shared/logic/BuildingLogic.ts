@@ -235,7 +235,8 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
          break;
       }
       case "Warehouse": {
-         base = getResourceImportCapacity(building, 1) * STORAGE_TO_PRODUCTION * 10;
+         //base = getResourceImportCapacity(building, 1) * STORAGE_TO_PRODUCTION * 10;
+         base = getResourceImportCapacity(building, 1) * STORAGE_TO_PRODUCTION * 100;
          break;
       }
       case "Petra": {

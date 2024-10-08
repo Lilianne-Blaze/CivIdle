@@ -16,7 +16,7 @@
                 "h": 40
             }
         },
-        "Misc_Circle_25": {
+        "Misc_circle_25": {
             "frame": {
                 "x": 1347,
                 "y": 498,
@@ -24,7 +24,7 @@
                 "h": 25
             }
         },
-        "Misc_Circle_50": {
+        "Misc_circle_50": {
             "frame": {
                 "x": 773,
                 "y": 601,
@@ -32,7 +32,7 @@
                 "h": 50
             }
         },
-        "Misc_Circle": {
+        "Misc_circle": {
             "frame": {
                 "x": 824,
                 "y": 601,
