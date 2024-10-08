@@ -53,6 +53,26 @@ function requireDevelopment(): void {
 export async function handleChatCommand(command: string): Promise<void> {
    const parts = command.split(" ");
    switch (parts[0]) {
+      case "chx1": {
+         Singleton().ticker.speedUp = 1;
+         addSystemMessage(`Speed x1`);
+         break;
+      }
+      case "chx4": {
+         Singleton().ticker.speedUp = 4;
+         addSystemMessage(`Speed x4`);
+         break;
+      }
+      case "chx9": {
+         Singleton().ticker.speedUp = 9;
+         addSystemMessage(`Speed x9`);
+         break;
+      }
+      case "chx16": {
+         Singleton().ticker.speedUp = 16;
+         addSystemMessage(`Speed x16`);
+         break;
+      }
       case "timetravel": {
          requireOfflineRun();
          const time = clamp(safeParseInt(parts[1], 30), 0, 60 * 4);
