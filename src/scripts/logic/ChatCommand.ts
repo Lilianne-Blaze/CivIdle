@@ -63,6 +63,7 @@ export async function handleChatCommand(command: string): Promise<void> {
          addSystemMessage(`getGameState().isOffline = `+getGameState().isOffline);
          addSystemMessage(`getGameState().id = `+getGameState().id);
          addSystemMessage(`isOnlineUser() = `+isOnlineUser());
+         addSystemMessage(`savedGame.options.userId = `+savedGame.options.userId);
          break;
       }
       case "chx1": {
