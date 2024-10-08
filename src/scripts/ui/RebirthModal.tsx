@@ -309,9 +309,11 @@ export function RebirthModal(): React.ReactNode {
                      } catch (error) {
                         console.error(error);
                         if (isOnlineUser()) {
-                           playError();
-                           showToast(t(L.RebornOfflineWarning));
-                           return;
+                           if (!import.meta.env.DEV) {
+                              playError();
+                              showToast(t(L.RebornOfflineWarning));
+                              return;
+                           }
                         }
                      }
 
