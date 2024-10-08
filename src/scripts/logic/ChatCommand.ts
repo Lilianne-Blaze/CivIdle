@@ -66,21 +66,25 @@ export async function handleChatCommand(command: string): Promise<void> {
          break;
       }
       case "chx1": {
+         requireDevelopment();
          Singleton().ticker.speedUp = 1;
          addSystemMessage(`Speed x1`);
          break;
       }
       case "chx4": {
+         requireDevelopment();
          Singleton().ticker.speedUp = 4;
          addSystemMessage(`Speed x4`);
          break;
       }
       case "chx9": {
+         requireDevelopment();
          Singleton().ticker.speedUp = 9;
          addSystemMessage(`Speed x9`);
          break;
       }
       case "chx16": {
+         requireDevelopment();
          Singleton().ticker.speedUp = 16;
          addSystemMessage(`Speed x16`);
          break;

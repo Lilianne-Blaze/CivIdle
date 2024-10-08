@@ -354,7 +354,9 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          petra.speedUp = clamp(petra.speedUp, 1, MAX_PETRA_SPEED_UP);
 
          if (petra.speedUp > 1 && (petra.resources.Warp ?? 0) > 0) {
-            --petra.resources.Warp!;
+            if (!import.meta.env.DEV) {
+               --petra.resources.Warp!;
+            }
          } else {
             petra.speedUp = 1;
          }
