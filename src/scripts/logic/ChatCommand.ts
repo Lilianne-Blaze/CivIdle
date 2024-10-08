@@ -31,6 +31,8 @@ import {
    clearSystemMessages,
    client,
    getPlayerMap,
+   getUserLevel,
+   isOnlineUser,
 } from "../rpc/RPCClient";
 import { PlayerMapScene } from "../scenes/PlayerMapScene";
 import { WorldScene } from "../scenes/WorldScene";
@@ -53,6 +55,16 @@ function requireDevelopment(): void {
 export async function handleChatCommand(command: string): Promise<void> {
    const parts = command.split(" ");
    switch (parts[0]) {
+      case "chv":{
+         addSystemMessage(`import.meta.env.DEV = `+import.meta.env.DEV);
+         addSystemMessage(`import.meta.env.PROD = `+import.meta.env.PROD);
+         addSystemMessage(`canEarnGreatPeopleFromReborn() = `+canEarnGreatPeopleFromReborn());
+         addSystemMessage(`getUserLevel() = `+getUserLevel());
+         addSystemMessage(`getGameState().isOffline = `+getGameState().isOffline);
+         addSystemMessage(`getGameState().id = `+getGameState().id);
+         addSystemMessage(`isOnlineUser() = `+isOnlineUser());
+         break;
+      }
       case "chx1": {
          Singleton().ticker.speedUp = 1;
          addSystemMessage(`Speed x1`);
