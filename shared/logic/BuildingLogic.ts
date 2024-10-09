@@ -554,9 +554,11 @@ export function getCurrentPriority(building: IBuildingData, gs: GameState): numb
    switch (building.status) {
       case "building":
       case "upgrading":
-         return building.constructionPriority;
+         //return building.constructionPriority;
+         return building.constructionPriority + (Math.random() - 0.5);
       case "completed":
-         return building.productionPriority;
+         //return building.productionPriority;
+         return building.productionPriority + (Math.random() - 0.5);
       default:
          return PRIORITY_MIN;
    }
