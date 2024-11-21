@@ -969,7 +969,7 @@ export function tickPrice(gs: GameState) {
       const market = building as IMarketBuildingData;
       if (forceUpdatePrice || sizeOf(market.availableResources) === 0) {
          const nextToGrandBazaar =
-            grandBazaar?.building.status === "completed" && grid.distanceTile(grandBazaar.tile, xy) <= 1;
+            grandBazaar?.building.status === "completed" && grid.distanceTile(grandBazaar.tile, xy) <= 2;
          const seed = nextToGrandBazaar ? `${priceId},${xy}` : `${priceId}`;
          const buy = shuffle(keysOf(resources), srand(seed));
          const sell = shuffle(keysOf(resources), srand(seed));
