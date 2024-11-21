@@ -217,6 +217,68 @@ export class CityDefinitions {
       requireSupporterPack: true,
       festivalDesc: () => t(L.AoiMatsuri),
    };
+   KyotoHuge1: ICityDefinition = {
+      name: () => "KyotoHuge1",
+      deposits: {
+         Water: 0.03,
+         Copper: 0.025,
+         Iron: 0.025,
+         Wood: 0.03,
+         Stone: 0.03,
+         Gold: 0.025,
+         Coal: 0.01,
+         Oil: 0.01,
+         Aluminum: 0.025,
+         NaturalGas: 0.01,
+         Uranium: 0.025,
+      },
+      size: 300,
+      buildingNames: {
+         Headquarter: () => t(L.ImperialPalace),
+      },
+      uniqueBuildings: {
+         TheMet: "RapidFire",
+         ItsukushimaShrine: "Religion",
+         GoldenPavilion: "Theocracy",
+         OsakaCastle: "Electricity",
+      },
+      uniqueMultipliers: {},
+      naturalWonders: { Kanagawa: true, MountFuji: true },
+      requireGreatPeopleLevel: 0,
+      requireSupporterPack: false,
+      festivalDesc: () => t(L.AoiMatsuri),
+   };
+   KyotoLarge2: ICityDefinition = {
+      name: () => "KyotoLarge2",
+      deposits: {
+         Water: 0.03,
+         Copper: 0.025,
+         Iron: 0.025,
+         Wood: 0.03,
+         Stone: 0.03,
+         Gold: 0.025,
+         Coal: 0.01,
+         Oil: 0.01,
+         Aluminum: 0.025,
+         NaturalGas: 0.01,
+         Uranium: 0.025,
+      },
+      size: 90,
+      buildingNames: {
+         Headquarter: () => t(L.ImperialPalace),
+      },
+      uniqueBuildings: {
+         TheMet: "RapidFire",
+         ItsukushimaShrine: "Religion",
+         GoldenPavilion: "Theocracy",
+         OsakaCastle: "Electricity",
+      },
+      uniqueMultipliers: {},
+      naturalWonders: { Kanagawa: true, MountFuji: true },
+      requireGreatPeopleLevel: 0,
+      requireSupporterPack: false,
+      festivalDesc: () => t(L.AoiMatsuri),
+   };
 }
 
 export type City = keyof CityDefinitions;
