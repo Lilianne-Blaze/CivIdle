@@ -352,7 +352,6 @@ export class WorldScene extends Scene {
             }
             case "ColossusOfRhodes":
             case "LighthouseOfAlexandria":
-            case "GrandBazaar":
             case "HangingGarden":
             case "ChichenItza":
             case "AngkorWat":
@@ -369,6 +368,7 @@ export class WorldScene extends Scene {
                this.highlightRange(grid, 1);
                break;
             }
+            case "GrandBazaar":
             case "GreatSphinx":
             case "Hollywood":
             case "SagradaFamilia":
