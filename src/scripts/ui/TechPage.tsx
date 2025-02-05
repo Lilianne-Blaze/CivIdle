@@ -1,4 +1,5 @@
 import { MAX_TECH_COLUMN, type Tech } from "../../../shared/definitions/TechDefinitions";
+import { findSpecialBuilding } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
 import { getGreatPeopleChoiceCount, rollGreatPeopleThisRun } from "../../../shared/logic/RebirthLogic";
@@ -50,19 +51,29 @@ export function TechPage({ id }: { id: Tech }): React.ReactNode {
          unlockTech(tech, true, gs);
          const newAge = getCurrentAge(gs);
          if (oldAge && newAge && oldAge !== newAge) {
+            const status = findSpecialBuilding("YearOfTheSnake", gs)?.building.status;
+            const snake = status === "completed" || status === "upgrading";
             forEach(Config.TechAge, (age, def) => {
                if (def.idx <= Config.TechAge[newAge].idx) {
-                  const candidates = rollGreatPeopleThisRun(age, gs.city, getGreatPeopleChoiceCount(gs));
+                  const candidates = rollGreatPeopleThisRun(
+                     new Set([snake ? newAge : age]),
+                     gs.city,
+                     getGreatPeopleChoiceCount(gs),
+                  );
                   if (candidates) {
-                     gs.greatPeopleChoices.push(candidates);
+                     gs.greatPeopleChoicesV2.push(candidates);
                   }
                }
             });
             if (gs.unlockedUpgrades.Communism5) {
                for (let i = 0; i < 2; i++) {
-                  const candidates = rollGreatPeopleThisRun(newAge, gs.city, getGreatPeopleChoiceCount(gs));
+                  const candidates = rollGreatPeopleThisRun(
+                     new Set([newAge]),
+                     gs.city,
+                     getGreatPeopleChoiceCount(gs),
+                  );
                   if (candidates) {
-                     gs.greatPeopleChoices.push(candidates);
+                     gs.greatPeopleChoicesV2.push(candidates);
                   }
                }
             }
@@ -72,7 +83,7 @@ export function TechPage({ id }: { id: Tech }): React.ReactNode {
          checkItsukushimaShrine(tech, gs);
       });
 
-      if (gs.greatPeopleChoices.length > 0) {
+      if (gs.greatPeopleChoicesV2.length > 0) {
          playAgeUp();
          showModal(<ChooseGreatPersonModal permanent={false} />);
       } else {

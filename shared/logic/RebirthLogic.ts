@@ -3,6 +3,12 @@ import { GreatPersonType, type GreatPerson } from "../definitions/GreatPersonDef
 import { NoPrice, type Resource } from "../definitions/ResourceDefinitions";
 import type { TechAge } from "../definitions/TechDefinitions";
 import {
+   AccountLevel,
+   AccountLevelGreatPeopleLevel,
+   AccountLevelPlayTime,
+   type IUser,
+} from "../utilities/Database";
+import {
    WEEK,
    clamp,
    filterOf,
@@ -165,16 +171,16 @@ export function rollPermanentGreatPeople(
 }
 
 export function rollGreatPeopleThisRun(
-   age: TechAge,
+   ages: Set<TechAge>,
    city: City,
    choiceCount: number,
-): GreatPeopleChoice | null {
+): GreatPeopleChoiceV2 | null {
    const choices: GreatPeopleChoice = [];
    const pool = shuffle(
       keysOf(
          filterOf(
             Config.GreatPerson,
-            (_, v) => (isNullOrUndefined(v.city) || v.city === city) && v.age === age,
+            (_, v) => (isNullOrUndefined(v.city) || v.city === city) && ages.has(v.age),
          ),
       ),
    );
@@ -184,7 +190,7 @@ export function rollGreatPeopleThisRun(
    for (let i = 0; i < choiceCount; i++) {
       choices.push(pool[i]);
    }
-   return choices;
+   return { choices, amount: 1 };
 }
 
 export const DEFAULT_GREAT_PEOPLE_CHOICE_COUNT = 3;
@@ -197,11 +203,11 @@ export function getGreatPeopleChoiceCount(gs: GameState): number {
    return DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
 }
 
-export function getPermanentGreatPeopleLevel(): number {
+export function getPermanentGreatPeopleLevel(options: GameOptions): number {
    return reduceOf(
-      getGameOptions().greatPeople,
+      options.greatPeople,
       (prev, gp, inv) => {
-         return prev + inv.level + (getGameOptions().ageWisdom[Config.GreatPerson[gp].age] ?? 0);
+         return prev + inv.level + (options.ageWisdom[Config.GreatPerson[gp].age] ?? 0);
       },
       0,
    );
@@ -296,4 +302,26 @@ export function getMissingGreatPeopleForWisdom(age: TechAge): Map<GreatPerson, n
       }
    });
    return result;
+}
+
+export function getEligibleRank(user: IUser): AccountLevel {
+   if (user.level <= AccountLevel.Tribune) {
+      return AccountLevel.Tribune;
+   }
+   let level = user.level;
+   let greatPeopleLevel = 0;
+   if (user.empireValues.length > 0) {
+      greatPeopleLevel = user.empireValues[user.empireValues.length - 1].totalGreatPeopleLevel ?? 0;
+   }
+   forEach(AccountLevel, (k, v) => {
+      if (
+         user.totalPlayTime * 1000 >= AccountLevelPlayTime[v] &&
+         greatPeopleLevel >= AccountLevelGreatPeopleLevel[v]
+      ) {
+         if (v > level) {
+            level = v;
+         }
+      }
+   });
+   return level;
 }

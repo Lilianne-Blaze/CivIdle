@@ -1472,14 +1472,14 @@ export class BuildingDefinitions {
       wikipedia: "Broadway_theatre",
    };
    TheMet: IBuildingDefinition = {
-      name: () => t(L.TheMet),
-      desc: () => t(L.TheMetDesc),
+      name: () => t(L.ThePentagon),
+      desc: () => t(L.ThePentagonDesc),
       input: {},
       output: {},
       construction: { Book: 100, Law: 100, Rifle: 100 },
       max: 1,
       special: BuildingSpecial.WorldWonder,
-      wikipedia: "Metropolitan_Museum_of_Art",
+      wikipedia: "The_Pentagon",
    };
    WallStreet: IBuildingDefinition = {
       name: () => t(L.WallStreet),
@@ -1493,13 +1493,13 @@ export class BuildingDefinitions {
    };
 
    Shenandoah: IBuildingDefinition = {
-      name: () => t(L.Shenandoah),
-      desc: () => t(L.ShenandoahDescV2),
+      name: () => t(L.GrandCanyon),
+      desc: () => t(L.GrandCanyonDesc),
       input: {},
       output: {},
       construction: {},
       max: 0,
-      wikipedia: "Shenandoah_Valley",
+      wikipedia: "Grand_Canyon",
       special: BuildingSpecial.NaturalWonder,
    };
 
@@ -1754,6 +1754,160 @@ export class BuildingDefinitions {
       max: 0,
       special: BuildingSpecial.NaturalWonder,
       wikipedia: "Mount_Fuji",
+   };
+
+   CologneCathedral: IBuildingDefinition = {
+      name: () => t(L.CologneCathedral),
+      desc: () => t(L.CologneCathedralDesc),
+      input: {},
+      output: {},
+      construction: { Faith: 100, Knight: 100, Caravel: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Cologne_Cathedral",
+   };
+
+   Elbphilharmonie: IBuildingDefinition = {
+      name: () => t(L.Elbphilharmonie),
+      desc: () => t(L.ElbphilharmonieDesc),
+      input: {},
+      output: {},
+      construction: { Radio: 100, Diplomacy: 100, Rocket: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Elbphilharmonie",
+   };
+
+   Zugspitze: IBuildingDefinition = {
+      name: () => t(L.Zugspitze),
+      desc: () => t(L.ZugspitzeDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Zugspitze",
+   };
+
+   RhineGorge: IBuildingDefinition = {
+      name: () => t(L.RhineGorge),
+      desc: () => t(L.RhineGorgeDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Rhine_Gorge",
+   };
+
+   BlackForest: IBuildingDefinition = {
+      name: () => t(L.BlackForest),
+      desc: () => t(L.BlackForestDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Black_Forest",
+   };
+
+   SantaClausVillage: IBuildingDefinition = {
+      name: () => t(L.SantaClausVillage),
+      desc: () => t(L.SantaClausVillageDesc),
+      input: {},
+      output: {},
+      construction: { Faith: 500 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Santa_Claus_Village",
+   };
+
+   Lapland: IBuildingDefinition = {
+      name: () => t(L.Lapland),
+      desc: () => t(L.LaplandDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Lapland_(Finland)",
+   };
+
+   RockefellerCenterChristmasTree: IBuildingDefinition = {
+      name: () => t(L.RockefellerCenterChristmasTree),
+      desc: () => t(L.RockefellerCenterChristmasTreeDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Rockefeller_Center_Christmas_Tree",
+   };
+
+   YearOfTheSnake: IBuildingDefinition = {
+      name: () => t(L.YearOfTheSnake),
+      desc: () => t(L.YearOfTheSnakeDesc),
+      input: {},
+      output: {},
+      construction: { Opera: 500 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Snake_(zodiac)",
+   };
+
+   BritishMuseum: IBuildingDefinition = {
+      name: () => t(L.BritishMuseum),
+      desc: () => t(L.BritishMuseumDesc),
+      input: {},
+      output: {},
+      construction: { Tank: 100, Ironclad: 100, Train: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "British_Museum",
+   };
+
+   CambridgeUniversity: IBuildingDefinition = {
+      name: () => t(L.CambridgeUniversity),
+      desc: () => t(L.CambridgeUniversityDesc),
+      input: {},
+      output: {},
+      construction: { Philosophy: 100, Culture: 100, Faith: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "University_of_Cambridge",
+   };
+
+   TowerBridge: IBuildingDefinition = {
+      name: () => t(L.TowerBridge),
+      desc: () => t(L.TowerBridgeDesc),
+      input: {},
+      output: {},
+      construction: { Concrete: 150, Steel: 150 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Tower_Bridge",
+   };
+
+   EastIndiaCompany: IBuildingDefinition = {
+      name: () => t(L.EastIndiaCompany),
+      desc: () => t(L.EastIndiaCompanyDesc),
+      input: {},
+      output: {},
+      construction: { Bond: 100, Frigate: 100, Gunpowder: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "East_India_Company",
+   };
+
+   CerneAbbasGiant: IBuildingDefinition = {
+      name: () => t(L.CerneAbbasGiant),
+      desc: () => t(L.CerneAbbasGiantDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Cerne_Abbas_Giant",
    };
 
    // ArcDeTriomphe: IBuildingDefinition = {

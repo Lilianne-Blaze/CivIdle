@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { getScienceFromWorkers, isWorldWonder } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import type { GameOptions, GameState } from "../../../shared/logic/GameState";
+import { getGameOptions } from "../../../shared/logic/GameStateLogic";
 import { getTransportStat, getXyBuildings, unlockedBuildings } from "../../../shared/logic/IntraTickCache";
 import {
    getGreatPersonThisRunLevel,
@@ -50,6 +51,7 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { SteamAchievementPage } from "./SteamAchievementPage";
 import { TextWithHelp } from "./TextWithHelpComponent";
 import { WarningComponent } from "./WarningComponent";
+import { WarpSpeedComponent } from "./WarpSpeedComponent";
 import { WonderPage } from "./WonderPage";
 import { WorkerScienceComponent } from "./WorkerScienceComponent";
 
@@ -112,7 +114,9 @@ export function HeadquarterBuildingBody({
                </li>
                <li className="row">
                   <div className="f1">{t(L.StatisticsTransportationPercentage)}</div>
-                  <div className="text-strong">{formatPercent(transportStat.totalFuel / workersBusy)}</div>
+                  <div className="text-strong">
+                     {formatPercent(workersBusy > 0 ? transportStat.totalFuel / workersBusy : 0)}
+                  </div>
                </li>
                <li>
                   <details>
@@ -166,6 +170,7 @@ export function HeadquarterBuildingBody({
                </li>
             </ul>
          </fieldset>
+         <WarpSpeedComponent />
          <fieldset>
             <legend>{techAge != null ? Config.TechAge[techAge].name() : "Unknown Age"}</legend>
             <ul className="tree-view">
@@ -255,12 +260,12 @@ function GreatPeopleComponent({
    return (
       <fieldset>
          <legend>{t(L.GreatPeople)}</legend>
-         {gameState.greatPeopleChoices.length > 0 ? (
+         {gameState.greatPeopleChoicesV2.length > 0 ? (
             <WarningComponent className="mb10 text-small" icon="info">
                <div
                   className="pointer"
                   onClick={() => {
-                     if (gameState.greatPeopleChoices.length > 0) {
+                     if (gameState.greatPeopleChoicesV2.length > 0) {
                         playAgeUp();
                         showModal(<ChooseGreatPersonModal permanent={false} />);
                      }
@@ -346,7 +351,7 @@ function GreatPeopleComponent({
                               {t(L.EffectiveGreatPeopleLevel)}
                            </TextWithHelp>
                         </div>
-                        <div className="text-strong">{getPermanentGreatPeopleLevel()}</div>
+                        <div className="text-strong">{getPermanentGreatPeopleLevel(options)}</div>
                      </li>
                      {keysOf(options.greatPeople)
                         .sort(
@@ -422,7 +427,7 @@ function WonderComponent({ gameState }: { gameState: GameState }): React.ReactNo
 
 function RebornComponent({ gameState }: { gameState: GameState }): ReactNode {
    const extraGreatPeople = getRebirthGreatPeopleCount();
-   const totalPGPLevel = getPermanentGreatPeopleLevel();
+   const totalPGPLevel = getPermanentGreatPeopleLevel(getGameOptions());
    return (
       <fieldset>
          <legend>{t(L.Reborn)}</legend>

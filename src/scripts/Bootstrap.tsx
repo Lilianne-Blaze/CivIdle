@@ -1,7 +1,7 @@
-import { Capacitor } from "@capacitor/core";
 import type { Application, Texture } from "pixi.js";
 import type { City } from "../../shared/definitions/CityDefinitions";
 import { IsDeposit } from "../../shared/definitions/ResourceDefinitions";
+import { TimedBuildingUnlock } from "../../shared/definitions/TimedBuildingUnlock";
 import { addPetraOfflineTime, findSpecialBuilding } from "../../shared/logic/BuildingLogic";
 import { Config } from "../../shared/logic/Config";
 import { MAX_OFFLINE_PRODUCTION_SEC, calculateTierAndPrice } from "../../shared/logic/Constants";
@@ -13,7 +13,8 @@ import {
    serializeSaveLite,
 } from "../../shared/logic/GameStateLogic";
 import { initializeGameState } from "../../shared/logic/InitializeGameState";
-import type { IPetraBuildingData } from "../../shared/logic/Tile";
+import type { IWelcomeMessage } from "../../shared/utilities/Database";
+import { isSaveOwner } from "../../shared/utilities/DatabaseShared";
 import {
    clamp,
    deepFreeze,
@@ -21,8 +22,10 @@ import {
    isNullOrUndefined,
    rejectIn,
    safeAdd,
+   safePush,
    schedule,
 } from "../../shared/utilities/Helper";
+import { getServerNow } from "../../shared/utilities/ServerNow";
 import type { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { isGameDataCompatible, loadGame, syncFontSizeScale, syncSidePanelWidth, syncUITheme } from "./Global";
 import type { RouteChangeEvent } from "./Route";
@@ -31,20 +34,21 @@ import { Heartbeat } from "./logic/Heartbeat";
 import { getFullVersion } from "./logic/Version";
 import { getBuildingTexture, getTileTexture } from "./logic/VisualLogic";
 import type { MainBundleAssets } from "./main";
-import { connectWebSocket, convertOfflineTimeToWarp } from "./rpc/RPCClient";
+import { connectWebSocket } from "./rpc/RPCClient";
 import { PlayerMapScene } from "./scenes/PlayerMapScene";
 import { TechTreeScene } from "./scenes/TechTreeScene";
 import { WorldScene } from "./scenes/WorldScene";
 import { ChooseGreatPersonModal } from "./ui/ChooseGreatPersonModal";
+import { CrossPlatformSavePage } from "./ui/CrossPlatformSavePage";
 import { ErrorPage } from "./ui/ErrorPage";
 import { FirstTimePlayerModal } from "./ui/FirstTimePlayerModal";
 import { showModal, showToast } from "./ui/GlobalModal";
 import { LoadingPage, LoadingPageStage } from "./ui/LoadingPage";
 import { OfflineProductionModal } from "./ui/OfflineProductionModal";
+import { SaveCorruptedPage } from "./ui/SaveCorruptedPage";
 import { GameTicker } from "./utilities/GameTicker";
 import { SceneManager } from "./utilities/SceneManager";
 import { Singleton, initializeSingletons, type RouteTo } from "./utilities/Singleton";
-import { populateGreatPersonImageCache } from "./visuals/GreatPersonVisual";
 import { playError } from "./visuals/Sound";
 
 export async function startGame(
@@ -61,6 +65,11 @@ export async function startGame(
    let isNewPlayer = false;
    const data = await loadGame();
    if (data) {
+      if (!findSpecialBuilding("Headquarter", data.current)) {
+         playError();
+         routeTo(SaveCorruptedPage, {});
+         return;
+      }
       if (!isGameDataCompatible(data)) {
          playError();
          routeTo(ErrorPage, {
@@ -79,7 +88,6 @@ export async function startGame(
    } else {
       isNewPlayer = true;
    }
-
    // ========== Game data is loaded ==========
    routeTo(LoadingPage, { stage: LoadingPageStage.CheckSave });
    const gameState = getGameState();
@@ -103,39 +111,28 @@ export async function startGame(
       ticker: new GameTicker(app.ticker, gameState),
       heartbeat: new Heartbeat(serializeSaveLite()),
    });
-   if (import.meta.env.PROD) {
-      populateGreatPersonImageCache(context);
-   }
    setCityOverride(gameState);
 
    // ========== Connect to server ==========
    routeTo(LoadingPage, { stage: LoadingPageStage.SteamSignIn });
-   const TIMEOUT = import.meta.env.DEV || Capacitor.getPlatform() === "android" ? 1 : 15;
+   const TIMEOUT = import.meta.env.DEV ? 1 : 30;
    let hasOfflineProductionModal = false;
-   let offlineProduction = true;
 
    try {
-      const actualOfflineTime = await Promise.race([
-         connectWebSocket().then<number>((time) => {
-            // This means when we reach here, we are already too late to do offline production (due to timeout),
-            // so we convert the time to warp instead!
-            if (!offlineProduction) {
-               convertOfflineTimeToWarp(time);
-               return 0;
-            }
-            return time;
-         }),
-         rejectIn<number>(TIMEOUT, "Connection Timeout"),
+      const welcome = await Promise.race([
+         connectWebSocket(),
+         rejectIn<IWelcomeMessage>(TIMEOUT, "Connection Timeout"),
       ]);
 
-      offlineProduction = false;
+      if (!isSaveOwner(welcome.platformInfo, welcome.user)) {
+         routeTo(CrossPlatformSavePage, {});
+         return;
+      }
 
-      const petra = findSpecialBuilding("Petra", gameState);
-      const maxOfflineTime =
-         ((petra?.building as IPetraBuildingData | undefined)?.offlineProductionPercent ?? 1) *
-         MAX_OFFLINE_PRODUCTION_SEC;
+      const actualOfflineTime = welcome.offlineTime;
+
+      const maxOfflineTime = (options.offlineProductionPercent ?? 0) * MAX_OFFLINE_PRODUCTION_SEC;
       const offlineTime = clamp(actualOfflineTime, 0, maxOfflineTime);
-
       routeTo(LoadingPage, { stage: LoadingPageStage.OfflineProduction });
       if (actualOfflineTime >= 60) {
          const before = structuredClone(gameState);
@@ -157,10 +154,12 @@ export async function startGame(
          showModal(<OfflineProductionModal before={before} after={after} time={offlineTime} />);
       }
    } catch (error) {
-      offlineProduction = false;
+      console.error(error);
       playError();
       showToast(String(error));
    }
+
+   setTimedOverride(gameState);
 
    if (hasOfflineProductionModal) {
       // Do nothing
@@ -176,12 +175,17 @@ export async function startGame(
    tickEverySecond(gameState, false);
 
    if (import.meta.env.DEV) {
-      // showModal(<AdvisorModal advisor="Happiness" />);
+      // showModal(<AccountRankUpModal rank={AccountLevel.Praetor} />);
       // createRoot(document.getElementById("debug-ui")!).render(<DebugPage />);
    }
 
    const params = new URLSearchParams(location.href.split("?")[1]);
+
    switch (params.get("scene")) {
+      case "Save": {
+         routeTo(CrossPlatformSavePage, {});
+         break;
+      }
       case "Tech": {
          Singleton().sceneManager.loadScene(TechTreeScene);
          break;
@@ -195,12 +199,28 @@ export async function startGame(
          break;
       }
    }
+
    notifyGameStateUpdate();
    Singleton().ticker.start();
 }
 
+// This method is called after server time is synced!
+export function setTimedOverride(gs: GameState): void {
+   const now = getServerNow();
+   if (now === null) {
+      return;
+   }
+   const nowDate = new Date(now);
+
+   forEach(TimedBuildingUnlock, (building, def) => {
+      if (def.condition(nowDate) || import.meta.env.DEV) {
+         safePush(Config.Tech[def.tech], "unlockBuilding", building);
+      }
+   });
+}
+
 // This method is called early during bootstrap!
-export function setCityOverride(gameState: GameState) {
+export function setCityOverride(gameState: GameState): void {
    const city = Config.City[gameState.city];
    forEach(city.buildingNames, (b, name) => {
       Config.Building[b].name = name;

@@ -61,7 +61,8 @@ export class GameState {
    tick = 0;
    seconds = 0;
    greatPeople: PartialTabulate<GreatPerson> = {};
-   greatPeopleChoices: GreatPeopleChoice[] = [];
+   // greatPeopleChoices: GreatPeopleChoice[] = [];
+   greatPeopleChoicesV2: GreatPeopleChoiceV2[] = [];
    transportId = 0;
    lastPriceUpdated = 0;
    isOffline = false;
@@ -70,6 +71,7 @@ export class GameState {
    favoriteTiles: Set<Tile> = new Set();
    claimedGreatPeople = 0;
    valueTrackers = new Map<ValueToTrack, IValueTracker>();
+   speedUp = 1;
 }
 
 export type GreatPeopleChoice = GreatPerson[];
@@ -143,10 +145,11 @@ export type CursorOption = keyof typeof CursorOptions;
 export class GameOptions {
    useModernUI = true;
    userId: string | null = null;
-   token: string | null = null;
    checksum: string | null = null;
    sidePanelWidth = 450;
+   sidePanelWidthMobile = 450;
    fontSizeScale = 1;
+   fontSizeScaleMobile = 1;
    cursor: CursorOption = "OldFashioned";
    version = SAVE_FILE_VERSION;
    showTransportArrow = true;
@@ -156,14 +159,14 @@ export class GameOptions {
    themeColors = { ...DefaultThemeColors };
    shortcuts: Partial<Record<Shortcut, IShortcutConfig>> = {};
    soundEffect = true;
+   tradeFilledSound = true;
    chatHideLatestMessage = false;
    chatChannels: Set<ChatChannel> = new Set(["en"]);
-   useMirrorServer = false;
    enableTransportSourceCache = false;
    resourceBarShowUncappedHappiness = false;
    resourceBarExcludeTurnedOffOrNoActiveTransport = false;
    resourceBarExcludeStorageFull = false;
-   extraTileInfoType: ExtraTileInfoType = "EmpireValue";
+   extraTileInfoType: ExtraTileInfoType = "StoragePercentage";
    buildingDefaults: Partial<Record<Building, Partial<IBuildingData>>> = {};
    defaultProductionPriority = PRIORITY_MIN;
    defaultConstructionPriority = PRIORITY_MIN;
@@ -172,6 +175,7 @@ export class GameOptions {
    defaultBuildingLevel = 1;
    porcelainTowerMaxPickPerRoll = false;
    greedyTransport = false;
+   offlineProductionPercent = 0;
    // Should be wiped
    greatPeople: Partial<Record<GreatPerson, { level: number; amount: number }>> = {};
    ageWisdom: PartialTabulate<TechAge> = {};

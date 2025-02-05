@@ -1,3 +1,4 @@
+import { Preferences } from "@capacitor/preferences";
 import type { Application } from "pixi.js";
 import type { City } from "../../shared/definitions/CityDefinitions";
 import { NoPrice, NoStorage } from "../../shared/definitions/ResourceDefinitions";
@@ -24,16 +25,25 @@ import {
    rollPermanentGreatPeople,
 } from "../../shared/logic/RebirthLogic";
 import { Tick } from "../../shared/logic/TickLogic";
-import { clamp, forEach, rejectIn, safeAdd, sizeOf } from "../../shared/utilities/Helper";
+import {
+   base64ToBytes,
+   bytesToBase64,
+   clamp,
+   forEach,
+   rejectIn,
+   safeAdd,
+   sizeOf,
+} from "../../shared/utilities/Helper";
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { migrateSavedGame } from "./MigrateSavedGame";
 import { tickEverySecond } from "./logic/ClientUpdate";
-import { client } from "./rpc/RPCClient";
+import { CLIENT_ID, client } from "./rpc/RPCClient";
 import { SteamClient, isSteam } from "./rpc/SteamClient";
 import { WorldScene } from "./scenes/WorldScene";
 import { showToast } from "./ui/GlobalModal";
 import { idbDel, idbGet, idbSet } from "./utilities/BrowserStorage";
 import { makeObservableHook } from "./utilities/Hook";
+import { isAndroid, isIOS } from "./utilities/Platforms";
 import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
 
@@ -76,10 +86,9 @@ export function syncUITheme(gameOptions: GameOptions): void {
 }
 
 export function syncSidePanelWidth(app: Application, options: GameOptions): void {
-   if (options.sidePanelWidth !== 400) {
-      document.documentElement.style.setProperty("--game-ui-width", `${options.sidePanelWidth / 10}rem`);
-      app.resize();
-   }
+   const width = isAndroid() || isIOS() ? options.sidePanelWidthMobile : options.sidePanelWidth;
+   document.documentElement.style.setProperty("--game-ui-width", `${width / 10}rem`);
+   app.resize();
 }
 
 export function syncFontSizeScale(app: Application, options: GameOptions): void {
@@ -87,17 +96,12 @@ export function syncFontSizeScale(app: Application, options: GameOptions): void 
       document.documentElement.style.setProperty("--base-font-size", "62.5%");
       return;
    }
-   document.documentElement.style.setProperty("--base-font-size", `${options.fontSizeScale * 62.5}%`);
+   const scale = isAndroid() || isIOS() ? options.fontSizeScaleMobile : options.fontSizeScale;
+   document.documentElement.style.setProperty("--base-font-size", `${scale * 62.5}%`);
    app.resize();
 }
 
 const SAVE_KEY = "CivIdle";
-
-let currentSavePromise: Promise<any> = Promise.resolve();
-
-function cleanUpSavePromise() {
-   currentSavePromise = Promise.resolve();
-}
 
 interface ISaveGameTask {
    resolve: () => void;
@@ -129,6 +133,8 @@ export async function doSaveGame(task: ISaveGameTask): Promise<void> {
       const compressed = await compressSave(savedGame);
       if (isSteam()) {
          await SteamClient.fileWriteBytes(SAVE_KEY, compressed);
+      } else if (isAndroid() || isIOS()) {
+         await Preferences.set({ key: SAVE_KEY, value: bytesToBase64(compressed) });
       } else {
          await idbSet(SAVE_KEY, compressed);
       }
@@ -147,18 +153,26 @@ export async function doSaveGame(task: ISaveGameTask): Promise<void> {
 }
 
 export async function compressSave(gs: SavedGame = savedGame): Promise<Uint8Array> {
-   return await compress(serializeSave(gs));
+   return await compress(new TextEncoder().encode(serializeSave(gs)));
 }
 
 export async function decompressSave(data: Uint8Array): Promise<SavedGame> {
-   return deserializeSave(await decompress(data));
+   return deserializeSave(new TextDecoder().decode(await decompress(data)));
 }
 
 export async function loadGame(): Promise<SavedGame | null> {
    try {
+      console.time("Loading Save file");
       if (isSteam()) {
          const bytes = await SteamClient.fileReadBytes(SAVE_KEY);
          return await decompressSave(new Uint8Array(bytes));
+      }
+      if (isAndroid() || isIOS()) {
+         const string = (await Preferences.get({ key: SAVE_KEY })).value;
+         if (!string) {
+            return null;
+         }
+         return await decompressSave(base64ToBytes(string));
       }
       const compressed = await idbGet<Uint8Array>(SAVE_KEY);
       if (!compressed) {
@@ -168,6 +182,8 @@ export async function loadGame(): Promise<SavedGame | null> {
    } catch (e) {
       console.warn("loadGame failed", e);
       return null;
+   } finally {
+      console.timeEnd("Loading Save file");
    }
 }
 
@@ -219,6 +235,7 @@ if (import.meta.env.DEV) {
          return;
       }
       await idbDel(SAVE_KEY);
+      await idbDel(CLIENT_ID);
       window.location.reload();
    };
    // @ts-expect-error
@@ -253,9 +270,9 @@ if (import.meta.env.DEV) {
    // @ts-expect-error
    window.rollGreatPeople = (age: TechAge, candidate: number) => {
       const gs = getGameState();
-      const candidates = rollGreatPeopleThisRun(age, getGameState().city, candidate);
+      const candidates = rollGreatPeopleThisRun(new Set([age]), getGameState().city, candidate);
       if (candidates) {
-         gs.greatPeopleChoices.push(candidates);
+         gs.greatPeopleChoicesV2.push(candidates);
       }
       notifyGameStateUpdate(gs);
    };
@@ -279,6 +296,13 @@ if (import.meta.env.DEV) {
             Singleton().sceneManager.enqueue(WorldScene, (s) => s.revealTile(xy));
          }
       });
+   };
+
+   // @ts-expect-error
+   window.revealTile = (xy: Tile) => {
+      const gs = getGameState();
+      exploreTile(xy, gs);
+      Singleton().sceneManager.enqueue(WorldScene, (s) => s.revealTile(xy));
    };
 
    // @ts-expect-error
@@ -314,4 +338,7 @@ if (import.meta.env.DEV) {
 
    // @ts-expect-error
    window.Config = Config;
+
+   // @ts-expect-error
+   window.hq = () => Tick.current.specialBuildings.get("Headquarter");
 }

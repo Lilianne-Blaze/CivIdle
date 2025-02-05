@@ -121,6 +121,8 @@ export class ResourceDefinitions {
    PlanetaryRover: IResourceDefinition = { name: () => t(L.PlanetaryRover) };
    Peace: IResourceDefinition = { name: () => t(L.Peace) };
    Festival: IResourceDefinition = { name: () => t(L.Festival) };
+   Cycle: IResourceDefinition = { name: () => t(L.Cycle) };
+   TradeValue: IResourceDefinition = { name: () => t(L.TradeValue) };
 }
 
 export type Resource = keyof ResourceDefinitions;
@@ -133,13 +135,18 @@ export const NoPrice: PartialSet<Resource> = {
    Warp: true,
    Explorer: true,
    Teleport: true,
+   Cycle: true,
+   TradeValue: true,
 } as const;
 
 export const NoStorage: PartialSet<Resource> = {
    Worker: true,
    Power: true,
    Science: true,
+   Warp: true,
    Festival: true,
+   Cycle: true,
+   TradeValue: true,
 } as const;
 
 export const IsDeposit = {

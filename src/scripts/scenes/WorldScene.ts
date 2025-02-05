@@ -378,10 +378,14 @@ export class WorldScene extends Scene {
             case "TheMet":
             case "WallStreet":
             case "OsakaCastle":
+            case "RhineGorge":
+            case "Lapland":
+            case "YearOfTheSnake":
             case "GoldenGateBridge": {
                this.highlightRange(grid, 2);
                break;
             }
+            case "Elbphilharmonie":
             case "GoldenPavilion": {
                this.highlightRange(grid, 3);
                break;

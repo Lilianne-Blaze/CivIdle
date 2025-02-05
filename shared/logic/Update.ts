@@ -2,6 +2,7 @@ import type { Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
+import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
 import {
    HOUR,
@@ -100,10 +101,12 @@ import {
 
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
+export const OnBuildingOrUpgradeComplete = new TypedEvent<Tile>();
 export const OnTechUnlocked = new TypedEvent<Tech>();
 export const OnBuildingProductionComplete = new TypedEvent<{ xy: Tile; offline: boolean }>();
 export const RequestFloater = new TypedEvent<{ xy: Tile; amount: number }>();
 export const RequestChooseGreatPerson = new TypedEvent<{ permanent: boolean }>();
+export const OnEligibleAccountRankUpdated = new TypedEvent<AccountLevel>();
 
 export function tickUnlockable(td: IUnlockable, source: string, gs: GameState): void {
    td.unlockBuilding?.forEach((b) => {
@@ -212,13 +215,20 @@ export function getSortedTiles(gs: GameState): [Tile, IBuildingData][] {
       if (diff !== 0) {
          return diff;
       }
-      return (Config.BuildingTier[buildingA.type] ?? 0) - (Config.BuildingTier[buildingB.type] ?? 0);
+      // Low tiers have higher priority
+      const tier = (Config.BuildingTier[buildingA.type] ?? 0) - (Config.BuildingTier[buildingB.type] ?? 0);
+      return tier;
    });
 }
 
 const resourceSet = new Set<Resource>();
 
-export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
+export function transportAndConsumeResources(
+   xy: Tile,
+   result: IProduceResource[],
+   gs: GameState,
+   offline: boolean,
+): void {
    const tile = gs.tiles.get(xy);
    if (!tile) {
       return;
@@ -326,7 +336,7 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
       forEach(cost, function checkConstructionUpgradeResources(res, amount) {
          const amountArrived = building.resources[res] ?? 0;
          const amountInTransit = getAmountInTransit(xy, res);
-         const threshold = getGameOptions().greedyTransport ? maxCost[res] ?? 0 : amount;
+         const threshold = getGameOptions().greedyTransport ? (maxCost[res] ?? 0) : amount;
          if (completed && amountArrived < amount) {
             completed = false;
          }
@@ -363,6 +373,12 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
          });
       }
 
+      // This has to be here before the `if (completed)` block. Otherwise there will be a one tick flicker
+      // when upgrade completes:
+      if (building.status === "upgrading" && isWorldWonder(building.type)) {
+         OnBuildingProductionComplete.emit({ xy, offline });
+      }
+
       if (completed) {
          building.level++;
          forEach(cost, (res, amount) => {
@@ -373,13 +389,10 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
             building.status = building.desiredLevel > building.level ? "upgrading" : "completed";
             OnBuildingComplete.emit(xy);
          }
+         OnBuildingOrUpgradeComplete.emit(xy);
          if (building.status === "upgrading" && building.level >= building.desiredLevel) {
             building.status = "completed";
          }
-      }
-
-      if (building.status === "upgrading" && isWorldWonder(building.type)) {
-         OnBuildingProductionComplete.emit({ xy, offline });
       }
 
       return;
@@ -545,7 +558,8 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
             return;
          }
          safeAdd(building.resources, sellResource, -sellAmount);
-         safeAdd(building.resources, buyResource, buyAmount);
+         result.push({ xy, resource: buyResource, amount: buyAmount });
+         // safeAdd(building.resources, buyResource, buyAmount);
          totalBought += buyAmount;
       });
       if (totalBought > 0) {
@@ -619,11 +633,14 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
                const storage = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
                if (storage) {
                   RequestFloater.emit({ xy, amount });
+                  // result.push({ xy, resource: res, amount });
                   safeAdd(storage, res, amount);
                   Tick.next.scienceProduced.set(xy, amount);
                }
             } else {
-               if (res === "Power") Tick.next.powerPlants.add(xy);
+               if (res === "Power") {
+                  Tick.next.powerPlants.add(xy);
+               }
                mapSafeAdd(Tick.next.workersAvailable, res, amount);
             }
          });
@@ -663,15 +680,19 @@ export function tickTile(xy: Tile, gs: GameState, offline: boolean): void {
    useWorkers("Worker", worker.output, xy);
    deductResources(building.resources, input);
    forEach(output, (res, v) => {
-      if (res === "Power") Tick.next.powerPlants.add(xy);
+      if (res === "Power") {
+         Tick.next.powerPlants.add(xy);
+      }
       if (isTransportable(res)) {
-         safeAdd(building.resources, res, v);
+         result.push({ xy, resource: res, amount: v });
+         // safeAdd(building.resources, res, v);
          RequestFloater.emit({ xy, amount: v });
          return;
       }
       if (res === "Science") {
          const storage = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
          if (storage) {
+            // result.push({ xy, resource: res, amount: v });
             safeAdd(storage, res, v);
             Tick.next.scienceProduced.set(xy, v);
             RequestFloater.emit({ xy, amount: v });
@@ -992,4 +1013,10 @@ export function tickPrice(gs: GameState) {
          }
       }
    });
+}
+
+export interface IProduceResource {
+   xy: Tile;
+   resource: Resource;
+   amount: number;
 }

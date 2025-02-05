@@ -126,6 +126,19 @@ export class GreatPersonDefinitions {
       age: "IronAge",
    });
 
+   Samsuiluna: IGreatPersonDefinition = boostOf({
+      name: () => t(L.Samsuiluna),
+      boost: {
+         multipliers: ["output", "storage"],
+         buildings: ["Marbleworks"],
+      },
+      time: "c. 1700s BC",
+      value: (level) => 2 * level,
+      maxLevel: Number.POSITIVE_INFINITY,
+      age: "IronAge",
+      city: "Babylon",
+   });
+
    // Classical //////////////////////////////////////////////////////////////////////////////////////////////
 
    Aeschylus: IGreatPersonDefinition = boostOf({
@@ -524,6 +537,19 @@ export class GreatPersonDefinitions {
       age: "RenaissanceAge",
    });
 
+   OdaNobunaga: IGreatPersonDefinition = boostOf({
+      name: () => t(L.OdaNobunaga),
+      boost: {
+         multipliers: ["output", "storage"],
+         buildings: ["FrigateBuilder"],
+      },
+      time: "1534 ~ 1582 AD",
+      value: (level) => 2 * level,
+      maxLevel: Number.POSITIVE_INFINITY,
+      age: "RenaissanceAge",
+      city: "Kyoto",
+   });
+
    WilliamShakespeare: IGreatPersonDefinition = boostOf({
       name: () => t(L.WilliamShakespeare),
       boost: {
@@ -619,6 +645,19 @@ export class GreatPersonDefinitions {
       type: GreatPersonType.Promotion,
    };
 
+   ThomasGresham: IGreatPersonDefinition = boostOf({
+      name: () => t(L.ThomasGresham),
+      boost: {
+         multipliers: ["output", "storage"],
+         buildings: ["BondMarket"],
+      },
+      time: "1519 ~ 1579 AD",
+      value: (level) => level * 2,
+      maxLevel: Number.POSITIVE_INFINITY,
+      age: "RenaissanceAge",
+      city: "English",
+   });
+
    // Industrial /////////////////////////////////////////////////////////////////////////////////////////////
 
    JamesWatt: IGreatPersonDefinition = boostOf({
@@ -643,6 +682,19 @@ export class GreatPersonDefinitions {
       value: (level) => level,
       maxLevel: Number.POSITIVE_INFINITY,
       age: "IndustrialAge",
+   });
+
+   GeorgeWashington: IGreatPersonDefinition = boostOf({
+      name: () => t(L.GeorgeWashington),
+      boost: {
+         multipliers: ["output", "storage"],
+         buildings: ["Parliament"],
+      },
+      time: "1732 ~ 1799 AD",
+      value: (level) => 2 * level,
+      maxLevel: Number.POSITIVE_INFINITY,
+      age: "IndustrialAge",
+      city: "NewYork",
    });
 
    LouisSullivan: IGreatPersonDefinition = {
@@ -939,6 +991,19 @@ export class GreatPersonDefinitions {
       value: (level) => level,
       maxLevel: Number.POSITIVE_INFINITY,
       age: "WorldWarAge",
+   });
+
+   OttoVonBismarck: IGreatPersonDefinition = boostOf({
+      name: () => t(L.OttoVonBismarck),
+      boost: {
+         multipliers: ["output", "storage"],
+         buildings: ["BattleshipBuilder"],
+      },
+      time: "1815 ~ 1898 AD",
+      value: (level) => 2 * level,
+      maxLevel: Number.POSITIVE_INFINITY,
+      age: "WorldWarAge",
+      city: "German",
    });
 
    MahatmaGandhi: IGreatPersonDefinition = {

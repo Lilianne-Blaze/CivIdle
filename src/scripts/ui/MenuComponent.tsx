@@ -3,10 +3,11 @@ import type { PropsWithChildren } from "react";
 import { useEffect, useRef, useState } from "react";
 import { DISCORD_URL } from "../../../shared/logic/Constants";
 import { Tick } from "../../../shared/logic/TickLogic";
-import { sizeOf } from "../../../shared/utilities/Helper";
+import { isSaveOwner } from "../../../shared/utilities/DatabaseShared";
+import { isNullOrUndefined, sizeOf } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
-import { saveGame } from "../Global";
-import { useUser } from "../rpc/RPCClient";
+import { compressSave, saveGame } from "../Global";
+import { client, usePlatformInfo, useUser } from "../rpc/RPCClient";
 import { SteamClient, isSteam } from "../rpc/SteamClient";
 import { PlayerMapScene } from "../scenes/PlayerMapScene";
 import { TechTreeScene } from "../scenes/TechTreeScene";
@@ -17,6 +18,7 @@ import { playError } from "../visuals/Sound";
 import { AboutModal } from "./AboutModal";
 import { GameplayOptionPage } from "./GameplayOptionPage";
 import { showModal, showToast } from "./GlobalModal";
+import { HallOfFameModal } from "./HallOfFameModal";
 import { PatchNotesPage } from "./PatchNotesPage";
 import { ShortcutPage } from "./ShortcutPage";
 import { ThemePage } from "./ThemePage";
@@ -61,6 +63,7 @@ export function MenuComponent(): React.ReactNode {
    const [active, setActive] = useState<MenuItemOptions>(null);
    const buttonRef = useRef(null);
    const user = useUser();
+   const platformInfo = usePlatformInfo();
    useEffect(() => {
       function onPointerDown(e: PointerEvent) {
          setActive(null);
@@ -118,17 +121,6 @@ export function MenuComponent(): React.ReactNode {
                         {t(L.ResearchMenu)}
                      </MenuItem>
                   </div>
-                  {/* <div
-                     className="menu-popover-item"
-                     onPointerDown={(e) => {
-                        Singleton().sceneManager.loadScene(RomeProvinceScene);
-                        setActive(null);
-                     }}
-                  >
-                     <MenuItem check={Singleton().sceneManager.isCurrent(RomeProvinceScene)}>
-                        {t(L.RomeMapMenu)}
-                     </MenuItem>
-                  </div> */}
                   {sizeOf(Tick.current.playerTradeBuildings) <= 0 ? null : (
                      <div
                         className="menu-popover-item"
@@ -142,6 +134,15 @@ export function MenuComponent(): React.ReactNode {
                         </MenuItem>
                      </div>
                   )}
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={(e) => {
+                        showModal(<HallOfFameModal />);
+                        setActive(null);
+                     }}
+                  >
+                     <MenuItem check={false}>{t(L.HallOfFame)}</MenuItem>
+                  </div>
                </div>
             </div>
             <div
@@ -190,6 +191,20 @@ export function MenuComponent(): React.ReactNode {
                      }}
                   >
                      <MenuItem check={false}>{t(L.Shortcut)}</MenuItem>
+                  </div>
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={async () => {
+                        try {
+                           await saveGame();
+                           window.location.search = "?scene=Save";
+                        } catch (err) {
+                           playError();
+                           showToast(String(err));
+                        }
+                     }}
+                  >
+                     <MenuItem check={false}>{t(L.ManageSave)}</MenuItem>
                   </div>
                </div>
             </div>
@@ -273,6 +288,26 @@ export function MenuComponent(): React.ReactNode {
                         }}
                      >
                         <MenuItem check={false}>{t(L.SaveAndExit)}</MenuItem>
+                     </div>
+                  ) : null}
+                  {isSteam() &&
+                  user &&
+                  !isNullOrUndefined(platformInfo?.connectedUserId) &&
+                  isSaveOwner(platformInfo, user) ? (
+                     <div
+                        className="menu-popover-item"
+                        onPointerDown={async () => {
+                           try {
+                              await saveGame();
+                              await client.checkInSave(await compressSave());
+                              SteamClient.quit();
+                           } catch (error) {
+                              playError();
+                              showToast(String(error));
+                           }
+                        }}
+                     >
+                        <MenuItem check={false}>{t(L.CheckInAndExit)}</MenuItem>
                      </div>
                   ) : null}
                   <div

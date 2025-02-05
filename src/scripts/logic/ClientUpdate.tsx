@@ -1,3 +1,4 @@
+import { App } from "@capacitor/app";
 import { Advisors } from "../../../shared/definitions/AdvisorDefinitions";
 import { GreatPersonTickFlag } from "../../../shared/definitions/GreatPersonDefinitions";
 import { OnTileExplored, getScienceFromWorkers } from "../../../shared/logic/BuildingLogic";
@@ -15,36 +16,55 @@ import { RequestResetTile } from "../../../shared/logic/TechLogic";
 import { CurrentTickChanged, EmptyTickData, Tick, freezeTickData } from "../../../shared/logic/TickLogic";
 import {
    OnBuildingComplete,
+   OnBuildingOrUpgradeComplete,
    OnBuildingProductionComplete,
+   OnEligibleAccountRankUpdated,
    OnPriceUpdated,
    RequestChooseGreatPerson,
    RequestFloater,
    getSortedTiles,
    tickPower,
    tickPrice,
-   tickTile,
    tickTransports,
    tickUnlockable,
+   transportAndConsumeResources,
+   type IProduceResource,
 } from "../../../shared/logic/Update";
+import { AccountLevel } from "../../../shared/utilities/Database";
 import { clamp, forEach, safeAdd, type Tile } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
 import { saveGame } from "../Global";
+import { client, disconnectWebSocket, getUser, reconnectWebSocket } from "../rpc/RPCClient";
 import { isSteam } from "../rpc/SteamClient";
 import { WorldScene } from "../scenes/WorldScene";
+import { AccountRankUpModal } from "../ui/AccountRankUpModal";
 import { AdvisorModal } from "../ui/AdvisorModal";
 import { ChooseGreatPersonModal } from "../ui/ChooseGreatPersonModal";
 import { hasOpenModal, showModal, showToast } from "../ui/GlobalModal";
 import { makeObservableHook } from "../utilities/Hook";
 import { Singleton } from "../utilities/Singleton";
-import { playAgeUp, playDing } from "../visuals/Sound";
+import { playAgeUp, playDing, playLevelUp } from "../visuals/Sound";
 import { onBuildingComplete } from "./OnBuildingComplete";
+import { onBuildingOrUpgradeComplete } from "./OnBuildingOrUpgradeComplete";
 import { onProductionComplete } from "./OnProductionComplete";
 import { onTileExplored } from "./OnTileExplored";
 import { TimeSeries } from "./TimeSeries";
 
 export function shouldTick(): boolean {
-   return isSteam() || document.visibilityState === "visible";
+   return isSteam() || !document.hidden;
 }
+
+App.addListener("appStateChange", ({ isActive }) => {
+   if (isSteam()) {
+      return;
+   }
+   if (isActive) {
+      reconnectWebSocket();
+   } else {
+      saveGame();
+      disconnectWebSocket();
+   }
+});
 
 let timeSinceLastTick = 0;
 
@@ -61,7 +81,9 @@ export function tickEveryFrame(gs: GameState, dt: number) {
    const targetProgress = Math.ceil(timeSinceLastTick * tickTileQueueSize * Singleton().ticker.speedUp);
    const currentProgress = tickTileQueueSize - tickTileQueue.length;
    const toProcess = clamp(targetProgress - currentProgress, 0, tickTileQueue.length);
-   tickTileQueue.splice(0, toProcess).forEach((tile) => tickTile(tile, gs, false));
+   tickTileQueue
+      .splice(0, toProcess)
+      .forEach((tile) => transportAndConsumeResources(tile, resourceProduced, gs, false));
 }
 
 const heartbeatFreq = import.meta.env.DEV ? 10 : 60;
@@ -69,6 +91,7 @@ const saveFreq = isSteam() ? 60 : 10;
 
 let tickTileQueue: Tile[] = [];
 let tickTileQueueSize = 0;
+const resourceProduced: IProduceResource[] = [];
 
 let currentSessionTick = 0;
 export function tickEverySecond(gs: GameState, offline: boolean) {
@@ -79,7 +102,7 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
    timeSinceLastTick = 0;
 
    if (!offline) {
-      tickTileQueue.forEach((tile) => tickTile(tile, gs, false));
+      tickTileQueue.forEach((tile) => transportAndConsumeResources(tile, resourceProduced, gs, false));
       postTickTiles(gs, false);
    }
 
@@ -132,7 +155,7 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
 
    if (offline) {
       tiles.forEach(function forEachTickTile([tile, _building]) {
-         tickTile(tile, gs, offline);
+         transportAndConsumeResources(tile, resourceProduced, gs, offline);
       });
       postTickTiles(gs, offline);
    } else {
@@ -161,10 +184,12 @@ function checkForAdvisors(gs: GameState) {
 }
 
 let lastTickTime = Date.now();
+let hasShownAccountRankUpModal = false;
+let eligibleRank = AccountLevel.Tribune;
 
 function postTickTiles(gs: GameState, offline: boolean) {
+   produceResources(gs);
    tickPower(gs);
-
    Tick.next.happiness = calculateHappiness(gs);
    const { scienceFromWorkers } = getScienceFromWorkers(gs);
    const hq = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
@@ -204,6 +229,18 @@ function postTickTiles(gs: GameState, offline: boolean) {
       }
       if (gs.tick % (heartbeatFreq * speed) === 0) {
          Singleton().heartbeat.update(serializeSaveLite());
+         client.queryRankUp().then((newRank) => {
+            const user = getUser();
+            if (user && newRank > user.level) {
+               eligibleRank = newRank;
+               OnEligibleAccountRankUpdated.emit(eligibleRank);
+               if (!hasShownAccountRankUpModal && !hasOpenModal()) {
+                  hasShownAccountRankUpModal = true;
+                  playLevelUp();
+                  showModal(<AccountRankUpModal rank={eligibleRank} user={user} />);
+               }
+            }
+         });
       }
    }
 
@@ -223,6 +260,7 @@ RequestResetTile.on((xy) => {
 });
 OnTileExplored.on(onTileExplored);
 OnBuildingComplete.on(onBuildingComplete);
+OnBuildingOrUpgradeComplete.on(onBuildingOrUpgradeComplete);
 OnBuildingProductionComplete.on(onProductionComplete);
 OnPriceUpdated.on((gs) => {
    const count = getBuildingsByType("Market", gs)?.size ?? 0;
@@ -237,3 +275,14 @@ RequestChooseGreatPerson.on(({ permanent }) => {
 });
 
 export const useCurrentTick = makeObservableHook(CurrentTickChanged, () => Tick.current);
+export const useEligibleAccountRank = makeObservableHook(OnEligibleAccountRankUpdated, () => eligibleRank);
+
+function produceResources(gs: GameState) {
+   for (const a of resourceProduced) {
+      const storage = gs.tiles.get(a.xy)?.building?.resources;
+      if (storage) {
+         safeAdd(storage, a.resource, a.amount);
+      }
+   }
+   resourceProduced.length = 0;
+}

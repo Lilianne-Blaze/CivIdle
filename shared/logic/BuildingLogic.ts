@@ -1,5 +1,6 @@
 import type { Building } from "../definitions/BuildingDefinitions";
 import { BuildingSpecial } from "../definitions/BuildingDefinitions";
+import type { City } from "../definitions/CityDefinitions";
 import type { IUnlockableMultipliers } from "../definitions/ITechDefinition";
 import type { Religion } from "../definitions/ReligionDefinitions";
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
@@ -27,7 +28,7 @@ import type { PartialSet, PartialTabulate } from "../utilities/TypeDefinitions";
 import { TypedEvent } from "../utilities/TypedEvent";
 import { L, t } from "../utilities/i18n";
 import { Config } from "./Config";
-import { MANAGED_IMPORT_RANGE } from "./Constants";
+import { MANAGED_IMPORT_RANGE, MAX_PETRA_SPEED_UP } from "./Constants";
 import { GameFeature, hasFeature } from "./FeatureLogic";
 import type { GameOptions, GameState } from "./GameState";
 import { getGameOptions, getGameState } from "./GameStateLogic";
@@ -212,6 +213,31 @@ export function getPetraBaseStorage(petra: IBuildingData): number {
    return HOUR * petra.level;
 }
 
+export function getMaxWarpSpeed(gs: GameState): number {
+   return findSpecialBuilding("Petra", gs) ? MAX_PETRA_SPEED_UP : 2;
+}
+
+export function getMaxWarpStorage(gs: GameState): number {
+   const HOUR = 60 * 60;
+   let storage = 4 * HOUR;
+   const petra = findSpecialBuilding("Petra", gs);
+   if (petra) {
+      // Petra level based warp
+      storage += getPetraBaseStorage(petra.building);
+      // Zenobia level based warp
+      storage += HOUR * Config.GreatPerson.Zenobia.value(getGreatPersonTotalEffect("Zenobia"));
+      const wisdomLevel = getGameOptions().ageWisdom[Config.GreatPerson.Zenobia.age] ?? 0;
+      // Age Wisdom level based warp
+      storage += HOUR * Config.GreatPerson.Zenobia.value(wisdomLevel);
+      // Fuji warp
+      const fuji = findSpecialBuilding("MountFuji", gs);
+      if (fuji && getGrid(gs).distanceTile(fuji.tile, petra.tile) <= 1) {
+         storage += HOUR * 8;
+      }
+   }
+   return storage;
+}
+
 // 1 hour
 const STORAGE_TO_PRODUCTION = 3600;
 
@@ -220,7 +246,7 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
       return NoStorage[k] ? prev : prev + v;
    };
    const building = gs.tiles.get(xy)?.building;
-   const used = reduceOf(building?.resources, accumulate, 0);
+   let used = reduceOf(building?.resources, accumulate, 0);
    let multiplier = totalMultiplierFor(xy, "storage", 1, true, gs);
 
    let base = 0;
@@ -239,15 +265,10 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
          break;
       }
       case "Petra": {
-         const HOUR = 60 * 60;
-         base = 3 * HOUR + getPetraBaseStorage(building);
-         base += HOUR * Config.GreatPerson.Zenobia.value(getGreatPersonTotalEffect("Zenobia"));
-         base +=
-            HOUR *
-            Config.GreatPerson.Zenobia.value(getGameOptions().ageWisdom[Config.GreatPerson.Zenobia.age] ?? 0);
-         const fuji = findSpecialBuilding("MountFuji", gs);
-         if (fuji && getGrid(gs).distanceTile(fuji.tile, xy) <= 1) {
-            base += HOUR * 8;
+         const hq = findSpecialBuilding("Headquarter", gs);
+         if (hq) {
+            base = getMaxWarpStorage(gs);
+            used = hq.building.resources.Warp ?? 0;
          }
          multiplier = 1;
          break;
@@ -626,7 +647,11 @@ export function getBuildingLevelLabel(b: IBuildingData): string {
       b.type === "AldersonDisk" ||
       b.type === "DysonSphere" ||
       b.type === "MatrioshkaBrain" ||
-      b.type === "LargeHadronCollider"
+      b.type === "LargeHadronCollider" ||
+      b.type === "CologneCathedral" ||
+      b.type === "SantaClausVillage" ||
+      b.type === "Petra" ||
+      b.type === "YearOfTheSnake"
    ) {
       return String(b.level);
    }
@@ -1023,21 +1048,21 @@ export function findSpecialBuilding(type: Building, gs: GameState): Required<ITi
 }
 
 export function addPetraOfflineTime(time: number, gs: GameState): void {
-   const petra = findSpecialBuilding("Petra", gs);
-   if (petra) {
-      const storage = getStorageFor(petra.tile, gs);
-      if (!petra.building.resources.Warp) {
-         petra.building.resources.Warp = 0;
-      }
-      const before = petra.building.resources.Warp;
-      petra.building.resources.Warp += time;
-      petra.building.resources.Warp = clamp(petra.building.resources.Warp, 0, storage.total);
-      const after = petra.building.resources.Warp;
-      console.log("[addPetraOfflineTime]: Before:", before, "After:", after);
-   } else {
-      console.log("[addPetraOfflineTime]: No Petra");
+   const hq = findSpecialBuilding("Headquarter", gs);
+   if (!hq) {
+      return;
    }
+   const storage = getMaxWarpStorage(gs);
+   if (!hq.building.resources.Warp) {
+      hq.building.resources.Warp = 0;
+   }
+   const before = hq.building.resources.Warp;
+   hq.building.resources.Warp += time;
+   hq.building.resources.Warp = clamp(hq.building.resources.Warp, 0, storage);
+   const after = hq.building.resources.Warp;
+   console.log("[addPetraOfflineTime]: Before:", before, "After:", after);
 }
+
 export function getYellowCraneTowerRange(xy: Tile, gs: GameState): number {
    const building = gs.tiles.get(xy)?.building;
    if (building?.type !== "YellowCraneTower") {
@@ -1117,4 +1142,18 @@ export function getExplorerRange(gs: GameState): number {
       return 2;
    }
    return 1;
+}
+
+export function getUniqueWonders(currentCity: City): Building[] {
+   const result: Building[] = [];
+   forEach(Config.City, (city, def) => {
+      if (city === currentCity) return;
+      forEach(def.uniqueBuildings, (building, def) => {
+         if (isWorldWonder(building)) {
+            result.push(building);
+         }
+      });
+   });
+
+   return result;
 }

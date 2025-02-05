@@ -3,6 +3,7 @@ import type { GreatPerson } from "../definitions/GreatPersonDefinitions";
 import type { Ideology } from "../definitions/IdeologyDefinitions";
 import type { Religion } from "../definitions/ReligionDefinitions";
 import type { Deposit, Resource } from "../definitions/ResourceDefinitions";
+import type { TechAge } from "../definitions/TechDefinitions";
 import type { Tradition } from "../definitions/TraditionDefinitions";
 import { clamp, isNullOrUndefined, type Tile } from "../utilities/Helper";
 import type { PartialSet, PartialTabulate } from "../utilities/TypeDefinitions";
@@ -120,11 +121,6 @@ export enum PetraOptions {
    TimeWarp = 1 << 0,
 }
 
-export interface IPetraBuildingData extends IBuildingData {
-   speedUp: number;
-   offlineProductionPercent: number;
-}
-
 export interface ITraditionBuildingData extends IBuildingData {
    tradition: Tradition | null;
 }
@@ -139,6 +135,10 @@ export interface IIdeologyBuildingData extends IBuildingData {
 
 export interface IGreatPeopleBuildingData extends IBuildingData {
    greatPeople: Set<GreatPerson>;
+}
+
+export interface IZugspitzeBuildingData extends IBuildingData {
+   greatPeople: Map<TechAge, GreatPerson>;
 }
 
 export type IHaveTypeAndLevel = Pick<IBuildingData, "type" | "level">;
@@ -211,16 +211,6 @@ export function makeBuilding(data: Pick<IBuildingData, "type"> & Partial<IBuildi
          }
          break;
       }
-      case "Petra": {
-         const petra = building as IPetraBuildingData;
-         if (isNullOrUndefined(petra.speedUp)) {
-            petra.speedUp = 1;
-         }
-         if (isNullOrUndefined(petra.offlineProductionPercent)) {
-            petra.offlineProductionPercent = 1;
-         }
-         break;
-      }
       case "ChoghaZanbil": {
          const tradition = building as ITraditionBuildingData;
          if (!tradition.tradition) {
@@ -246,6 +236,13 @@ export function makeBuilding(data: Pick<IBuildingData, "type"> & Partial<IBuildi
          const tradition = building as IGreatPeopleBuildingData;
          if (!tradition.greatPeople) {
             tradition.greatPeople = new Set();
+         }
+         break;
+      }
+      case "Zugspitze": {
+         const zug = building as IZugspitzeBuildingData;
+         if (!zug.greatPeople) {
+            zug.greatPeople = new Map();
          }
          break;
       }

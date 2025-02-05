@@ -237,6 +237,7 @@ export async function handleChatCommand(command: string): Promise<void> {
                `Flag=${attr.toString(2)}`,
                `Mod=${hasFlag(attr, UserAttributes.Mod)}`,
                `DLC1=${hasFlag(attr, UserAttributes.DLC1)}`,
+               `DLC2=${hasFlag(attr, UserAttributes.DLC2)}`,
                `Banned=${hasFlag(attr, UserAttributes.Banned)}`,
                `TribuneOnly=${hasFlag(attr, UserAttributes.TribuneOnly)}`,
                `NoRename=${hasFlag(attr, UserAttributes.DisableRename)}`,
@@ -254,6 +255,7 @@ export async function handleChatCommand(command: string): Promise<void> {
                `Flag=${attr.toString(2)}`,
                `Mod=${hasFlag(attr, UserAttributes.Mod)}`,
                `DLC1=${hasFlag(attr, UserAttributes.DLC1)}`,
+               `DLC2=${hasFlag(attr, UserAttributes.DLC2)}`,
                `Banned=${hasFlag(attr, UserAttributes.Banned)}`,
                `TribuneOnly=${hasFlag(attr, UserAttributes.TribuneOnly)}`,
                `NoRename=${hasFlag(attr, UserAttributes.DisableRename)}`,
@@ -401,6 +403,29 @@ export async function handleChatCommand(command: string): Promise<void> {
          }
          const count = await client.queryGreatPeopleRecovery(parts[1]);
          addSystemMessage(`Player ${parts[1]} will receive ${count} great people`);
+         break;
+      }
+      case "clearconnection": {
+         if (!parts[1]) {
+            throw new Error("Invalid command format");
+         }
+         await client.clearConnection(parts[1]);
+         addSystemMessage("Cross Platform connections have been cleared");
+         break;
+      }
+      case "cloudsave": {
+         if (!parts[1]) {
+            throw new Error("Invalid command format");
+         }
+         try {
+            const save = await client.queryCloudSave(parts[1]);
+            const newHandle = await window.showSaveFilePicker({ suggestedName: parts[1] });
+            const writableStream = await newHandle.createWritable();
+            await writableStream.write(save);
+            await writableStream.close();
+         } catch (error) {
+            addSystemMessage(String(error));
+         }
          break;
       }
       default: {

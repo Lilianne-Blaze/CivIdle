@@ -5,8 +5,10 @@ import {
    getBuildingThatExtract,
    getExtraVisionRange,
    isNaturalWonder,
+   isWorldWonder,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
+import type { GameState } from "../../../shared/logic/GameState";
 import { getGameOptions, getGameState } from "../../../shared/logic/GameStateLogic";
 import { getGrid, getXyBuildings } from "../../../shared/logic/IntraTickCache";
 import {
@@ -21,10 +23,11 @@ import {
    getCurrentAge,
    getMostAdvancedTech,
    getTechUnlockCost,
+   getTechUnlockCostInAge,
 } from "../../../shared/logic/TechLogic";
 import { ensureTileFogOfWar } from "../../../shared/logic/TerrainLogic";
 import { Tick } from "../../../shared/logic/TickLogic";
-import { makeBuilding } from "../../../shared/logic/Tile";
+import { makeBuilding, type IBuildingData } from "../../../shared/logic/Tile";
 import { OnBuildingComplete } from "../../../shared/logic/Update";
 import {
    clamp,
@@ -65,34 +68,42 @@ export function onBuildingComplete(xy: Tile): void {
          break;
       }
       case "Parthenon": {
-         const candidates1 = rollGreatPeopleThisRun("ClassicalAge", gs.city, 4);
+         const candidates1 = rollGreatPeopleThisRun(new Set(["ClassicalAge"]), gs.city, 4);
          if (candidates1) {
-            gs.greatPeopleChoices.push(candidates1);
+            gs.greatPeopleChoicesV2.push(candidates1);
          }
 
-         const candidates2 = rollGreatPeopleThisRun("ClassicalAge", gs.city, 4);
+         const candidates2 = rollGreatPeopleThisRun(new Set(["ClassicalAge"]), gs.city, 4);
          if (candidates2) {
-            gs.greatPeopleChoices.push(candidates2);
+            gs.greatPeopleChoicesV2.push(candidates2);
          }
 
-         if (gs.greatPeopleChoices.length > 0) {
+         if (gs.greatPeopleChoicesV2.length > 0) {
             playAgeUp();
             showModal(<ChooseGreatPersonModal permanent={false} />);
          }
          break;
       }
       case "TajMahal": {
-         const candidates1 = rollGreatPeopleThisRun("ClassicalAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates1 = rollGreatPeopleThisRun(
+            new Set(["ClassicalAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates1) {
-            gs.greatPeopleChoices.push(candidates1);
+            gs.greatPeopleChoicesV2.push(candidates1);
          }
 
-         const candidates2 = rollGreatPeopleThisRun("MiddleAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates2 = rollGreatPeopleThisRun(
+            new Set(["MiddleAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates2) {
-            gs.greatPeopleChoices.push(candidates2);
+            gs.greatPeopleChoicesV2.push(candidates2);
          }
 
-         if (gs.greatPeopleChoices.length > 0) {
+         if (gs.greatPeopleChoicesV2.length > 0) {
             playAgeUp();
             showModal(<ChooseGreatPersonModal permanent={false} />);
          }
@@ -104,6 +115,15 @@ export function onBuildingComplete(xy: Tile): void {
          const hq = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
          if (tech && hq) {
             safeAdd(hq, "Science", getTechUnlockCost(tech));
+         }
+         break;
+      }
+      case "CologneCathedral": {
+         const age = getCurrentAge(gs);
+         const [_, max] = getTechUnlockCostInAge(age);
+         const hq = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
+         if (hq) {
+            safeAdd(hq, "Science", max);
          }
          break;
       }
@@ -138,14 +158,18 @@ export function onBuildingComplete(xy: Tile): void {
          }
          gs.claimedGreatPeople = getRebirthGreatPeopleCount();
          let pickPerRoll = 1;
-         const count = getGreatPeopleChoiceCount(gs);
+         const choiceCount = getGreatPeopleChoiceCount(gs);
          if (getGameOptions().porcelainTowerMaxPickPerRoll) {
-            pickPerRoll = clamp(Math.floor(count / 50), 1, Number.POSITIVE_INFINITY);
+            pickPerRoll = clamp(Math.floor(gs.claimedGreatPeople / 50), 1, Number.POSITIVE_INFINITY);
          }
-         rollPermanentGreatPeople(gs.claimedGreatPeople, 1, count, getCurrentAge(gs), gs.city).forEach((c) =>
-            gs.greatPeopleChoices.push(c.choices),
-         );
-         if (gs.greatPeopleChoices.length > 0) {
+         rollPermanentGreatPeople(
+            gs.claimedGreatPeople,
+            pickPerRoll,
+            choiceCount,
+            getCurrentAge(gs),
+            gs.city,
+         ).forEach((c) => gs.greatPeopleChoicesV2.push(c));
+         if (gs.greatPeopleChoicesV2.length > 0) {
             playAgeUp();
             showModal(<ChooseGreatPersonModal permanent={false} />);
          }
@@ -203,9 +227,9 @@ export function onBuildingComplete(xy: Tile): void {
       }
       case "Broadway": {
          const age = getCurrentAge(gs);
-         const candidates1 = rollGreatPeopleThisRun(age, gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates1 = rollGreatPeopleThisRun(new Set([age]), gs.city, getGreatPeopleChoiceCount(gs));
          if (candidates1) {
-            gs.greatPeopleChoices.push(candidates1);
+            gs.greatPeopleChoicesV2.push(candidates1);
          }
 
          const previousAge = firstKeyOf(
@@ -213,17 +237,43 @@ export function onBuildingComplete(xy: Tile): void {
          );
 
          if (previousAge) {
-            const candidates2 = rollGreatPeopleThisRun(previousAge, gs.city, getGreatPeopleChoiceCount(gs));
+            const candidates2 = rollGreatPeopleThisRun(
+               new Set([previousAge]),
+               gs.city,
+               getGreatPeopleChoiceCount(gs),
+            );
             if (candidates2) {
-               gs.greatPeopleChoices.push(candidates2);
+               gs.greatPeopleChoicesV2.push(candidates2);
             }
          }
 
-         if (gs.greatPeopleChoices.length > 0) {
+         if (gs.greatPeopleChoicesV2.length > 0) {
             playAgeUp();
             showModal(<ChooseGreatPersonModal permanent={false} />);
          }
          break;
+      }
+      case "BritishMuseum": {
+         gs.unlockedUpgrades.BritishMuseum = true;
+         break;
+      }
+   }
+   checkCerneAbbasGiant(building, gs);
+}
+
+function checkCerneAbbasGiant(building: IBuildingData, gs: GameState) {
+   if (Tick.current.specialBuildings.has("CerneAbbasGiant") && isWorldWonder(building.type)) {
+      const candidates = rollGreatPeopleThisRun(
+         new Set([getCurrentAge(gs)]),
+         gs.city,
+         getGreatPeopleChoiceCount(gs),
+      );
+      if (candidates) {
+         gs.greatPeopleChoicesV2.push(candidates);
+      }
+      if (gs.greatPeopleChoicesV2.length > 0) {
+         playAgeUp();
+         showModal(<ChooseGreatPersonModal permanent={false} />);
       }
    }
 }

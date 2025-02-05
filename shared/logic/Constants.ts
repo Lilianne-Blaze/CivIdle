@@ -4,9 +4,9 @@ import type { City } from "../definitions/CityDefinitions";
 import type { Deposit, Resource } from "../definitions/ResourceDefinitions";
 import { IsDeposit, NoPrice } from "../definitions/ResourceDefinitions";
 import type { Tech, TechAge } from "../definitions/TechDefinitions";
+import { TimedBuildingUnlock } from "../definitions/TimedBuildingUnlock";
 import type { Upgrade } from "../definitions/UpgradeDefinitions";
 import {
-   HOUR,
    forEach,
    formatHMS,
    formatNumber,
@@ -35,7 +35,6 @@ export const SAVE_KEY = "CivIdle";
 export const MAX_OFFLINE_PRODUCTION_SEC = 60 * 60 * 4;
 export const SCIENCE_VALUE = 0.2;
 export const TRADE_CANCEL_REFUND_PERCENT = 0.9;
-export const TRIBUNE_UPGRADE_PLAYTIME = 48 * HOUR;
 export const MAX_CHAT_PER_CHANNEL = 200;
 export const DISCORD_URL = "https://discord.com/invite/m5JWZtEKMZ";
 export const BACKUP_RECOVERY_URL =
@@ -55,6 +54,8 @@ export const FESTIVAL_CONVERSION_RATE = 100;
 export const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
 export const GOOGLE_PLAY_GAMES_CLIENT_ID =
    "242227196074-u9201vdqd82p0o0hvfg2metk3gl5ocro.apps.googleusercontent.com";
+export const TOWER_BRIDGE_GP_PER_CYCLE = 3600;
+export const EAST_INDIA_COMPANY_BOOST_PER_EV = 2000;
 
 interface IRecipe {
    building: Building;
@@ -207,6 +208,10 @@ export function calculateTierAndPrice(log?: (val: string) => void) {
       }
    });
 
+   forEach(TimedBuildingUnlock, (building, def) => {
+      Config.BuildingTech[building] = def.tech;
+   });
+
    const resourceTierDependency: Partial<Record<Resource, Resource>> = {};
    const buildingTierDependency: Partial<Record<Building, Resource>> = {};
 
@@ -341,7 +346,7 @@ export function calculateTierAndPrice(log?: (val: string) => void) {
             reduceOf(
                def.output,
                (prev, res, amount) =>
-                  prev + (res === "Science" ? SCIENCE_VALUE : Config.ResourcePrice[res] ?? 0) * amount,
+                  prev + (res === "Science" ? SCIENCE_VALUE : (Config.ResourcePrice[res] ?? 0)) * amount,
                0,
             ),
          );
@@ -524,6 +529,12 @@ function getBuildingUnlockTechSlow(building: Building): Tech | null {
          return def.tech;
       }
    }
+
+   const timedUnlock = TimedBuildingUnlock[building];
+   if (timedUnlock) {
+      return timedUnlock.tech;
+   }
+
    return null;
 }
 

@@ -1,6 +1,5 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { decode, encode } from "@msgpack/msgpack";
-import { CapacitorGameConnect as CapacitorGameConnect_ } from "@openforge/capacitor-game-connect";
 import type { ServerImpl } from "../../../server/src/Server";
 import { addPetraOfflineTime } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
@@ -15,6 +14,7 @@ import type {
    IClientTrade,
    IMapMessage,
    IPendingClaimMessage,
+   IPlatformInfo,
    IRPCMessage,
    ITradeMessage,
    IUser,
@@ -28,30 +28,38 @@ import {
 } from "../../../shared/utilities/Database";
 import { vacuumChat } from "../../../shared/utilities/DatabaseShared";
 import { SECOND, clamp, forEach, hasFlag, uuid4 } from "../../../shared/utilities/Helper";
+import { setServerNow } from "../../../shared/utilities/ServerNow";
 import { TypedEvent } from "../../../shared/utilities/TypedEvent";
 import { L, t } from "../../../shared/utilities/i18n";
 import { saveGame } from "../Global";
 import { getBuildNumber, getVersion } from "../logic/Version";
 import { showToast } from "../ui/GlobalModal";
+import { idbGet, idbSet } from "../utilities/BrowserStorage";
 import { makeObservableHook } from "../utilities/Hook";
 import { playBubble, playKaching } from "../visuals/Sound";
 import { SteamClient, isSteam } from "./SteamClient";
 
 let user: IUser | null = null;
+let platformInfo: IPlatformInfo | null = null;
 
 export const OnUserChanged = new TypedEvent<IUser | null>();
+export const OnPlatformInfoChanged = new TypedEvent<IPlatformInfo | null>();
 export const OnChatMessage = new TypedEvent<LocalChat[]>();
 export const OnTradeChanged = new TypedEvent<IClientTrade[]>();
 export const OnPlayerMapChanged = new TypedEvent<Map<string, IClientMapEntry>>();
 export const OnPlayerMapMessage = new TypedEvent<IMapMessage>();
 export const OnNewPendingClaims = new TypedEvent<void>();
 
-interface CapacitorGameConnectPluginExt {
+export interface PlayGamesPlugin {
    requestServerSideAccess: (opt: { clientId: string }) => Promise<{ serverAuthToken: string }>;
 }
 
-const CapacitorGameConnect = CapacitorGameConnect_ as typeof CapacitorGameConnect_ &
-   CapacitorGameConnectPluginExt;
+export interface GameCenterPlugin {
+   getAuthTicket: () => Promise<{ ticket: string }>;
+}
+
+const PlayGames = registerPlugin<PlayGamesPlugin>("PlayGames");
+const GameCenter = registerPlugin<GameCenterPlugin>("GameCenter");
 
 export interface IClientChat extends IChat {
    id: number;
@@ -77,10 +85,10 @@ let ws: WebSocket | null = null;
 export const client = rpcClient<ServerImpl>({
    request: (method: string, params: any[]) => {
       return new Promise((resolve, reject) => {
-         const id = ++requestId;
-         if (!ws) {
+         if (!ws || ws.readyState !== WebSocket.OPEN) {
             return reject("WebSocket is not ready yet");
          }
+         const id = ++requestId;
          const request = {
             jsonrpc: "2.0",
             id: id,
@@ -96,10 +104,7 @@ export const client = rpcClient<ServerImpl>({
 function getServerAddress(): string {
    if (import.meta.env.DEV) {
       const url = new URLSearchParams(window.location.search);
-      return url.get("server") ?? "ws://192.168.3.12:8000";
-   }
-   if (getGameOptions().useMirrorServer) {
-      return "wss://api.cividle.com";
+      return url.get("server") ?? "ws://localhost:8000";
    }
    return "wss://de.cividle.com";
 }
@@ -117,9 +122,14 @@ export const usePlayerMap = makeObservableHook(OnPlayerMapChanged, () => playerM
 export const useChatMessages = makeObservableHook(OnChatMessage, () => chatMessages);
 export const useTrades = makeObservableHook(OnTradeChanged, getTrades);
 export const useUser = makeObservableHook(OnUserChanged, getUser);
+export const usePlatformInfo = makeObservableHook(OnPlatformInfoChanged, getPlatformInfo);
 
 export function getUser(): IUser | null {
    return user;
+}
+
+export function getPlatformInfo(): IPlatformInfo | null {
+   return platformInfo;
 }
 
 export function isOnlineUser(): boolean {
@@ -155,6 +165,8 @@ export function clearSystemMessages(): void {
    OnChatMessage.emit(chatMessages);
 }
 
+export const CLIENT_ID = "CIVIDLE_CLIENT_ID";
+
 let reconnect = 0;
 let requestId = 0;
 // biome-ignore lint/complexity/noBannedTypes: <explanation>
@@ -163,7 +175,7 @@ const rpcRequests: Record<number, { resolve: Function; reject: Function; time: n
 let steamTicket: string | null = null;
 let steamTicketTime = 0;
 
-export async function connectWebSocket(): Promise<number> {
+export async function connectWebSocket(): Promise<IWelcomeMessage> {
    const platform = Capacitor.getPlatform();
    if (isSteam()) {
       if (!steamTicket || Date.now() - steamTicketTime > 30 * SECOND) {
@@ -187,8 +199,7 @@ export async function connectWebSocket(): Promise<number> {
       ];
       ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
    } else if (platform === "android") {
-      const player = await CapacitorGameConnect.signIn();
-      const token = await CapacitorGameConnect.requestServerSideAccess({
+      const token = await PlayGames.requestServerSideAccess({
          clientId: GOOGLE_PLAY_GAMES_CLIENT_ID,
       });
       const params = [
@@ -196,9 +207,20 @@ export async function connectWebSocket(): Promise<number> {
          "platform=android",
          `version=${getVersion()}`,
          `build=${getBuildNumber()}`,
-         `userId=${getGameOptions().userId}`,
+         `userId=${getGameOptions().userId ?? ""}`,
          `gameId=${getGameState().id}`,
-         `androidPlayerId=${player.player_id}`,
+         `checksum=${checksum.expected}${checksum.actual}`,
+      ];
+      ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
+   } else if (platform === "ios") {
+      const result = await GameCenter.getAuthTicket();
+      const params = [
+         `ticket=${result.ticket}`,
+         "platform=ios",
+         `version=${getVersion()}`,
+         `build=${getBuildNumber()}`,
+         `userId=${getGameOptions().userId ?? ""}`,
+         `gameId=${getGameState().id}`,
          `checksum=${checksum.expected}${checksum.actual}`,
       ];
       ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
@@ -206,12 +228,16 @@ export async function connectWebSocket(): Promise<number> {
       if (!getGameOptions().userId) {
          getGameOptions().userId = `web:${uuid4()}`;
       }
-      if (!getGameOptions().token) {
-         getGameOptions().token = uuid4();
+
+      let key = await idbGet<string>(CLIENT_ID);
+
+      if (!key) {
+         key = uuid4();
+         await idbSet(CLIENT_ID, key);
       }
-      const token = `${getGameOptions().userId}:${getGameOptions().token}`;
+
       const params = [
-         `ticket=${token}`,
+         `ticket=${key}`,
          "platform=web",
          `version=${getVersion()}`,
          `build=${getBuildNumber()}`,
@@ -228,9 +254,9 @@ export async function connectWebSocket(): Promise<number> {
 
    ws.binaryType = "arraybuffer";
 
-   let resolve: ((v: number) => void) | null = null;
+   let resolve: ((v: IWelcomeMessage) => void) | null = null;
 
-   const promise = new Promise<number>((resolve_) => {
+   const promise = new Promise<IWelcomeMessage>((resolve_) => {
       resolve = resolve_;
    });
 
@@ -262,9 +288,13 @@ export async function connectWebSocket(): Promise<number> {
             const w = message as IWelcomeMessage;
             user = w.user;
             const options = getGameOptions();
-            options.token = w.user.token;
+            if (!options.userId) {
+               options.userId = user.userId;
+            }
             saveGame().catch(console.error);
-            OnUserChanged.emit({ ...user });
+            OnUserChanged.emit(user);
+            platformInfo = w.platformInfo;
+            OnPlatformInfoChanged.emit(platformInfo);
             const tick = getGameState().tick;
             const offlineTicks = clamp(w.lastGameTick + w.offlineTime - tick, 0, Number.POSITIVE_INFINITY);
             console.log(
@@ -278,7 +308,9 @@ export async function connectWebSocket(): Promise<number> {
                "User:",
                JSON.stringify(w),
             );
-            resolve?.(Math.min(w.offlineTime, offlineTicks));
+            setServerNow(w.now);
+            w.offlineTime = Math.min(w.offlineTime, offlineTicks);
+            resolve?.(w);
             break;
          }
          case MessageType.Trade: {
@@ -315,7 +347,9 @@ export async function connectWebSocket(): Promise<number> {
          case MessageType.PendingClaim: {
             const r = message as IPendingClaimMessage;
             if (user && r.claims[user.userId]) {
-               playKaching();
+               if (getGameOptions().tradeFilledSound) {
+                  playKaching();
+               }
                showToast(t(L.PlayerTradeClaimAvailable, { count: r.claims[user.userId] }));
                OnNewPendingClaims.emit();
             }
@@ -341,6 +375,7 @@ export async function connectWebSocket(): Promise<number> {
       switch (ev.code) {
          case ServerWSErrorCode.BadRequest:
          case ServerWSErrorCode.NotAllowed:
+         case ServerWSErrorCode.Background:
             break;
          case ServerWSErrorCode.InvalidTicket:
             steamTicket = null;
@@ -355,14 +390,23 @@ export async function connectWebSocket(): Promise<number> {
    return promise;
 }
 
-function retryConnect() {
-   setTimeout(
-      () => connectWebSocket().then(convertOfflineTimeToWarp),
-      Math.min(Math.pow(2, reconnect++) * SECOND, 16 * SECOND),
-   );
+export function disconnectWebSocket() {
+   ws?.close(ServerWSErrorCode.Background);
+   reconnect = 0;
 }
 
-export function convertOfflineTimeToWarp(offlineTime: number): void {
+export function reconnectWebSocket() {
+   if (!ws) {
+      connectWebSocket().then(convertOfflineTimeToWarp);
+   }
+}
+
+function retryConnect() {
+   setTimeout(reconnectWebSocket, Math.min(Math.pow(2, reconnect++) * SECOND, 16 * SECOND));
+}
+
+export function convertOfflineTimeToWarp(w: IWelcomeMessage): void {
+   const { offlineTime } = w;
    console.log("[convertOfflineTimeToWarp] offlineTime:", offlineTime);
    if (offlineTime >= 60) {
       playBubble();

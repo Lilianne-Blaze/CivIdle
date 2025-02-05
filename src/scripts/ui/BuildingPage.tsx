@@ -1,3 +1,4 @@
+import type React from "react";
 import type { FunctionComponent } from "react";
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { Config } from "../../../shared/logic/Config";
@@ -6,8 +7,10 @@ import type { ITileData } from "../../../shared/logic/Tile";
 import type { Tile } from "../../../shared/utilities/Helper";
 import { useGameState } from "../Global";
 import { Singleton } from "../utilities/Singleton";
+import { BritishMuseumBuildingBody } from "./BritishMuseumBuildingBody";
 import { BroadwayBuildingBody } from "./BroadwayBuildingBody";
 import { DefaultBuildingBody } from "./DefaultBuildingBody";
+import { EastIndiaCompanyBuildingBody } from "./EastIndiaCompanyBuildingBody";
 import { EuphratesRiverBuildingBody } from "./EuphratesRiverBuildingBody";
 import { GrandBazaarBuildingBody } from "./GrandBazaarBuildingBody";
 import { HagiaSophiaBuildingBody } from "./HagiaSophiaBuildingBody";
@@ -23,10 +26,12 @@ import { ScienceProductionWonderBuildingBody } from "./ScienceProductionWonderBu
 import { StatisticsBuildingBody } from "./StatisticsBuildingBody";
 import { TheMetBuildingBody } from "./TheMetBuildingBody";
 import { ToggleWonderBuildingBody } from "./ToggleableWonderBuildingBody";
+import { TowerBridgeBuildingBody } from "./TowerBridgeBuildingBody";
 import { TraditionBuildingBody } from "./TraditionBuildingBody";
 import { UnitedNationsBuildingBody } from "./UnitedNationsBuildingBody";
 import { UpgradableWonderBuildingBody } from "./UpgradableWonderBuildingBody";
 import { WarehouseBuildingBody } from "./WarehouseBuildingBody";
+import { ZugspitzeBuildingBody } from "./ZugspitzeBuildingBody";
 
 const BuildingBodyOverride: Partial<Record<Building, FunctionComponent<IBuildingComponentProps>>> = {
    Headquarter: HeadquarterBuildingBody,
@@ -58,6 +63,13 @@ const BuildingBodyOverride: Partial<Record<Building, FunctionComponent<IBuilding
    DysonSphere: UpgradableWonderBuildingBody,
    MatrioshkaBrain: UpgradableWonderBuildingBody,
    LargeHadronCollider: UpgradableWonderBuildingBody,
+   CologneCathedral: UpgradableWonderBuildingBody,
+   Zugspitze: ZugspitzeBuildingBody,
+   SantaClausVillage: UpgradableWonderBuildingBody,
+   YearOfTheSnake: UpgradableWonderBuildingBody,
+   BritishMuseum: BritishMuseumBuildingBody,
+   TowerBridge: TowerBridgeBuildingBody,
+   EastIndiaCompany: EastIndiaCompanyBuildingBody,
 };
 
 export function BuildingPage(props: { tile: ITileData }): React.ReactNode {

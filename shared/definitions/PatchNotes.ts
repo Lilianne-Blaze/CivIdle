@@ -6,9 +6,28 @@ interface PatchNote {
 
 export const PatchNotes: PatchNote[] = [
    {
+      version: "0.21.0",
+      content: [],
+      link: "https://github.com/fishpondstudio/CivIdle/issues/389",
+   },
+   {
+      version: "0.20.1",
+      content: [["Bugfix", "Fix a bug where Year of the Snake is not effective when being upgraded"]],
+   },
+   {
+      version: "0.20.0",
+      content: [],
+      link: "https://store.steampowered.com/news/app/2181940/view/546723866324501220",
+   },
+   {
+      version: "0.19.0",
+      content: [],
+      link: "https://store.steampowered.com/news/app/2181940/view/4485117301459257316",
+   },
+   {
       version: "0.18.0",
       content: [],
-      link: "https://github.com/fishpondstudio/CivIdle/issues/353",
+      link: "https://store.steampowered.com/news/app/2181940/view/4485116032403374366",
    },
    {
       version: "0.17.1",
@@ -17,7 +36,7 @@ export const PatchNotes: PatchNote[] = [
          ["QoL", "Clarify the wordings of festival in Beijing"],
          [
             "QoL",
-            "Clarify the wordings of production priority: priority determins the order that buildings transport and produce - a bigger number means a building transports and produces before other buildings. However, a higher priority does not guarantee that the building will transport the resource first. For example, given the following priority order: Coal Power Plan > Coal Mine > Steel Mill, the steel mill will get all the coal produced in the same cycle because it transports and produces immediately after the coal mine",
+            "Clarify the wordings of production priority: priority determines the order that buildings transport and produce - a bigger number means a building transports and produces before other buildings. However, a higher priority does not guarantee that the building will transport the resource first. For example, given the following priority order: Coal Power Plan > Coal Mine > Steel Mill, the steel mill will get all the coal produced in the same cycle because it transports and produces immediately after the coal mine",
          ],
       ],
    },

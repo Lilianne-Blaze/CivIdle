@@ -10,6 +10,7 @@ import type { IBuildingComponentProps } from "./BuildingPage";
 import { BuildingValueComponent } from "./BuildingValueComponent";
 import { BuildingWikipediaComponent } from "./BuildingWikipediaComponent";
 import { ResourceAmountComponent } from "./ResourceAmountComponent";
+import { SpaceshipIdleComponent } from "./SpaceshipIdleComponent";
 
 export function UpgradableWonderBuildingBody({ gameState, xy }: IBuildingComponentProps): React.ReactNode {
    const building = gameState.tiles.get(xy)?.building;
@@ -18,6 +19,7 @@ export function UpgradableWonderBuildingBody({ gameState, xy }: IBuildingCompone
    }
    return (
       <div className="window-body">
+         <SpaceshipIdleComponent gameState={gameState} type={building.type} />
          <BuildingDescriptionComponent gameState={gameState} xy={xy} />
          <fieldset>
             <div className="row">
@@ -27,7 +29,7 @@ export function UpgradableWonderBuildingBody({ gameState, xy }: IBuildingCompone
             <div className="separator" />
             {jsxMapOf(getBuildingCost({ type: building.type, level: building.level }), (res, amount) => {
                return (
-                  <div className="row">
+                  <div key={res} className="row">
                      <div className="f1 text-strong">{Config.Resource[res].name()}</div>
                      <div>
                         <ResourceAmountComponent

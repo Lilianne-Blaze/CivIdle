@@ -1,26 +1,28 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
-import { GreatPersonTickFlag } from "../../../shared/definitions/GreatPersonDefinitions";
+import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
 import {
    forEachMultiplier,
    generateScienceFromFaith,
    getGreatWallRange,
+   getMaxWarpStorage,
    getScienceFromWorkers,
-   getStorageFor,
    getWorkingBuilding,
    getYellowCraneTowerRange,
    isBuildingWellStocked,
    isSpecialBuilding,
+   isWorldOrNaturalWonder,
    isWorldWonder,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import {
+   EAST_INDIA_COMPANY_BOOST_PER_EV,
    EXPLORER_SECONDS,
    FESTIVAL_CONVERSION_RATE,
    MAX_EXPLORER,
-   MAX_PETRA_SPEED_UP,
    MAX_TELEPORT,
    SCIENCE_VALUE,
    TELEPORT_SECONDS,
+   TOWER_BRIDGE_GP_PER_CYCLE,
 } from "../../../shared/logic/Constants";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
 import { getGameOptions, getGameState } from "../../../shared/logic/GameStateLogic";
@@ -32,20 +34,27 @@ import {
    getXyBuildings,
 } from "../../../shared/logic/IntraTickCache";
 import { getVotedBoostId } from "../../../shared/logic/PlayerTradeLogic";
-import { getGreatPersonTotalEffect, getPermanentGreatPeopleLevel } from "../../../shared/logic/RebirthLogic";
+import {
+   getGreatPeopleChoiceCount,
+   getGreatPeopleForWisdom,
+   getGreatPersonTotalEffect,
+   getPermanentGreatPeopleLevel,
+   rollGreatPeopleThisRun,
+} from "../../../shared/logic/RebirthLogic";
 import {
    getBuildingUnlockAge,
    getBuildingsUnlockedBefore,
    getCurrentAge,
+   getUnlockedTechAges,
 } from "../../../shared/logic/TechLogic";
 import { Tick } from "../../../shared/logic/TickLogic";
 import type {
    IGreatPeopleBuildingData,
    IIdeologyBuildingData,
-   IPetraBuildingData,
    IReligionBuildingData,
    ITileData,
    ITraditionBuildingData,
+   IZugspitzeBuildingData,
 } from "../../../shared/logic/Tile";
 import { addMultiplier, tickUnlockable } from "../../../shared/logic/Update";
 import { VotedBoostType, type IGetVotedBoostResponse } from "../../../shared/utilities/Database";
@@ -65,7 +74,10 @@ import {
 import { srand } from "../../../shared/utilities/Random";
 import { L, t } from "../../../shared/utilities/i18n";
 import { client } from "../rpc/RPCClient";
+import { ChooseGreatPersonModal } from "../ui/ChooseGreatPersonModal";
+import { hasOpenModal, showModal } from "../ui/GlobalModal";
 import { Singleton } from "../utilities/Singleton";
+import { playAgeUp } from "../visuals/Sound";
 
 let votedBoost: IGetVotedBoostResponse | null = null;
 let lastVotedBoostUpdatedAt = 0;
@@ -86,7 +98,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
    switch (building.type) {
       case "Headquarter": {
          mapSafePush(Tick.next.tileMultipliers, xy, {
-            output: round(getPermanentGreatPeopleLevel() * 0.1, 1),
+            output: round(getPermanentGreatPeopleLevel(getGameOptions()) * 0.1, 1),
             source: t(L.PermanentGreatPeople),
          });
          if (hasFeature(GameFeature.Festival, gs)) {
@@ -105,12 +117,15 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          } else {
             gs.festival = false;
          }
-         if (Date.now() <= 1728950400000) {
-            forEach(Config.BuildingTechAge, (b, age) => {
-               if (age === "IndustrialAge") {
-                  addMultiplier(b, { output: 1, unstable: true }, t(L.IndustryIdle10));
-               }
-            });
+
+         if (!offline) {
+            gs.speedUp = clamp(gs.speedUp, 1, getMaxWarpStorage(gs));
+            if (gs.speedUp > 1 && (building.resources.Warp ?? 0) > 0) {
+               --building.resources.Warp!;
+            } else {
+               gs.speedUp = 1;
+            }
+            Singleton().ticker.speedUp = gs.speedUp;
          }
          break;
       }
@@ -344,27 +359,6 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          addMultiplier("StoneQuarry", { output: 1, worker: 1, storage: 1 }, buildingName);
          addMultiplier("LoggingCamp", { output: 1, worker: 1, storage: 1 }, buildingName);
          addMultiplier("CopperMiningCamp", { output: 1, worker: 1, storage: 1 }, buildingName);
-         break;
-      }
-      case "Petra": {
-         if (offline) {
-            break;
-         }
-         const petra = building as IPetraBuildingData;
-         petra.speedUp = clamp(petra.speedUp, 1, MAX_PETRA_SPEED_UP);
-
-         if (petra.speedUp > 1 && (petra.resources.Warp ?? 0) > 0) {
-            --petra.resources.Warp!;
-         } else {
-            petra.speedUp = 1;
-         }
-         Singleton().ticker.speedUp = petra.speedUp;
-
-         for (const res of keysOf(petra.resources)) {
-            if (res !== "Warp") {
-               delete petra.resources[res];
-            }
-         }
          break;
       }
       case "OxfordUniversity": {
@@ -1334,11 +1328,12 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             fujiTick = 0;
             lastFujiGeneratedAt = Date.now();
             const petra = Tick.current.specialBuildings.get("Petra");
-            if (petra) {
-               const { total, used } = getStorageFor(petra.tile, gs);
+            const hq = Tick.current.specialBuildings.get("Headquarter");
+            if (hq && petra) {
+               const total = getMaxWarpStorage(gs);
                const amount = gs.festival ? 40 : 20;
-               if (total - used >= amount) {
-                  safeAdd(petra.building.resources, "Warp", amount);
+               if (total - (hq.building.resources.Warp ?? 0) >= amount) {
+                  safeAdd(hq.building.resources, "Warp", amount);
                }
             }
          } else {
@@ -1376,9 +1371,165 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          });
          break;
       }
+      case "RhineGorge": {
+         let count = 0;
+         for (const point of grid.getRange(tileToPoint(xy), 2)) {
+            const targetXy = pointToTile(point);
+            if (targetXy === xy) {
+               continue;
+            }
+            const building = gs.tiles.get(targetXy)?.building;
+            if (building?.status === "completed" && isWorldOrNaturalWonder(building.type)) {
+               ++count;
+            }
+         }
+         Tick.next.globalMultipliers.happiness.push({ value: count * 2, source: buildingName });
+         break;
+      }
+      case "Elbphilharmonie": {
+         for (const point of grid.getRange(tileToPoint(xy), 3)) {
+            const xy = pointToTile(point);
+            const building = getWorkingBuilding(xy, gs);
+            if (!building) {
+               continue;
+            }
+            let count = 0;
+            for (const point2 of grid.getNeighbors(point)) {
+               const building2 = getWorkingBuilding(pointToTile(point2), gs);
+               if (!building2) {
+                  continue;
+               }
+               if (
+                  !isSpecialBuilding(building2.type) &&
+                  Config.BuildingTier[building.type] !== Config.BuildingTier[building2.type]
+               ) {
+                  ++count;
+               }
+            }
+            mapSafePush(Tick.next.tileMultipliers, xy, {
+               output: count,
+               source: buildingName,
+            });
+         }
+         break;
+      }
+      case "CologneCathedral": {
+         forEach(Config.Building, (b, def) => {
+            if (!isSpecialBuilding(b) && def.output.Science) {
+               addMultiplier(b, { output: building.level }, buildingName);
+            }
+         });
+         break;
+      }
+      case "BlackForest": {
+         forEach(Config.Building, (b, def) => {
+            if (!isSpecialBuilding(b) && (def.input.Wood || def.input.Lumber)) {
+               addMultiplier(b, { output: 5 }, buildingName);
+            }
+         });
+         break;
+      }
+      case "Zugspitze": {
+         const zug = building as IZugspitzeBuildingData;
+         const gps = new Map<GreatPerson, number>();
+         const currentAge = getCurrentAge(gs);
+         zug.greatPeople.forEach((gp, age) => {
+            if (Config.TechAge[age].idx <= Config.TechAge[currentAge].idx) {
+               mapSafeAdd<GreatPerson>(gps, gp, 1);
+            }
+         });
+         gps.forEach((level, gp) => {
+            const def = Config.GreatPerson[gp];
+            def.tick(
+               def,
+               gs.festival ? level * 2 : level,
+               `${buildingName}: ${def.name()}`,
+               GreatPersonTickFlag.Unstable,
+            );
+         });
+         break;
+      }
+      case "Lapland": {
+         const multiplier = Config.TechAge[getCurrentAge(gs)].idx + 1;
+         for (const neighbor of grid.getRange(tileToPoint(xy), 2)) {
+            mapSafePush(Tick.next.tileMultipliers, pointToTile(neighbor), {
+               output: multiplier,
+               source: buildingName,
+            });
+         }
+         break;
+      }
+      case "RockefellerCenterChristmasTree": {
+         const multiplier = Config.TechAge[getCurrentAge(gs)].idx + 1;
+         Tick.next.globalMultipliers.happiness.push({ value: multiplier * 3, source: buildingName });
+         break;
+      }
+      case "YearOfTheSnake": {
+         for (const point of grid.getRange(tileToPoint(xy), 2)) {
+            mapSafePush(Tick.next.tileMultipliers, pointToTile(point), {
+               output: building.level,
+               source: buildingName,
+            });
+         }
+         break;
+      }
+      case "CambridgeUniversity": {
+         forEach(Config.TechAge, (age, def) => {
+            if (def.idx < Config.TechAge.RenaissanceAge.idx) {
+               return;
+            }
+            getGreatPeopleForWisdom(age).forEach((gp) => {
+               const greatPerson = Config.GreatPerson[gp];
+               greatPerson.tick(
+                  greatPerson,
+                  1,
+                  t(L.CambridgeUniversitySource, { age: Config.TechAge[age].name() }),
+                  GreatPersonTickFlag.None,
+               );
+            });
+         });
+         break;
+      }
+      case "TowerBridge": {
+         safeAdd(building.resources, "Cycle", gs.festival ? 1.2 : 1);
+         let hasGreatPeople = false;
+         while ((building.resources.Cycle ?? 0) >= TOWER_BRIDGE_GP_PER_CYCLE) {
+            safeAdd(building.resources, "Cycle", -TOWER_BRIDGE_GP_PER_CYCLE);
+            const candidates1 = rollGreatPeopleThisRun(
+               getUnlockedTechAges(gs),
+               gs.city,
+               getGreatPeopleChoiceCount(gs),
+            );
+            if (candidates1) {
+               gs.greatPeopleChoicesV2.push(candidates1);
+               hasGreatPeople = true;
+            }
+         }
+         if (hasGreatPeople && !hasOpenModal()) {
+            playAgeUp();
+            showModal(<ChooseGreatPersonModal permanent={false} />);
+         }
+         break;
+      }
+      case "EastIndiaCompany": {
+         if ((building.resources.TradeValue ?? 0) > EAST_INDIA_COMPANY_BOOST_PER_EV) {
+            safeAdd(building.resources, "TradeValue", -EAST_INDIA_COMPANY_BOOST_PER_EV);
+            getBuildingsByType("Caravansary", gs)?.forEach((tile, xy) => {
+               grid.getNeighbors(tileToPoint(xy)).forEach((p) => {
+                  mapSafePush(Tick.next.tileMultipliers, pointToTile(p), {
+                     output: gs.festival ? 2 : 1,
+                     source: buildingName,
+                     unstable: true,
+                  });
+               });
+            });
+         }
+         break;
+      }
       // case "ArcDeTriomphe": {
       //    forEach(Config.Building, (b, def) => {
       //       if (def.input.Culture || def.output.Culture) {
+
       //          addMultiplier(b, { output: 1, worker: 1, storage: 1 }, buildingName);
       //       }
       //    });

@@ -53,9 +53,13 @@ export class UpgradeDefinitions {
       },
       additionalUpgrades: () => [t(L.Cultivation4UpgradeHTML)],
       onUnlocked: (gs) => {
-         const candidates = rollGreatPeopleThisRun("RenaissanceAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates = rollGreatPeopleThisRun(
+            new Set(["RenaissanceAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates) {
-            gs.greatPeopleChoices.push(candidates);
+            gs.greatPeopleChoicesV2.push(candidates);
          }
          RequestChooseGreatPerson.emit({ permanent: false });
       },
@@ -609,13 +613,21 @@ export class UpgradeDefinitions {
          sciencePerBusyWorker: 1,
       },
       onUnlocked: (gs) => {
-         const candidates1 = rollGreatPeopleThisRun("IndustrialAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates1 = rollGreatPeopleThisRun(
+            new Set(["IndustrialAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates1) {
-            gs.greatPeopleChoices.push(candidates1);
+            gs.greatPeopleChoicesV2.push(candidates1);
          }
-         const candidates2 = rollGreatPeopleThisRun("WorldWarAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates2 = rollGreatPeopleThisRun(
+            new Set(["WorldWarAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates2) {
-            gs.greatPeopleChoices.push(candidates2);
+            gs.greatPeopleChoicesV2.push(candidates2);
          }
       },
       additionalUpgrades: () => [t(L.CommunismLevel4DescHTML)],
@@ -630,12 +642,25 @@ export class UpgradeDefinitions {
          BiplaneFactory: { output: 1 },
       },
       onUnlocked: (gs) => {
-         const candidates = rollGreatPeopleThisRun("ColdWarAge", gs.city, getGreatPeopleChoiceCount(gs));
+         const candidates = rollGreatPeopleThisRun(
+            new Set(["ColdWarAge"]),
+            gs.city,
+            getGreatPeopleChoiceCount(gs),
+         );
          if (candidates) {
-            gs.greatPeopleChoices.push(candidates);
+            gs.greatPeopleChoicesV2.push(candidates);
          }
       },
       additionalUpgrades: () => [t(L.CommunismLevel5DescHTML)],
+   };
+   BritishMuseum: IUpgradeDefinition = { name: () => "", requireResources: {} };
+   SpaceshipIdle: IUpgradeDefinition = {
+      name: () => "",
+      requireResources: {},
+      tick: (gs) => {
+         addMultiplier("SpaceCenter", { output: 1, storage: 1 }, t(L.WishlistSpaceshipIdle));
+         addMultiplier("SpacecraftFactory", { output: 1, storage: 1 }, t(L.WishlistSpaceshipIdle));
+      },
    };
 }
 

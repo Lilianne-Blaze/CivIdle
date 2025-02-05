@@ -11,7 +11,9 @@ import { calculateTierAndPrice } from "../shared/logic/Constants";
 import { GameOptions, GameState, SavedGame } from "../shared/logic/GameState";
 import { deserializeSave, serializeSave } from "../shared/logic/GameStateLogic";
 import { initializeGameState } from "../shared/logic/InitializeGameState";
+import { getBuyAmountRange, getTradePercentage } from "../shared/logic/PlayerTradeLogic";
 import {
+   getEligibleRank,
    getGreatPersonThisRunLevel,
    getTotalGreatPeopleUpgradeCost,
    getUpgradeCostFib,
@@ -34,7 +36,22 @@ import {
 } from "../shared/logic/TechLogic";
 import { makeBuilding } from "../shared/logic/Tile";
 import { fossilDeltaApply, fossilDeltaCreate } from "../shared/thirdparty/FossilDelta";
-import { forEach, pointToTile } from "../shared/utilities/Helper";
+import {
+   AccountLevel,
+   UserAttributes,
+   UserColors,
+   type IAddTradeRequest,
+   type IUser,
+} from "../shared/utilities/Database";
+import {
+   HOUR,
+   SECOND,
+   base64ToBytes,
+   bytesToBase64,
+   forEach,
+   pointToTile,
+   round,
+} from "../shared/utilities/Helper";
 
 test("getBuildingCost", (t) => {
    assert.equal(10, getBuildingCost({ type: "CoalMine", level: 0 }).Brick);
@@ -261,15 +278,15 @@ test("addResourceTo", async () => {
 test("fossilDelta", async () => {
    const s = new SavedGame();
    s.current.tick = 1;
-   const source = serializeSave(s);
+   const source = new TextEncoder().encode(serializeSave(s));
    s.current.tick = 10000;
-   const dest = serializeSave(s);
+   const dest = new TextEncoder().encode(serializeSave(s));
    const patch = fossilDeltaCreate(source, dest);
    assert.ok(patch.length < source.length, `patch ${patch.length} is smaller than source ${source.length}`);
    assert.ok(patch.length < dest.length, `patch ${patch.length} is smaller than dest ${dest.length}`);
    const newDest = fossilDeltaApply(source, patch, { verifyChecksum: true });
    assert.equal(dest.length, newDest.length);
-   const newGameState = deserializeSave(newDest);
+   const newGameState = deserializeSave(new TextDecoder().decode(newDest));
    assert.equal(s.current.tick, newGameState.current.tick);
 });
 
@@ -351,5 +368,86 @@ test("getBuildingsUnlockedBefore", () => {
       getBuildingsUnlockedBefore(age).forEach((b) => {
          assert.isTrue(Config.TechAge[getBuildingUnlockAge(b)].idx < Config.TechAge[age].idx, b);
       });
+   });
+});
+
+test("getEligibleRank", () => {
+   const user: IUser = {
+      userId: "userId",
+      ip: "ip",
+      handle: "handle",
+      token: null,
+      lastDisconnectAt: 0,
+      lastGameTick: 0,
+      totalPlayTime: 0,
+      flag: "EARTH",
+      color: UserColors.Default,
+      lastHeartbeatAt: Date.now(),
+      level: AccountLevel.Tribune,
+      empireValues: [],
+      tradeValues: [],
+      attr: UserAttributes.None,
+   };
+   assert.equal(getEligibleRank(user), AccountLevel.Tribune);
+
+   user.totalPlayTime = (200 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 200 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Tribune, "need at least Quaestor");
+
+   user.level = AccountLevel.Quaestor;
+   user.totalPlayTime = (200 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 200 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Aedile);
+
+   user.totalPlayTime = (600 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 200 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Aedile);
+
+   user.totalPlayTime = (200 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 600 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Aedile);
+
+   user.totalPlayTime = (200 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 600 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Aedile);
+
+   user.totalPlayTime = (500 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 500 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Praetor);
+
+   user.level = AccountLevel.Praetor;
+   user.totalPlayTime = (200 * HOUR) / SECOND;
+   user.empireValues = [{ value: 0, time: 0, tick: 0, totalGreatPeopleLevel: 200 }];
+   assert.equal(getEligibleRank(user), AccountLevel.Praetor);
+});
+
+test("getTradePercentage", () => {
+   const trade: IAddTradeRequest = {
+      buyAmount: 0,
+      buyResource: "Car",
+      sellAmount: 1000,
+      sellResource: "Train",
+   };
+   const result = getBuyAmountRange(trade, 0.25);
+   trade.buyAmount = result.min;
+   assert.equal(round(getTradePercentage(trade), 2), 0.25);
+   trade.buyAmount = result.max;
+   assert.equal(round(getTradePercentage(trade), 2), -0.25);
+});
+
+test("bytesToBase64", () => {
+   const data = new Uint8Array(1_000_000);
+   for (let i = 0; i < data.length; i++) {
+      data[i] = Math.floor(Math.random() * 256);
+   }
+   console.time("Encode");
+   const base64 = bytesToBase64(data);
+   console.timeEnd("Encode");
+
+   console.time("Decode");
+   const rt = base64ToBytes(base64);
+   console.timeEnd("Decode");
+   rt.forEach((v, i) => {
+      assert.equal(v, data[i]);
    });
 });

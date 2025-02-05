@@ -40,6 +40,7 @@ body.big-old-fashioned-cursor .pointer * {
 body {
    cursor: default;
    user-select: none;
+   -webkit-user-select: none;
    overflow: hidden;
    position: fixed;
    left: 0;
@@ -106,7 +107,7 @@ body {
    align-items: center;
    justify-content: center;
    background: rgba(0, 0, 0, 0.5);
-   z-index: 10;
+   z-index: 200;
 }
 
 #global-modal .window {
@@ -124,7 +125,7 @@ body {
    max-width: 50vw;
    position: absolute;
    top: 50px;
-   z-index: 11;
+   z-index: 201;
 }
 
 body .tippy-box {

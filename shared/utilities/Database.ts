@@ -49,6 +49,8 @@ export interface IWelcomeMessage extends IMessage {
    user: IUser;
    offlineTime: number;
    lastGameTick: number;
+   now: number;
+   platformInfo: IPlatformInfo;
 }
 
 export interface ITrade extends IAddTradeRequest {
@@ -191,6 +193,14 @@ export interface IUser {
    ip: string;
    attr: UserAttributes;
    lastGameId?: string;
+   connectionRequest?: IConnectionRequest;
+   saveOwner?: string;
+   lastCheckInAt?: number;
+}
+
+export interface IConnectionRequest {
+   createdAt: number;
+   passcode: string;
 }
 
 export interface IMapEntry {
@@ -241,6 +251,7 @@ export interface IVotedBoostOption {
 export const DB: {
    chat: IChat[];
    users: Record<string, IUser>;
+   connectedUsers: Record<string, string>;
    trades: Record<string, ITrade>;
    pendingClaims: Record<string, IPendingClaim[]>;
    map: Record<string, IMapEntry>;
@@ -251,6 +262,7 @@ export const DB: {
 } = {
    chat: [],
    users: {},
+   connectedUsers: {},
    trades: {},
    map: {},
    pendingClaims: {},
@@ -288,6 +300,13 @@ export enum AccountLevel {
    Consul = 4,
 }
 
+export enum Platform {
+   None = 0,
+   Steam = 1,
+   iOS = 2,
+   Android = 3,
+}
+
 export const TradeTileReservationDays: Record<AccountLevel, number> = {
    [AccountLevel.Tribune]: 1,
    [AccountLevel.Quaestor]: 7,
@@ -304,9 +323,32 @@ export const ChatMaxChars: Record<AccountLevel, number> = {
    [AccountLevel.Consul]: 800,
 };
 
+export const AccountLevelPlayTime: Record<AccountLevel, number> = {
+   [AccountLevel.Tribune]: 0,
+   [AccountLevel.Quaestor]: 48 * HOUR,
+   [AccountLevel.Aedile]: 200 * HOUR,
+   [AccountLevel.Praetor]: 500 * HOUR,
+   [AccountLevel.Consul]: 1000 * HOUR,
+};
+
+export const AccountLevelGreatPeopleLevel: Record<AccountLevel, number> = {
+   [AccountLevel.Tribune]: 0,
+   [AccountLevel.Quaestor]: 0,
+   [AccountLevel.Aedile]: 200,
+   [AccountLevel.Praetor]: 500,
+   [AccountLevel.Consul]: 1000,
+};
+
 export enum ServerWSErrorCode {
    Ok = 0,
    BadRequest = 3000,
    InvalidTicket = 3001,
    NotAllowed = 3002,
+   Background = 4000,
+}
+
+export interface IPlatformInfo {
+   userId: string;
+   originalUserId: string;
+   connectedUserId: string | null;
 }
