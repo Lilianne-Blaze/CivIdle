@@ -37,7 +37,7 @@ import { TextWithHelp } from "./TextWithHelpComponent";
 import { WarningComponent } from "./WarningComponent";
 import { TitleBarComponent } from "./TitleBarComponent";
 
-import { lilModCli } from "../../../shared/lmc/LilModCli";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 import { ToggleComponent } from "./ToggleComponent";
 
 export function LmcOptionPage(): React.ReactNode {
@@ -69,10 +69,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Enable balanced transports"
                   contentHTML=""
-                  value={lilModCli.isOption("balancedTransports")}
+                  value={lilModCli.isOption(lilModOption.balancedTransports)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("balancedTransports");
+                     lilModCli.toggleOption(lilModOption.balancedTransports);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -80,82 +80,13 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Ignore max distance when building/upgrading"
                   contentHTML=""
-                  value={lilModCli.isOption("ignoreMaxDistanceWhenBuildingOrUpgrading")}
+                  value={lilModCli.isOption(lilModOption.ignoreMaxDistanceWhenBuildingOrUpgrading)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("ignoreMaxDistanceWhenBuildingOrUpgrading");
+                     lilModCli.toggleOption(lilModOption.ignoreMaxDistanceWhenBuildingOrUpgrading);
                      notifyGameOptionsUpdate(options);
                   }}
                />
-            </fieldset>
-
-            <fieldset>
-               <legend>Markets</legend>
-
-               <ToggleComponent
-                  title="Don't sell less for more"
-                  contentHTML=""
-                  value={lilModCli.isOption("marketsDontSellLessForMore")}
-                  onValueChange={(value) => {
-                     playClick();
-                     lilModCli.toggleOption("marketsDontSellLessForMore");
-                     notifyGameOptionsUpdate(options);
-                  }}
-               />
-
-               <ToggleComponent
-                  title="Don't sell at loss"
-                  contentHTML=""
-                  value={lilModCli.isOption("marketsDontSellAtLoss")}
-                  onValueChange={(value) => {
-                     playClick();
-                     lilModCli.toggleOption("marketsDontSellAtLoss");
-                     notifyGameOptionsUpdate(options);
-                  }}
-               />
-
-               <ToggleComponent
-                  title="Manage Food"
-                  contentHTML=""
-                  value={lilModCli.isOption("marketManageFoods")}
-                  onValueChange={(value) => {
-                     playClick();
-                     lilModCli.toggleOption("marketManageFoods");
-                     notifyGameOptionsUpdate(options);
-                  }}
-               />
-
-               <div className="row">
-                  <div className="f1 mr20">
-                     <div>{"Buy if amount lower than"}</div>
-                  </div>
-                  <input
-                     type="text"
-                     style={{ width: 80, textAlign: "right" }}
-                     value={lilModCli.getOption("marketsSellFoodsIfHigher")}
-                     onChange={(e) => {
-                        const eValue = e.target.value.trim();
-                        lilModCli.setOption("marketsSellFoodsIfHigher", eValue);
-                        //notifyGameOptionsUpdate();
-                     }}
-                  />
-               </div>
-
-               <div className="row">
-                  <div className="f1 mr20">
-                     <div>{"Sell if amount higher than"}</div>
-                  </div>
-                  <input
-                     type="text"
-                     style={{ width: 80, textAlign: "right" }}
-                     value={lilModCli.getOption("marketsBuyFoodsIfLower")}
-                     onChange={(e) => {
-                        const eValue = e.target.value.trim();
-                        lilModCli.setOption("marketsBuyFoodsIfLower", eValue);
-                        //notifyGameOptionsUpdate();
-                     }}
-                  />
-               </div>
             </fieldset>
 
             <fieldset>
@@ -164,10 +95,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Keep upgrading lowest level buildings"
                   contentHTML=""
-                  value={lilModCli.isOption("autoUpgradeBuildingsEnabled")}
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsEnabled)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("autoUpgradeBuildingsEnabled");
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsEnabled);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -180,11 +111,11 @@ export function LmcOptionPage(): React.ReactNode {
                      max="100"
                      min="2"
                      style={{ width: "75px" }}
-                     value={lilModCli.getOption("autoUpgradeBuildingsMinCount")}
+                     value={lilModCli.getOption(lilModOption.autoUpgradeBuildingsMinCount)}
                      onChange={(e) => {
                         const parsed = safeParseInt(e.target.value);
                         if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 100) {
-                           lilModCli.setOption("autoUpgradeBuildingsMinCount", parsed);
+                           lilModCli.setOption(lilModOption.autoUpgradeBuildingsMinCount, parsed);
                            notifyGameOptionsUpdate(options);
                         }
                      }}
@@ -199,11 +130,11 @@ export function LmcOptionPage(): React.ReactNode {
                      max="1000"
                      min="2"
                      style={{ width: "75px" }}
-                     value={lilModCli.getOption("autoUpgradeBuildingsOnePerX")}
+                     value={lilModCli.getOption(lilModOption.autoUpgradeBuildingsOnePerX)}
                      onChange={(e) => {
                         const parsed = safeParseInt(e.target.value);
                         if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 1000) {
-                           lilModCli.setOption("autoUpgradeBuildingsOnePerX", parsed);
+                           lilModCli.setOption(lilModOption.autoUpgradeBuildingsOnePerX, parsed);
                            notifyGameOptionsUpdate(options);
                         }
                      }}
@@ -218,11 +149,11 @@ export function LmcOptionPage(): React.ReactNode {
                      max="100"
                      min="2"
                      style={{ width: "75px" }}
-                     value={lilModCli.getOption("autoUpgradeBuildingsMaxLevel")}
+                     value={lilModCli.getOption(lilModOption.autoUpgradeBuildingsMaxLevel)}
                      onChange={(e) => {
                         const parsed = safeParseInt(e.target.value);
                         if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 100) {
-                           lilModCli.setOption("autoUpgradeBuildingsMaxLevel", parsed);
+                           lilModCli.setOption(lilModOption.autoUpgradeBuildingsMaxLevel, parsed);
                            notifyGameOptionsUpdate(options);
                         }
                      }}
@@ -232,10 +163,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Autoupgrade power plants"
                   contentHTML="Keep upgrading power plants. Note this option can cause power outages."
-                  value={lilModCli.isOption("autoUpgradeBuildingsPowerPlants")}
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsPowerPlants)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("autoUpgradeBuildingsPowerPlants");
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsPowerPlants);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -243,10 +174,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Autoupgrade paused buildings"
                   contentHTML=""
-                  value={lilModCli.isOption("autoUpgradeBuildingsPausedBuildings")}
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsPausedBuildings)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("autoUpgradeBuildingsPausedBuildings");
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsPausedBuildings);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -254,10 +185,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Autoupgrade mines with no max level"
                   contentHTML="Keep upgrading mines and other pure producers with no max level."
-                  value={lilModCli.isOption("autoUpgradeBuildingsMinesNoMaxLevel")}
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsMinesNoMaxLevel)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("autoUpgradeBuildingsMinesNoMaxLevel");
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsMinesNoMaxLevel);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -269,10 +200,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Disable spinners"
                   contentHTML="Some UI options will not refresh until you reload the game."
-                  value={lilModCli.isOption("disableSpinners")}
+                  value={lilModCli.isOption(lilModOption.disableSpinners)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("disableSpinners");
+                     lilModCli.toggleOption(lilModOption.disableSpinners);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -283,30 +214,33 @@ export function LmcOptionPage(): React.ReactNode {
 
                <ToggleComponent
                   title="Show coords in city map"
-                  value={lilModCli.isOption("cityMapShowCoords")}
+                  contentHTML=""
+                  value={lilModCli.isOption(lilModOption.cityMapShowCoords)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("cityMapShowCoords");
+                     lilModCli.toggleOption(lilModOption.cityMapShowCoords);
                      notifyGameOptionsUpdate(options);
                   }}
                />
 
                <ToggleComponent
                   title="Show coords in world map"
-                  value={lilModCli.isOption("worldMapShowCoords")}
+                  contentHTML=""
+                  value={lilModCli.isOption(lilModOption.worldMapShowCoords)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("worldMapShowCoords");
+                     lilModCli.toggleOption(lilModOption.worldMapShowCoords);
                      notifyGameOptionsUpdate(options);
                   }}
                />
 
                <ToggleComponent
                   title="Show both EV and % in city map"
-                  value={lilModCli.isOption("cityMapShowBothEvAndPct")}
+                  contentHTML=""
+                  value={lilModCli.isOption(lilModOption.cityMapShowBothEvAndPct)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("cityMapShowBothEvAndPct");
+                     lilModCli.toggleOption(lilModOption.cityMapShowBothEvAndPct);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -318,10 +252,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Always use full import capacity"
                   contentHTML="If some per-cycle imports are set, always use full import capacity proportionally to the per-cycle import settings."
-                  value={lilModCli.isOption("alwaysUseFullImportCapacity")}
+                  value={lilModCli.isOption(lilModOption.alwaysUseFullImportCapacity)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("alwaysUseFullImportCapacity");
+                     lilModCli.toggleOption(lilModOption.alwaysUseFullImportCapacity);
                      notifyGameOptionsUpdate(options);
                   }}
                />
@@ -329,10 +263,10 @@ export function LmcOptionPage(): React.ReactNode {
                <ToggleComponent
                   title="Potato transports v1"
                   contentHTML="EXPERIMENTAL: uses less transports to improve performance. May cause transport delays depending on your stockpile settings."
-                  value={lilModCli.isOption("enablePotatoTransports1")}
+                  value={lilModCli.isOption(lilModOption.enablePotatoTransports1)}
                   onValueChange={(value) => {
                      playClick();
-                     lilModCli.toggleOption("enablePotatoTransports1");
+                     lilModCli.toggleOption(lilModOption.enablePotatoTransports1);
                      notifyGameOptionsUpdate(options);
                   }}
                />

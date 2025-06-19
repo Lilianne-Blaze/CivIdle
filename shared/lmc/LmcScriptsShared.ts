@@ -1,5 +1,8 @@
 
+import mqtt from 'mqtt'
+
 import {
+   atMostOnce,
    atMostOncePerXSecs,
    calcApproxDeltaAdaptive,
    ceilTo,
@@ -22,8 +25,9 @@ import type { GameState } from "../logic/GameState";
 import type { Tech } from "../definitions/TechDefinitions";
 import { getTotalTechUnlockCost } from "../logic/TechLogic";
 import { type GameStateAndOfflineFlagEvent, OnAtBottomOfTickEverySecond } from "./LmcEvents";
-import { BuildingIsPowerPlant, BuildingIsPureProducer, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS } from "./LmcConstsEarly";
+import { BuildingIsPowerPlant, BuildingIsPureProducer, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path } from "./LmcConstsEarly";
 import { getRebirthGreatPeopleCount } from "../logic/RebirthLogic";
+import { IUser } from '../utilities/Database';
 
 const gt = globalThis as any;
 
@@ -299,7 +303,7 @@ export function getUserScriptsPath(userId = getGameOptions().userId, createIfMis
 gt.getUserScriptsPath = getUserScriptsPath;
 
 export function maybePrintLastLongTermBackupName() {
-   if (!isFsLoaded) { return null; }
+   if (!isFsLoaded()) { return null; }
 
    if (!withInitialDelay(30)) {
       return null;
@@ -323,7 +327,11 @@ export function maybePrintLastLongTermBackupName() {
 gt.maybePrintLastLongTermBackupName = maybePrintLastLongTermBackupName;
 
 export function maybeMakeLongTermBackup(everySeconds = 60 * 60 * 6) {
-   if (!isFsLoaded) { return null; }
+   if (!isFsLoaded()) { return null; }
+
+   if (atMostOncePerXSecs("maybeMakeLongTermBackup.preload", 60 * 60)) {
+      getAppDataRoaming();
+   }
 
    if (!withInitialDelay(30)) {
       return null;
@@ -649,5 +657,24 @@ export function getNextGpMilestones(currentGpAtRb = getRebirthGreatPeopleCount()
 
    return result;
 }
+
+// =====
+
+export function isTechUnlocked(tech: string, gs: GameState = getGameState()): boolean {
+   return gs.unlockedTech[tech as keyof typeof Config.Tech] === true;
+}
+gt.isTechUnlocked = isTechUnlocked;
+
+// =====
+
+declare function getUser(): IUser | null;
+
+export function getUserSafe(): IUser | null {
+   if (typeof getUser === "function") {
+      return getUser();
+   }
+   return null;
+}
+gt.getUserSafe = getUserSafe;
 
 // =====

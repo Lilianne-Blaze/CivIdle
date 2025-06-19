@@ -153,7 +153,7 @@ export async function handleChatCommand(command: string): Promise<void> {
       // ===== runUserScript command
 
       case "runUserScript": {
-         if (!isFsLoaded) {
+         if (!isFsLoaded()) {
             addSystemMessage("runUserScript command is not available in this environment");
             break;
          }

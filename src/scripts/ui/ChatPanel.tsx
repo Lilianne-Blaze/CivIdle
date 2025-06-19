@@ -40,6 +40,7 @@ import { showToast } from "./GlobalModal";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { SelectChatChannelModal } from "./SelectChatChannelModal";
 import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
+import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
 
 const SetChatInput = new TypedEvent<{ channel: ChatChannel; getContent: (old: string) => string }>();
 
@@ -165,7 +166,7 @@ function ChatWindow({
             <div className="title-bar-text">{ChatChannels[channel]}</div>
             <div className="title-bar-controls">
                <button aria-label="Minimize" onClick={onMinimize}></button>
-               <button aria-label="Close" onClick={onClose}></button>
+               {/* <button aria-label="Close" onClick={onClose}></button> */}
             </div>
          </div>
          <div
@@ -210,7 +211,18 @@ function ChatInput({
    const [chat, setChat] = useState("");
    const chatInput = useRef<HTMLInputElement>(null);
    const sendChat = () => {
-      if (!chat) return;
+      if (!chat) return; ``
+
+      // LMCBOOKMARK here we intercept and potentially redirect outgoing chat messages
+      const beforeChatSendEvent = new BeforeChatMessageSendEvent(user!, channel, chat);
+      OnBeforeChatMessageSend.emit(beforeChatSendEvent);
+      if (beforeChatSendEvent.blockSending) {
+         //console.debug("Chat message sending blocked by event handler");
+         setChat("");
+         return;
+      }
+
+
       if (chat.startsWith("/")) {
          const command = chat.substring(1);
          addSystemMessage(`$ ${command}`);

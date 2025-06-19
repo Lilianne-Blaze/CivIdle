@@ -3,6 +3,7 @@ import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
 import { UserAttributes } from "../utilities/Database";
 import { hasFlag } from "../utilities/Helper";
+import { isFsLoaded } from "./LmcConstsEarly";
 
 
 const gt = globalThis as any;
@@ -55,6 +56,26 @@ export function getCiSteamId() {
 }
 gt.getCiSteamId = getCiSteamId;
 
+export function getUserId(): string | null {
+   return getGameOptions()?.userId;
+}
+gt.getUserId = getUserId;
+
+export function getUserName() {
+   return getUser().handle;
+}
+gt.getUserName = getUserName;
+
+export function getUserHandle() {
+   return getUser().handle;
+}
+gt.getUserHandle = getUserHandle;
+
+export function getCurrentCity() {
+   return getGameState().city;
+}
+gt.getCurrentCity = getCurrentCity;
+
 export function isValidCiSteamId(str = getCiSteamId()) {
    // Matches steam:<number> where number is 1–20 digits (covers all 64-bit numbers)
    return /^steam:(\d{1,20})$/.test(str);
@@ -70,7 +91,7 @@ gt.getCiSteamIdNumber = getCiSteamIdNumber;
 // =====
 
 export function getProcessEnvAsync(envVarName: string): Promise<string | null> {
-   const script1 = `SteamClient.processEnv("${envVarName}")`;
+   const script1 = `SteamClient.getProcessEnv("${envVarName}")`;
    const prom1 = eval(script1);
    return prom1;
 }
@@ -79,24 +100,30 @@ gt.getProcessEnvAsync = getProcessEnvAsync;
 let appDataRoamingCached: string | null = null;
 
 /**
- * Warning: will be null on first call.
+ * Warning: makes best effort to get the AppDataRoaming path, but in some cases may return null for some early calls.
  */
 export function getAppDataRoaming() {
    if (appDataRoamingCached) {
       return appDataRoamingCached;
    }
+
    try {
-      //   const script1 = `SteamClient.processEnv("AppData")`;
-      //   const prom1 = eval(script1);
-      //   prom1.then((res: any) => {
-      //      appDataRoamingCached = res;
-      //   });
+      const val = process.env["AppData"];
+      appDataRoamingCached = val ?? appDataRoamingCached;
+      console.debug("getAppDataRoaming, using process.env:", appDataRoamingCached);
+   } catch (err) { }
+   if (appDataRoamingCached) {
+      return appDataRoamingCached;
+   }
+
+   try {
       const prom1 = getProcessEnvAsync("AppData");
       prom1.then((res: any) => {
          appDataRoamingCached = res;
+         console.debug("getAppDataRoaming, using getProcessEnvAsync:", appDataRoamingCached);
       });
    } catch (e) {
-      console.error("Failed to get AppDataRoaming:", e);
+      console.error("Failed to get AppDataRoaming (are we running in a browser?):", e);
    }
    return appDataRoamingCached;
 }

@@ -5,6 +5,7 @@ import path from "node:path";
 import { IPCService } from "./IPCService";
 
 const gt = globalThis as any;
+gt.electronApp = app;
 
 export type SteamClient = Omit<Client, "init" | "runCallbacks">;
 
@@ -47,6 +48,11 @@ const createWindow = async () => {
             preload: path.join(__dirname, "preload.js"),
             devTools: !app.isPackaged,
             backgroundThrottling: false,
+
+            // LBCBOOKMARK
+            nodeIntegration: true,
+            contextIsolation: false,
+
          },
          minHeight: MIN_HEIGHT,
          minWidth: MIN_WIDTH,

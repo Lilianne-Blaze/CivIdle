@@ -50,12 +50,25 @@ let user: IUser | null = null;
 let platformInfo: IPlatformInfo | null = null;
 
 export const OnUserChanged = new TypedEvent<IUser | null>();
+gt.OnUserChanged = OnUserChanged;
+
 export const OnPlatformInfoChanged = new TypedEvent<IPlatformInfo | null>();
+gt.OnPlatformInfoChanged = OnPlatformInfoChanged;
+
 export const OnChatMessage = new TypedEvent<LocalChat[]>();
+gt.OnChatMessage = OnChatMessage;
+
 export const OnTradeChanged = new TypedEvent<IClientTrade[]>();
+gt.OnTradeChanged = OnTradeChanged;
+
 export const OnPlayerMapChanged = new TypedEvent<Map<string, IClientMapEntry>>();
+gt.OnPlayerMapChanged = OnPlayerMapChanged;
+
 export const OnPlayerMapMessage = new TypedEvent<IMapMessage>();
+gt.OnPlayerMapMessage = OnPlayerMapMessage;
+
 export const OnNewPendingClaims = new TypedEvent<void>();
+gt.OnNewPendingClaims = OnNewPendingClaims;
 
 export interface PlayGamesPlugin {
    requestServerSideAccess: (opt: { clientId: string }) => Promise<{ serverAuthToken: string }>;

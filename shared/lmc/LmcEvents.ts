@@ -3,6 +3,7 @@
 // LmcEvents.ts
 
 import type { GameState } from "../logic/GameState";
+import { ChatChannel, IUser } from "../utilities/Database";
 import { TypedEvent } from "../utilities/TypedEvent";
 
 const gt = globalThis as any;
@@ -49,6 +50,8 @@ gt.OnAtEndOfSetCityOverride = OnAtEndOfSetCityOverride;
 export const OnAfterWelcomeMessageProcessed = new TypedEvent();
 gt.OnAfterWelcomeMessageProcessed = OnAfterWelcomeMessageProcessed;
 
+// -----
+
 export type UserIdChangedEvent = {
    prevUserId: string | null;
    newUserId: string | null;
@@ -57,8 +60,25 @@ export type UserIdChangedEvent = {
 export const OnUserIdChanged = new TypedEvent<UserIdChangedEvent>();
 gt.OnUserIdChanged = OnUserIdChanged;
 
+// -----
+
 export const OnAtEndOfClearIntraTickCache = new TypedEvent();
 gt.OnAtEndOfClearIntraTickCache = OnAtEndOfClearIntraTickCache;
+
+// -----
+
+export class BeforeChatMessageSendEvent {
+   constructor(
+      public user: IUser,
+      public channel: ChatChannel,
+      public chat: string,
+      public timeMillis: number = Date.now(),
+      public blockSending = false,
+   ) { }
+}
+
+export const OnBeforeChatMessageSend = new TypedEvent<BeforeChatMessageSendEvent>();
+gt.OnBeforeChatMessageSend = OnBeforeChatMessageSend;
 
 // LmcEvents.ts
 // ===== ===== =====

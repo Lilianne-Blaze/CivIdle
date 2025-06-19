@@ -50,6 +50,12 @@ import { GameTicker } from "./utilities/GameTicker";
 import { SceneManager } from "./utilities/SceneManager";
 import { Singleton, initializeSingletons, type RouteTo } from "./utilities/Singleton";
 import { playError } from "./visuals/Sound";
+import { ensureLmcUserScriptsLoaded } from "../../shared/lmc/LmcUserScripts";
+import { ensureLmcMqttLoaded } from "../../shared/lmc/LmcMqtt";
+import { ensureLmcChatLoaded } from "../../shared/lmc/LmcChat";
+
+const gt = globalThis as any;
+(globalThis as any).temp = (globalThis as any).temp + Math.random();
 
 export async function startGame(
    app: Application,
@@ -59,6 +65,12 @@ export async function startGame(
 ) {
    const routeTo: RouteTo = (component, params) => routeChanged.emit({ component, params });
    console.log("CivIdle version:", getFullVersion());
+
+   // LMCBOOKMARK preloading scripts
+   ensureLmcUserScriptsLoaded();
+   ensureLmcMqttLoaded();
+   ensureLmcChatLoaded();
+
    // ========== Load game data ==========
    routeTo(LoadingPage, { stage: LoadingPageStage.LoadSave });
 

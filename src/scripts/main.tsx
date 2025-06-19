@@ -29,14 +29,14 @@ import { GlobalModal, GlobalToast } from "./ui/GlobalModal";
 import { ResourcePanel } from "./ui/ResourcePanel";
 import { Fonts } from "./visuals/Fonts";
 
-if (!import.meta.env.DEV) {
-   Sentry.init({
-      dsn: "https://dc918a4ab59f404688ab61ea803de8c0@bugreport.fishpondstudio.com/1",
-      release: `Build.${build}`,
-      autoSessionTracking: false,
-      integrations: [Sentry.captureConsoleIntegration({ levels: ["warn", "error", "assert"] })],
-   });
-}
+// if (!import.meta.env.DEV) {
+//    Sentry.init({
+//       dsn: "https://dc918a4ab59f404688ab61ea803de8c0@bugreport.fishpondstudio.com/1",
+//       release: `Build.${build}`,
+//       autoSessionTracking: false,
+//       integrations: [Sentry.captureConsoleIntegration({ levels: ["warn", "error", "assert"] })],
+//    });
+// }
 
 const routeChanged = new TypedEvent<RouteChangeEvent>();
 createRoot(document.getElementById("game-ui")!).render(<Route event={routeChanged} />);
@@ -111,13 +111,13 @@ export async function loadBundle() {
             },
             f.family === Fonts.Cabin
                ? {
-                    dropShadow: true,
-                    dropShadowAlpha: 0.75,
-                    dropShadowColor: "#000000",
-                    dropShadowAngle: Math.PI / 6,
-                    dropShadowBlur: 0,
-                    dropShadowDistance: 3,
-                 }
+                  dropShadow: true,
+                  dropShadowAlpha: 0.75,
+                  dropShadowColor: "#000000",
+                  dropShadowAngle: Math.PI / 6,
+                  dropShadowBlur: 0,
+                  dropShadowDistance: 3,
+               }
                : {},
          ),
          { chars: BitmapFont.ASCII, resolution: 2, padding: 8 },

@@ -513,3 +513,76 @@ export function floorTo(x: number, step: number): number {
 gt.ceilTo = ceilTo;
 
 // =====
+
+// Usage:
+// sha1Hex("test123").then(console.log);  // e4c9b206a5ed0eb2df394d63b5a6e90c1e6e1879
+export async function sha1Hex(input: any): Promise<string> {
+   // Convert input string to a Uint8Array
+   const encoder = new TextEncoder();
+   const data = encoder.encode(input);
+
+   // Perform the digest
+   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+
+   // Convert ArrayBuffer to hex string
+   const hashArray = Array.from(new Uint8Array(hashBuffer));
+   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+   return hashHex;
+}
+gt.sha1Hex = sha1Hex;
+
+// =====
+
+export function copyMissingProps(fromObj: { [key: string | number | symbol]: any }, toObj: { [key: string | number | symbol]: any }) {
+   for (const key of Object.keys(fromObj)) {
+      if (!(key in toObj)) {
+         toObj[key] = fromObj[key];
+      }
+   }
+}
+gt.copyMissingProps = copyMissingProps;
+
+// =====
+
+export function newTimedGuid48(timeMillis = Date.now()) {
+   let timeHex = timeMillis.toString(16).padStart(16, '0').slice(-16);
+   let uuidHex = crypto.randomUUID().replace(/-/g, '');
+   return timeHex + uuidHex;
+}
+gt.newTimedGuid48 = newTimedGuid48;
+
+/**
+ * Splits a timed GUID (created by newTimedGuid48) into its timestamp (as a number)
+ * and UUID (in standard 8-4-4-4-12 notation).
+ */
+export function splitTimedGuid48(timedGuid: string): { timeMillis: number; uuid: string } {
+   const timeHex = timedGuid.slice(0, 16);
+   const uuidHex = timedGuid.slice(16, 48);
+
+   // Format UUID hex into standard UUID notation: 8-4-4-4-12
+   const uuid = [
+      uuidHex.slice(0, 8),
+      uuidHex.slice(8, 12),
+      uuidHex.slice(12, 16),
+      uuidHex.slice(16, 20),
+      uuidHex.slice(20, 32)
+   ].join('-');
+
+   const timeMillis = parseInt(timeHex, 16);
+
+   return { timeMillis, uuid };
+}
+gt.splitTimedGuid48 = splitTimedGuid48;
+
+/**
+ * Merges a timestamp (as number) and a UUID (in standard notation) into a timed GUID.
+ */
+export function mergeTimedGuid48(timeMillis: number, uuid: string): string {
+   const timeHex = timeMillis.toString(16).padStart(16, '0').slice(-16);
+   const uuidHex = uuid.replace(/-/g, '');
+   return timeHex + uuidHex;
+}
+gt.mergeTimedGuid48 = mergeTimedGuid48;
+
+// =====
+

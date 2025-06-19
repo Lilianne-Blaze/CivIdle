@@ -27,6 +27,7 @@ import { TutorialPage } from "./TutorialPage";
 import { LmcOptionPage } from "./LmcOptionPage";
 import { LmcTradeOptionPage } from "./LmcTradeOptionPage";
 import { LmcDebugOptionPage } from "./LmcDebugOptionPage";
+import { LmcMultiplayerOptionPage } from "./LmcMultiplayerOptionPage";
 
 type MenuItemOptions = "view" | "options" | "help" | null;
 
@@ -181,6 +182,7 @@ export function MenuComponent(): React.ReactNode {
                   >
                      <MenuItem check={false}>{t(L.Gameplay)}</MenuItem>
                   </div>
+                  { /* ===== */}
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
@@ -202,11 +204,21 @@ export function MenuComponent(): React.ReactNode {
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
+                        Singleton().routeTo(LmcMultiplayerOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, multiplayer</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
                         Singleton().routeTo(LmcDebugOptionPage, {});
                      }}
                   >
                      <MenuItem check={false}>Modded client, debug</MenuItem>
                   </div>
+                  { /* ===== */}
 
                   <div
                      className="menu-popover-item"
