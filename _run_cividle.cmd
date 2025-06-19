@@ -1,0 +1,1 @@
+electron\out\cividle-win32-x64\cividle.exe

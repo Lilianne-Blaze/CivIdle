@@ -9,6 +9,8 @@
       "build": "tsc",
       "start": "npm run build && electron-forge start -- --in-process-gpu --disable-direct-composition",
       "package": "npm run clean && npm run build && electron-forge package",
+      "build-only": "npm run build",
+      "package-only": "electron-forge package",
       "make": "npm run build && electron-forge make",
       "publish": "npm run build && electron-forge publish",
       "lint": "echo \"No linting configured\""
