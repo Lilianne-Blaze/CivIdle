@@ -1,0 +1,24 @@
+
+import { L, t } from "../../../shared/utilities/i18n";
+import { useGameOptions, useGameState } from "../Global";
+import { MenuComponent } from "./MenuComponent";
+import { TitleBarComponent } from "./TitleBarComponent";
+
+export function LmcDebugOptionPage(): React.ReactNode {
+   const options = useGameOptions();
+   const gs = useGameState();
+   return (
+      <div className="window">
+         <TitleBarComponent>{t(L.Gameplay)}</TitleBarComponent>
+         <MenuComponent />
+         <div className="window-body">
+            <fieldset>
+               <legend>Debug options</legend>
+
+            </fieldset>
+         </div>
+      </div>
+   );
+}
+
+// =====

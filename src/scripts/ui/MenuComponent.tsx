@@ -24,6 +24,10 @@ import { ShortcutPage } from "./ShortcutPage";
 import { ThemePage } from "./ThemePage";
 import { TutorialPage } from "./TutorialPage";
 
+import { LmcOptionPage } from "./LmcOptionPage";
+import { LmcTradeOptionPage } from "./LmcTradeOptionPage";
+import { LmcDebugOptionPage } from "./LmcDebugOptionPage";
+
 type MenuItemOptions = "view" | "options" | "help" | null;
 
 function MenuButton({ name }: { name: string }): React.ReactNode {
@@ -180,11 +184,39 @@ export function MenuComponent(): React.ReactNode {
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
+                        Singleton().routeTo(LmcOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcTradeOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, trade</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcDebugOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, debug</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
                         Singleton().routeTo(ThemePage, {});
                      }}
                   >
                      <MenuItem check={false}>{t(L.Theme)}</MenuItem>
                   </div>
+
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
@@ -292,9 +324,9 @@ export function MenuComponent(): React.ReactNode {
                      </div>
                   ) : null}
                   {isSteam() &&
-                  user &&
-                  !isNullOrUndefined(platformInfo?.connectedUserId) &&
-                  isSaveOwner(platformInfo, user) ? (
+                     user &&
+                     !isNullOrUndefined(platformInfo?.connectedUserId) &&
+                     isSaveOwner(platformInfo, user) ? (
                      <div
                         className="menu-popover-item"
                         onPointerDown={async () => {

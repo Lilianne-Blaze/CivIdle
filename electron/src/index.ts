@@ -4,13 +4,20 @@ import { existsSync, renameSync } from "node:fs";
 import path from "node:path";
 import { IPCService } from "./IPCService";
 
+const gt = globalThis as any;
+
 export type SteamClient = Omit<Client, "init" | "runCallbacks">;
 
 app.commandLine.appendSwitch("enable-logging", "file");
 
 const logPath = path.join(getLocalGameSavePath(), "CivIdle.log");
 if (existsSync(logPath)) {
-   renameSync(logPath, path.join(getLocalGameSavePath(), "CivIdle-prev.log"));
+   //renameSync(logPath, path.join(getLocalGameSavePath(), "CivIdle-prev.log"));
+
+   // LMCBOOKMARK
+   const cem = getCurrentEpochMillis();
+   const fs = epochToFilestamp(cem);
+   renameSync(logPath, path.join(getLocalGameSavePath(), `CivIdle-${fs}.log`));
 }
 
 app.commandLine.appendSwitch("log-file", logPath);
@@ -24,8 +31,10 @@ export function getLocalGameSavePath(): string {
    return path.join(app.getPath("appData"), "CivIdleLocal");
 }
 
-export const MIN_WIDTH = 1136;
-export const MIN_HEIGHT = 640;
+// export const MIN_WIDTH = 1136;
+// export const MIN_HEIGHT = 640;
+export const MIN_WIDTH = 640;
+export const MIN_HEIGHT = 480;
 
 const disableFloatingMode = !app.isPackaged || process.argv.includes("--disable-floating-mode");
 // const enableDevTools = process.argv.includes("--enable-dev-tools");
@@ -107,3 +116,15 @@ app.on("window-all-closed", () => {
 function quit() {
    app.quit();
 }
+
+// LMCBOOKMARK
+function getCurrentEpochMillis(): number {
+   return Date.now();
+}
+
+function epochToFilestamp(epochMillis: number): string {
+   const date = new Date(epochMillis);
+   return date.toISOString().replace(/[-:.]/g, '').slice(0, -4) + 'Z';
+}
+
+

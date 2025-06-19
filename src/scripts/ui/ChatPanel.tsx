@@ -283,7 +283,7 @@ function ChatMessage({
             "is-even": chat.id % 2 === 0,
             "mentions-me": user
                ? chat.message.toLowerCase().includes(`@${user.handle.toLowerCase()} `) ||
-                 hasFlag(chat.attr, ChatAttributes.Announce)
+               hasFlag(chat.attr, ChatAttributes.Announce)
                : false,
          })}
       >

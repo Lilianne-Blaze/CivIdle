@@ -2,6 +2,8 @@ import type { Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
+import { lilModCli } from "../lmc/LilModCli";
+import { checkMarketTrade } from "../lmc/LmcMarkets";
 import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
 import {
@@ -99,6 +101,12 @@ import {
    type IWarehouseBuildingData,
 } from "./Tile";
 
+export const UPDATE_MULTIS = {
+   grandBazaarRange: 1,
+   marketRefreshPeriod: 1,
+};
+globalThis.UPDATE_MULTIS = UPDATE_MULTIS;
+
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
 export const OnBuildingOrUpgradeComplete = new TypedEvent<Tile>();
@@ -187,6 +195,11 @@ function tickTransportation(transport: ITransportationDataV2, grid: Grid, mah: I
 
 // This needs to be called after tickTiles
 export function tickPower(gs: GameState): void {
+
+   // powerPlants - buildings actively producing power
+   // powerGrid - tiles that are powered
+   // powerBuildings - buildings that require power and are currently powered
+
    const grid = getGrid(gs);
    console.assert(Tick.next.powerGrid.size === 0);
 
@@ -338,6 +351,15 @@ export function transportAndConsumeResources(
    }
 
    if (building.status === "building" || building.status === "upgrading") {
+
+      // make buildings 30+ level pass power
+      if (building.status === "upgrading") {
+         const requiresPower = Config.Building[building.type].power;
+         if (requiresPower && building.level >= 30) {
+            Tick.next.powerBuildings.add(xy);
+         }
+      }
+
       const cost = getBuildingCost(building);
       const maxCost = getTotalBuildingCost(building, building.level, building.desiredLevel);
       const { total } = getBuilderCapacity(building, xy, gs);
@@ -563,10 +585,35 @@ export function transportAndConsumeResources(
             Tick.next.notProducingReasons.set(xy, NotProducingReason.StorageFull);
             return;
          }
-         safeAdd(building.resources, sellResource, -sellAmount);
-         result.push({ xy, resource: buyResource, amount: buyAmount });
-         // safeAdd(building.resources, buyResource, buyAmount);
-         totalBought += buyAmount;
+
+         const sellValue = Config.ResourcePrice[sellResource] * sellAmount;
+         const buyValue = Config.ResourcePrice[buyResource] * buyAmount;
+         const tradeValue = buyValue / sellValue;
+         const amountRatio = buyAmount / sellAmount;
+         const params = {
+            sellResource,
+            buyResource,
+            sellAmount,
+            buyAmount,
+            sellValue,
+            buyValue,
+            tradeValue,
+            amountRatio,
+            xy,
+            gs,
+            checkType: "trade",
+         };
+
+         // is it needed after adding import filtering? needs more testing
+         // const allowTrade = checkMarketTrade(params);
+         const allowTrade = true;
+
+         if (allowTrade) {
+            safeAdd(building.resources, sellResource, -sellAmount);
+            result.push({ xy, resource: buyResource, amount: buyAmount });
+            // safeAdd(building.resources, buyResource, buyAmount);
+            totalBought += buyAmount;
+         }
       });
       if (totalBought > 0) {
          RequestFloater.emit({ xy, amount: totalBought });
@@ -970,11 +1017,11 @@ export function addMultiplier(k: Building, multiplier: MultiplierWithStability, 
 }
 
 function getPriceId() {
-   return Math.floor(Date.now() / HOUR);
+   return Math.floor(Date.now() / (HOUR * UPDATE_MULTIS.marketRefreshPeriod));
 }
 
 export function convertPriceIdToTime(priceId: number) {
-   return priceId * HOUR;
+   return priceId * (HOUR * UPDATE_MULTIS.marketRefreshPeriod);
 }
 
 export function tickPrice(gs: GameState) {
@@ -996,7 +1043,8 @@ export function tickPrice(gs: GameState) {
       const market = building as IMarketBuildingData;
       if (forceUpdatePrice || sizeOf(market.availableResources) === 0) {
          const nextToGrandBazaar =
-            grandBazaar?.building.status === "completed" && grid.distanceTile(grandBazaar.tile, xy) <= 1;
+            grandBazaar?.building.status === "completed" &&
+            grid.distanceTile(grandBazaar.tile, xy) <= 1 * UPDATE_MULTIS.grandBazaarRange;
          const seed = nextToGrandBazaar ? `${priceId},${xy}` : `${priceId}`;
          const buy = shuffle(keysOf(resources), srand(seed));
          const sell = shuffle(keysOf(resources), srand(seed));

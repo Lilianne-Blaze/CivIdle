@@ -25,6 +25,10 @@ import {
    uuid4,
 } from "../../../shared/utilities/Helper";
 import { compressSave, decompressSave, overwriteSaveGame, resetToCity, saveGame } from "../Global";
+import { decodeTextFromBase64, isValidBase64EncodedData } from "../../../shared/lmc/LmcCodecs";
+import { fs, isFsLoaded, LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER, LMC_VER_NOTE } from "../../../shared/lmc/LmcConstsEarly";
+import { lmcMapsDebug } from "../../../shared/lmc/LmcMaps";
+import { getUserScriptsPath } from "../../../shared/lmc/LmcScriptsShared";
 import {
    addSystemMessage,
    canEarnGreatPeopleFromReborn,
@@ -50,9 +54,126 @@ function requireDevelopment(): void {
    }
 }
 
+function eval2(arg: string): any {
+   // biome-ignore lint/security/noGlobalEval: <explanation>
+   // biome-ignore lint/style/noCommaOperator: <explanation>
+   return (0, eval)(arg);
+}
+
 export async function handleChatCommand(command: string): Promise<void> {
    const parts = command.split(" ");
    switch (parts[0]) {
+
+      // ===== ===== =====
+      // ===== ver commands
+      case "modVer":
+      case "modver": {
+         addSystemMessage(
+            `LMC Version: ${LMC_MAJOR_VER}.${LMC_MINOR_VER} for build (${LMC_FOR_BUILD}), note: ${LMC_VER_NOTE}`);
+         break;
+      }
+
+      // ===== ver commands
+      // ===== ===== =====
+
+      // ===== ===== =====
+      // ===== debug/testing commands
+
+      case "eval":
+      case "e": {
+         const restOfLine = parts.slice(1).join(" ");
+         const output = eval2(restOfLine);
+         addSystemMessage(`> ${output}`);
+         break;
+      }
+      case "evalPromise":
+      case "ep": {
+         const restOfLine = parts.slice(1).join(" ");
+         const output = eval2(restOfLine);
+         if (output instanceof Promise) {
+            addSystemMessage("Evaluated a promise, waiting for it to resolve...");
+            output.then((result) => {
+               addSystemMessage(`> ${result}`);
+            });
+         } else {
+            addSystemMessage(`> ${output}`);
+         }
+         break;
+      }
+      case "evalBase64":
+      case "eb": {
+         const inputBase64 = parts[1];
+         if (!isValidBase64EncodedData(inputBase64)) {
+            addSystemMessage("Invalid Base64 input");
+            return;
+         }
+         const inputText = decodeTextFromBase64(inputBase64);
+         const outputText = eval2(inputText);
+         addSystemMessage(`> ${outputText}`);
+         break;
+      }
+
+      case "listFuncs": {
+         const name = parts[1];
+         const line = `Object.keys(${name}).filter(k => typeof ${name}[k] === 'function')`;
+         const output = eval2(line);
+         addSystemMessage(`> ${output}`);
+         break;
+      }
+      case "listVars": {
+         const name = parts[1];
+         const line = `Object.keys(${name}).filter(k => typeof ${name}[k] !== 'function')`;
+         const output = eval2(line);
+         addSystemMessage(`> ${output}`);
+         break;
+      }
+
+      case "typeOf":
+      case "to": {
+         const restOfLine = parts.slice(1).join(" ");
+         const line = `typeof ${restOfLine}`;
+         const output = eval2(line);
+         addSystemMessage(`> ${output}`);
+         break;
+      }
+
+      case "jsonStringify":
+      case "js": {
+         const restOfLine = parts.slice(1).join(" ");
+         const line = `JSON.stringify(${restOfLine})`;
+         const output = eval2(line);
+         addSystemMessage(`> ${output}`);
+         break;
+      }
+
+      // ===== debug/testing commands
+      // ===== ===== =====
+
+      // ===== ===== =====
+      // ===== runUserScript command
+
+      case "runUserScript": {
+         if (!isFsLoaded) {
+            addSystemMessage("runUserScript command is not available in this environment");
+            break;
+         }
+         const scriptName = parts[1];
+         addSystemMessage(`Trying to load and run user script ${scriptName}...`);
+         try {
+            const path = getUserScriptsPath();
+            const scriptPath = `${path}/${scriptName}.js`;
+            const txt = fs.readFileSync(scriptPath, "utf8");
+            const result = eval2(txt);
+            addSystemMessage(`Return value: ${result}`);
+         } catch (err) {
+            addSystemMessage(`Error: ${err}`);
+         }
+         break;
+      }
+
+      // ===== runUserScript command
+      // ===== ===== =====
+
       case "timetravel": {
          requireOfflineRun();
          const time = clamp(safeParseInt(parts[1], 30), 0, 60 * 4);

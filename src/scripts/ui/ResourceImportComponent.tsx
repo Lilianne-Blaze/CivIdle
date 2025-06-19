@@ -223,6 +223,22 @@ export function ResourceImportComponent({ gameState, xy }: IBuildingComponentPro
             >
                {t(L.RedistributeAmongSelectedCap)}
             </div>
+            <div
+               className="text-link ml10"
+               onClick={() => {
+                  const amount = 1e15; // 1 Qa
+                  selected.forEach((res) => {
+                     if (building.resourceImports[res]) {
+                        building.resourceImports[res]!.cap = amount;
+                     } else {
+                        building.resourceImports[res] = { perCycle: 0, cap: amount };
+                     }
+                  });
+                  notifyGameStateUpdate();
+               }}
+            >
+               {"MaxCap"}
+            </div>{" "}
          </div>
          <div className="sep5"></div>
          <div className="row text-small">

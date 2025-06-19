@@ -3,16 +3,31 @@ import { safeAdd } from "../utilities/Helper";
 import { TypedEvent } from "../utilities/TypedEvent";
 import { SavedGame, type GameOptions, type GameState } from "./GameState";
 
+const gt = globalThis as any;
+
 export const savedGame = new SavedGame();
+gt.savedGame = savedGame;
+
 export const TILE_SIZE = 64;
+gt.TILE_SIZE = TILE_SIZE;
+
 export const GameStateChanged = new TypedEvent<GameState>();
+gt.GameStateChanged = GameStateChanged;
+
+
 export const GameOptionsChanged = new TypedEvent<GameOptions>();
+gt.GameOptionsChanged = GameOptionsChanged;
+
 export function getGameState(): GameState {
    return savedGame.current;
 }
+gt.getGameState = getGameState;
+
 export function getGameOptions(): GameOptions {
    return savedGame.options;
 }
+gt.getGameOptions = getGameOptions;
+
 export function serializeSave(save: SavedGame = savedGame): string {
    const transportation = save.current.transportationV2;
    save.current.transportationV2 = [];
@@ -31,6 +46,8 @@ export function serializeSave(save: SavedGame = savedGame): string {
    cloned.options.checksum = checksum;
    return JSON.stringify(cloned, replacer);
 }
+gt.serializeSave = serializeSave;
+
 export function serializeSaveLite(gs: SavedGame = savedGame): Uint8Array {
    const transportation = gs.current.transportationV2;
    gs.current.transportationV2 = [];
@@ -39,7 +56,11 @@ export function serializeSaveLite(gs: SavedGame = savedGame): Uint8Array {
    const result = new TextEncoder().encode(json);
    return result;
 }
+gt.serializeSaveLite = serializeSaveLite;
+
 export const checksum = { expected: "", actual: "" };
+gt.checksum = checksum;
+
 export function deserializeSave(str: string): SavedGame {
    const saveGame = JSON.parse(str, reviver) as SavedGame;
    const expected = saveGame.options.checksum;
@@ -55,12 +76,18 @@ export function deserializeSave(str: string): SavedGame {
    }
    return saveGame;
 }
+gt.deserializeSave = deserializeSave;
+
 export function notifyGameStateUpdate(gameState?: GameState): void {
    GameStateChanged.emit(gameState ?? getGameState());
 }
+gt.notifyGameStateUpdate = notifyGameStateUpdate;
+
 export function notifyGameOptionsUpdate(gameOptions?: GameOptions): void {
    GameOptionsChanged.emit(gameOptions ?? getGameOptions());
 }
+gt.notifyGameOptionsUpdate = notifyGameOptionsUpdate;
+
 export function watchGameState(cb: (gs: GameState) => void): () => void {
    cb(getGameState());
    function handleGameStateChanged(gs: GameState) {
@@ -71,6 +98,8 @@ export function watchGameState(cb: (gs: GameState) => void): () => void {
       GameStateChanged.off(handleGameStateChanged);
    };
 }
+gt.watchGameState = watchGameState;
+
 export function watchGameOptions(cb: (gameOptions: GameOptions) => void): () => void {
    cb(getGameOptions());
    function handleGameOptionsChanged(gameOptions: GameOptions) {
@@ -81,6 +110,8 @@ export function watchGameOptions(cb: (gameOptions: GameOptions) => void): () => 
       GameOptionsChanged.off(handleGameOptionsChanged);
    };
 }
+gt.watchGameOptions = watchGameOptions;
+
 export function replacer(key: string, value: any): any {
    if (value instanceof Map) {
       return {
@@ -96,6 +127,9 @@ export function replacer(key: string, value: any): any {
    }
    return value;
 }
+gt.replacer = replacer;
+gt.jsonReplacer = replacer;
+
 export function reviver(key: string, value: any): any {
    if (typeof value === "object" && value !== null) {
       if (value.$type === "Map") {
@@ -107,3 +141,5 @@ export function reviver(key: string, value: any): any {
    }
    return value;
 }
+gt.reviver = reviver;
+gt.jsonReviver = reviver;

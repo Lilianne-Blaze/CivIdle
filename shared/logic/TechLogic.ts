@@ -20,6 +20,8 @@ import { Tick } from "./TickLogic";
 import { getDepositTileCount } from "./Tile";
 import { OnTechUnlocked } from "./Update";
 
+const gt = globalThis as any;
+
 export function getTechUnlockCost(tech: Tech): number {
    const a = getAgeForTech(tech);
    let ageIdx = 0;
@@ -29,6 +31,7 @@ export function getTechUnlockCost(tech: Tech): number {
    }
    return Math.pow(5, ageIdx) * Math.pow(1.5, Config.Tech[tech].column) * 5000;
 }
+gt.getTechUnlockCost = getTechUnlockCost;
 
 export function getTotalTechUnlockCost(tech: Tech, gs: GameState) {
    const prerequisites: Tech[] = [];
@@ -42,10 +45,12 @@ export function getTotalTechUnlockCost(tech: Tech, gs: GameState) {
    prerequisites.sort((a, b) => Config.Tech[a].column - Config.Tech[b].column);
    return { prerequisites, totalScience };
 }
+gt.getTotalTechUnlockCost = getTotalTechUnlockCost;
 
 export function getScienceAmount(gs: GameState): number {
    return Tick.current.specialBuildings.get("Headquarter")?.building.resources.Science ?? 0;
 }
+gt.getScienceAmount = getScienceAmount;
 
 export function tryDeductScience(amount: number, gs: GameState): boolean {
    const storage = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
@@ -56,6 +61,7 @@ export function tryDeductScience(amount: number, gs: GameState): boolean {
    }
    return false;
 }
+gt.tryDeductScience = tryDeductScience;
 
 export function getMostAdvancedTech(gs: GameState): Tech | null {
    let column = 0;
@@ -68,6 +74,7 @@ export function getMostAdvancedTech(gs: GameState): Tech | null {
    });
    return tech;
 }
+gt.getMostAdvancedTech = getMostAdvancedTech;
 
 export function getUnlockedTechAges(gs: GameState): Set<TechAge> {
    const result = new Set<TechAge>();
@@ -82,6 +89,7 @@ export function getUnlockedTechAges(gs: GameState): Set<TechAge> {
    });
    return result;
 }
+gt.getUnlockedTechAges = getUnlockedTechAges;
 
 export function getBuildingUnlockTech(building: Building): Tech {
    const tech = Config.BuildingTech[building];
@@ -94,6 +102,7 @@ export function getBuildingUnlockTech(building: Building): Tech {
    }
    throw new Error(`Cannot find tech for building: ${building}`);
 }
+gt.getBuildingUnlockTech = getBuildingUnlockTech;
 
 export function getBuildingUnlockAge(building: Building): TechAge {
    const age = Config.BuildingTechAge[building];
@@ -103,6 +112,7 @@ export function getBuildingUnlockAge(building: Building): TechAge {
    if (tech) return getAgeForTech(tech);
    throw new Error(`Cannot find age for building: ${building}`);
 }
+gt.getBuildingUnlockAge = getBuildingUnlockAge;
 
 export function getCurrentAge(gs: GameState): TechAge {
    const tech = getMostAdvancedTech(gs);
@@ -111,6 +121,7 @@ export function getCurrentAge(gs: GameState): TechAge {
    }
    return getAgeForTech(tech);
 }
+gt.getCurrentAge = getCurrentAge;
 
 export function isAgeUnlocked(age: TechAge, gs: GameState): boolean {
    const tech = getMostAdvancedTech(gs);
@@ -119,6 +130,7 @@ export function isAgeUnlocked(age: TechAge, gs: GameState): boolean {
    }
    return Config.Tech[tech].column >= Config.TechAge[age].from;
 }
+gt.isAgeUnlocked = isAgeUnlocked;
 
 export function getAgeForTech(tech: Tech): TechAge {
    const techColumn = Config.Tech[tech].column;
@@ -131,6 +143,7 @@ export function getAgeForTech(tech: Tech): TechAge {
    }
    throw new Error(`Cannot find age for tech: ${tech}`);
 }
+gt.getAgeForTech = getAgeForTech;
 
 export function getNextAge(age: TechAge): TechAge | null {
    const idx = Config.TechAge[age].idx + 1;
@@ -141,6 +154,7 @@ export function getNextAge(age: TechAge): TechAge | null {
    }
    return null;
 }
+gt.getNextAge = getNextAge;
 
 export function isAllTechUnlocked(age: TechAge, gs: GameState): boolean {
    const from = Config.TechAge[age].from;
@@ -153,6 +167,7 @@ export function isAllTechUnlocked(age: TechAge, gs: GameState): boolean {
    }
    return true;
 }
+gt.isAllTechUnlocked = isAllTechUnlocked;
 
 export function unlockTech(tech: Tech, dispatchEvent: boolean, gs: GameState): void {
    if (gs.unlockedTech[tech]) {
@@ -201,8 +216,10 @@ export function unlockTech(tech: Tech, dispatchEvent: boolean, gs: GameState): v
    }
    OnTechUnlocked.emit(tech);
 }
+gt.unlockTech = unlockTech;
 
 export const RequestResetTile = new TypedEvent<Tile>();
+gt.RequestResetTile = RequestResetTile;
 
 export function addDeposit(xy: Tile, deposit: Deposit, dispatchEvent: boolean, gs: GameState): void {
    const tile = gs.tiles.get(xy);
@@ -213,6 +230,7 @@ export function addDeposit(xy: Tile, deposit: Deposit, dispatchEvent: boolean, g
       }
    }
 }
+gt.addDeposit = addDeposit;
 
 export function unlockableTechs(gs: GameState): Tech[] {
    const result: Tech[] = [];
@@ -226,10 +244,12 @@ export function unlockableTechs(gs: GameState): Tech[] {
    });
    return result;
 }
+gt.unlockableTechs = unlockableTechs;
 
 export function isPrerequisiteOf(prerequisite: Tech, tech: Tech): boolean {
    return getAllPrerequisites(tech).has(prerequisite);
 }
+gt.isPrerequisiteOf = isPrerequisiteOf;
 
 export function getAllPrerequisites(tech: Tech): Set<Tech> {
    const result = new Set<Tech>();
@@ -243,6 +263,7 @@ export function getAllPrerequisites(tech: Tech): Set<Tech> {
    }
    return result;
 }
+gt.getAllPrerequisites = getAllPrerequisites;
 
 export function getTechUnlockCostInAge(age: TechAge): [number, number] {
    let min = Number.POSITIVE_INFINITY;
@@ -258,6 +279,7 @@ export function getTechUnlockCostInAge(age: TechAge): [number, number] {
    });
    return [min, max];
 }
+gt.getTechUnlockCostInAge = getTechUnlockCostInAge;
 
 export function checkItsukushimaShrine(tech: Tech, gs: GameState): void {
    if (!Tick.current.specialBuildings.has("ItsukushimaShrine")) {

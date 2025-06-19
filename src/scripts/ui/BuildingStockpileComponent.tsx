@@ -13,9 +13,16 @@ import { isEmpty } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
 import { ApplyToAllComponent } from "./ApplyToAllComponent";
 import type { IBuildingComponentProps } from "./BuildingPage";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 
 export function BuildingStockpileComponent({ gameState, xy }: IBuildingComponentProps): React.ReactNode {
    const building = gameState.tiles.get(xy)?.building;
+
+   const biggerStockpiles = lilModCli.isOption(lilModOption.buildingsBiggerStockpiles);
+   const stockpileStep = biggerStockpiles ? 1 : 5;
+   const stockpileCapacityMax = biggerStockpiles ? STOCKPILE_CAPACITY_MAX * 2 : STOCKPILE_CAPACITY_MAX;
+   const stockpileMaxMax = biggerStockpiles ? STOCKPILE_MAX_MAX * 2 : STOCKPILE_MAX_MAX;
+
    if (building == null) {
       return null;
    }
@@ -38,7 +45,7 @@ export function BuildingStockpileComponent({ gameState, xy }: IBuildingComponent
             <input
                type="range"
                min={STOCKPILE_CAPACITY_MIN}
-               max={STOCKPILE_CAPACITY_MAX}
+               max={stockpileCapacityMax}
                value={building.stockpileCapacity}
                onChange={(e) => {
                   building.stockpileCapacity = Number.parseInt(e.target.value, 10);
@@ -70,8 +77,8 @@ export function BuildingStockpileComponent({ gameState, xy }: IBuildingComponent
             <input
                type="range"
                min={STOCKPILE_MAX_MIN}
-               max={STOCKPILE_MAX_MAX}
-               step="5"
+               max={stockpileMaxMax}
+               step={stockpileStep}
                value={building.stockpileMax}
                onChange={(e) => {
                   building.stockpileMax = Number.parseInt(e.target.value, 10);

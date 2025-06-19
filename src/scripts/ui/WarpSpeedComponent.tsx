@@ -47,7 +47,8 @@ export function WarpSpeedComponent(): React.ReactNode {
                {formatPercent((hq.building.resources.Warp ?? 0) / total)}
             </div>
             <div className="f1 text-right text-strong">
-               <FormatNumber value={hq.building.resources.Warp ?? 0} /> / <FormatNumber value={total} />
+               <FormatNumber value={(hq.building.resources.Warp ?? 0) / 3600 ?? 0} />h /{" "}
+               <FormatNumber value={total / 3600 ?? 0} />h
             </div>
          </div>
       </fieldset>

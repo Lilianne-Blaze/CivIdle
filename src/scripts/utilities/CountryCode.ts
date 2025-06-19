@@ -40,7 +40,7 @@ export const CountryCode = {
    CI: 'Cote D"Ivoire',
    CL: "Chile",
    CM: "Cameroon",
-   CN: "China",
+   CN: "West Taiwan",
    CO: "Colombia",
    CR: "Costa Rica",
    CU: "Cuba",

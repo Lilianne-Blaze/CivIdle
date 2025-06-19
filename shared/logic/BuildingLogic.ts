@@ -67,6 +67,18 @@ import {
    type ITileData,
 } from "./Tile";
 
+import { lilModCli } from "../lmc/LilModCli";
+
+const gt = globalThis as any;
+
+export const BUILDING_LOGIC_MULTIS = {
+   marketStorage: 1,
+   caravansaryStorage: 1,
+   warehouseStorage: 1,
+   marketBaseSellAmount: 1,
+};
+gt.BUILDING_LOGIC_MULTIS = BUILDING_LOGIC_MULTIS;
+
 export function totalMultiplierFor(
    xy: Tile,
    type: keyof Multiplier,
@@ -85,6 +97,7 @@ export function totalMultiplierFor(
    );
    return result;
 }
+gt.totalMultiplierFor = totalMultiplierFor;
 
 export function forEachMultiplier(
    xy: Tile,
@@ -110,12 +123,14 @@ export function forEachMultiplier(
       });
    });
 }
+gt.forEachMultiplier = forEachMultiplier;
 
 export function getMultipliersFor(xy: Tile, gs: GameState): MultiplierWithSource[] {
    const result: MultiplierWithSource[] = [];
    forEachMultiplier(xy, (m) => result.push(m), false, gs);
    return result;
 }
+gt.getMultipliersFor = getMultipliersFor;
 
 export enum IOCalculation {
    None = 0,
@@ -134,6 +149,7 @@ export function hasEnoughResources(a: PartialTabulate<Resource>, b: PartialTabul
    }
    return true;
 }
+gt.hasEnoughResources = hasEnoughResources;
 
 export function deductResources(
    a: PartialTabulate<Resource>,
@@ -151,6 +167,7 @@ export function deductResources(
    }
    return a;
 }
+gt.deductResources = deductResources;
 
 export function filterTransportable(resources: PartialTabulate<Resource>): PartialTabulate<Resource> {
    const result: PartialTabulate<Resource> = {};
@@ -162,6 +179,7 @@ export function filterTransportable(resources: PartialTabulate<Resource>): Parti
    }
    return result;
 }
+gt.filterTransportable = filterTransportable;
 
 interface IWorkerRequirement {
    rawOutput: number;
@@ -189,6 +207,7 @@ export function getWorkersFor(xy: Tile, gs: GameState): IWorkerRequirement {
    result.output = Math.ceil(result.rawOutput / result.multiplier);
    return result;
 }
+gt.getWorkersFor = getWorkersFor;
 
 export function checkBuildingMax(k: Building, gs: GameState): boolean {
    const buildingCount = mReduceOf(
@@ -198,10 +217,12 @@ export function checkBuildingMax(k: Building, gs: GameState): boolean {
    );
    return buildingCount < (Config.Building[k].max ?? Number.POSITIVE_INFINITY);
 }
+gt.checkBuildingMax = checkBuildingMax;
 
 export function isTransportable(res: Resource): boolean {
    return !NoStorage[res] && !NoPrice[res];
 }
+gt.isTransportable = isTransportable;
 
 interface IStorageResult {
    base: number;
@@ -214,11 +235,13 @@ export function getPetraBaseStorage(petra: IBuildingData): number {
    const HOUR = 60 * 60;
    return HOUR * petra.level;
 }
+gt.getPetraBaseStorage = getPetraBaseStorage;
 
 export function getMaxWarpSpeed(gs: GameState): number {
    const status = findSpecialBuilding("Petra", gs)?.building.status;
    return status === "completed" || status === "upgrading" ? MAX_PETRA_SPEED_UP : 2;
 }
+gt.getMaxWarpSpeed = getMaxWarpSpeed;
 
 export function getMaxWarpStorage(gs: GameState): number {
    const HOUR = 60 * 60;
@@ -240,6 +263,7 @@ export function getMaxWarpStorage(gs: GameState): number {
    }
    return storage;
 }
+gt.getMaxWarpStorage = getMaxWarpStorage;
 
 // 1 hour
 const STORAGE_TO_PRODUCTION = 3600;
@@ -256,15 +280,22 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
 
    switch (building?.type) {
       case "Market": {
-         base = building.level * STORAGE_TO_PRODUCTION * 10;
+         base = building.level * STORAGE_TO_PRODUCTION * 10 * BUILDING_LOGIC_MULTIS.marketStorage;
          break;
       }
       case "Caravansary": {
-         base = getResourceImportCapacity(building, 1) * STORAGE_TO_PRODUCTION;
+         base =
+            getResourceImportCapacity(building, 1) *
+            STORAGE_TO_PRODUCTION *
+            BUILDING_LOGIC_MULTIS.caravansaryStorage;
          break;
       }
       case "Warehouse": {
-         base = getResourceImportCapacity(building, 1) * STORAGE_TO_PRODUCTION * 10;
+         base =
+            getResourceImportCapacity(building, 1) *
+            STORAGE_TO_PRODUCTION *
+            10 *
+            BUILDING_LOGIC_MULTIS.warehouseStorage;
          break;
       }
       case "Petra": {
@@ -293,12 +324,13 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
          base =
             60 * reduceOf(getBuildingIO(xy, "input", IOCalculation.MultiplierStableOnly, gs), accumulate, 0) +
             STORAGE_TO_PRODUCTION *
-               reduceOf(getBuildingIO(xy, "output", IOCalculation.MultiplierStableOnly, gs), accumulate, 0);
+            reduceOf(getBuildingIO(xy, "output", IOCalculation.MultiplierStableOnly, gs), accumulate, 0);
          break;
       }
    }
    return { base, multiplier, total: base * multiplier, used };
 }
+gt.getStorageFor = getStorageFor;
 
 export function getStorageRequired(res: PartialTabulate<Resource>): number {
    let result = 0;
@@ -309,10 +341,12 @@ export function getStorageRequired(res: PartialTabulate<Resource>): number {
    });
    return result;
 }
+gt.getStorageRequired = getStorageRequired;
 
 export function addWorkers(res: Resource, amount: number): void {
    mapSafeAdd(Tick.next.workersAvailable, res, amount);
 }
+gt.addWorkers = addWorkers;
 
 export function useWorkers(res: Resource, amount: number, xy: Tile | null): void {
    if (isTransportable(res)) {
@@ -330,6 +364,7 @@ export function useWorkers(res: Resource, amount: number, xy: Tile | null): void
       }
    }
 }
+gt.useWorkers = useWorkers;
 
 export function getAvailableWorkers(res: Resource): number {
    const workersAvailable = Tick.current.workersAvailable.get(res) ?? 0;
@@ -342,10 +377,12 @@ export function getAvailableWorkers(res: Resource): number {
    }
    return Math.floor(workersAvailable * pct) - workersUsed;
 }
+gt.getAvailableWorkers = getAvailableWorkers;
 
 export function getResourceName(r: Resource): string {
    return Config.Resource[r].name();
 }
+gt.getResourceName = getResourceName;
 
 export function getBuildingName(xy: Tile, gs: GameState): string {
    const type = gs.tiles.get(xy)?.building?.type;
@@ -354,6 +391,7 @@ export function getBuildingName(xy: Tile, gs: GameState): string {
    }
    return Config.Building[type].name();
 }
+gt.getBuildingName = getBuildingName;
 
 export function filterNonTransportable<T>(
    resources: Partial<Record<Resource, T>>,
@@ -367,6 +405,7 @@ export function filterNonTransportable<T>(
    }
    return result;
 }
+gt.filterNonTransportable = filterNonTransportable;
 
 export function getStockpileMax(b: IBuildingData) {
    if (hasFeature(GameFeature.BuildingStockpileMode, getGameState())) {
@@ -374,6 +413,7 @@ export function getStockpileMax(b: IBuildingData) {
    }
    return DEFAULT_STOCKPILE_MAX;
 }
+gt.getStockpileMax = getStockpileMax;
 
 export function getStockpileCapacity(b: IBuildingData) {
    if (hasFeature(GameFeature.BuildingStockpileMode, getGameState())) {
@@ -381,6 +421,7 @@ export function getStockpileCapacity(b: IBuildingData) {
    }
    return DEFAULT_STOCKPILE_CAPACITY;
 }
+gt.getStockpileCapacity = getStockpileCapacity;
 
 export function addTransportation(
    resource: Resource,
@@ -411,6 +452,7 @@ export function addTransportation(
       hasEnoughFuel: true,
    });
 }
+gt.addTransportation = addTransportation;
 
 export function getScienceFromWorkers(gs: GameState) {
    const workersBeforeHappiness = Math.floor(Tick.current.workersAvailable.get("Worker") ?? 0);
@@ -439,6 +481,7 @@ export function getScienceFromWorkers(gs: GameState) {
       scienceFromWorkers,
    };
 }
+gt.getScienceFromWorkers = getScienceFromWorkers;
 
 export function getScienceFromBuildings() {
    return mReduceOf(
@@ -449,6 +492,7 @@ export function getScienceFromBuildings() {
       0,
    );
 }
+gt.getScienceFromBuildings = getScienceFromBuildings;
 
 type BuildingCostInput = Pick<IBuildingData, "type" | "level"> & {
    tradition?: Tradition | null;
@@ -500,6 +544,7 @@ export function getBuildingCost(building: BuildingCostInput): PartialTabulate<Re
    }
    return cost;
 }
+gt.getBuildingCost = getBuildingCost;
 
 const totalBuildingCostCache: Map<number, Readonly<PartialTabulate<Resource>>> = new Map();
 
@@ -529,6 +574,7 @@ export function getTotalBuildingCost(
    totalBuildingCostCache.set(hash, Object.freeze(result));
    return result;
 }
+gt.getTotalBuildingCost = getTotalBuildingCost;
 
 export function getWonderCostMultiplier(type: Building): number {
    const tech = getBuildingUnlockTech(type);
@@ -544,11 +590,12 @@ export function getWonderCostMultiplier(type: Building): number {
    }
    const multiplier = Math.round(
       300 +
-         10 * Math.pow(ageIdx, 3) * Math.pow(techIdx, 2) +
-         (100 * Math.pow(5, ageIdx) * Math.pow(1.5, techIdx)) / Math.pow(techIdx, 2),
+      10 * Math.pow(ageIdx, 3) * Math.pow(techIdx, 2) +
+      (100 * Math.pow(5, ageIdx) * Math.pow(1.5, techIdx)) / Math.pow(techIdx, 2),
    );
    return multiplier;
 }
+gt.getWonderCostMultiplier = getWonderCostMultiplier;
 
 export function getWonderBaseBuilderCapacity(type: Building): number {
    console.assert(isWorldWonder(type), "This only works for World Wonders!");
@@ -567,10 +614,12 @@ export function getWonderBaseBuilderCapacity(type: Building): number {
    const capacity = totalAmount / (500 * (Math.pow(ageIdx, 1.5) + 3) + 50 * Math.pow(techIdx, 1.5));
    return capacity;
 }
+gt.getWonderBaseBuilderCapacity = getWonderBaseBuilderCapacity;
 
 export function getBuildingValue(building: IBuildingData): number {
    return getResourcesValue(getTotalBuildingCost(building, 0, building.level));
 }
+gt.getBuildingValue = getBuildingValue;
 
 export function getCurrentPriority(building: IBuildingData, gs: GameState): number {
    if (!hasFeature(GameFeature.BuildingProductionPriority, gs)) {
@@ -580,16 +629,23 @@ export function getCurrentPriority(building: IBuildingData, gs: GameState): numb
    building.constructionPriority = clamp(building.constructionPriority, PRIORITY_MIN, PRIORITY_MAX);
    building.productionPriority = clamp(building.productionPriority, PRIORITY_MIN, PRIORITY_MAX);
 
+   // const balancedTransportsEnabledDefault = false;
+   // const balancedTransportsEnabled =
+   //    savedGame?.options?.lilModCli?.enableBalancedTransports ?? balancedTransportsEnabledDefault;
+   const balancedTransportsEnabled = lilModCli.isOption("enableBalancedTransports");
+   const adjustment = balancedTransportsEnabled ? (Math.random() - 0.5) * 0.9 : 0;
+
    switch (building.status) {
       case "building":
       case "upgrading":
-         return building.constructionPriority;
+         return building.constructionPriority + adjustment;
       case "completed":
-         return building.productionPriority;
+         return building.productionPriority + adjustment;
       default:
          return PRIORITY_MIN;
    }
 }
+gt.getCurrentPriority = getCurrentPriority;
 
 export function getInputMode(building: IBuildingData, gs: GameState): BuildingInputMode {
    if (!hasFeature(GameFeature.BuildingInputMode, gs)) {
@@ -597,6 +653,7 @@ export function getInputMode(building: IBuildingData, gs: GameState): BuildingIn
    }
    return building.inputMode;
 }
+gt.getInputMode = getInputMode;
 
 export function getMaxInputDistance(building: IBuildingData, gs: GameState): number {
    if (!hasFeature(GameFeature.BuildingInputMode, gs)) {
@@ -611,6 +668,7 @@ export function getMaxInputDistance(building: IBuildingData, gs: GameState): num
    }
    return building.maxInputDistance;
 }
+gt.getMaxInputDistance = getMaxInputDistance;
 
 export function getTotalBuildingUpgrades(gs: GameState): number {
    let result = 0;
@@ -621,6 +679,7 @@ export function getTotalBuildingUpgrades(gs: GameState): number {
    });
    return result;
 }
+gt.getTotalBuildingUpgrades = getTotalBuildingUpgrades;
 
 interface BuildingPercentageResult {
    percent: number;
@@ -646,6 +705,7 @@ export function getBuildingPercentage(xy: Tile, gs: GameState): BuildingPercenta
    });
    return { cost, percent: inStorage / totalCost, secondsLeft: Math.ceil((totalCost - inStorage) / total) };
 }
+gt.getBuildingPercentage = getBuildingPercentage;
 
 export function getBuildingLevelLabel(b: IBuildingData): string {
    if (BuildingShowLevel.has(b.type)) {
@@ -656,15 +716,18 @@ export function getBuildingLevelLabel(b: IBuildingData): string {
    }
    return String(b.level);
 }
+gt.getBuildingLevelLabel = getBuildingLevelLabel;
 
 function getNextLevel(currentLevel: number, x: number) {
    return (Math.floor(currentLevel / x) + 1) * x;
 }
+gt.getNextLevel = getNextLevel;
 
 export function getUpgradeTargetLevels(b: IBuildingData): number[] {
    const next5 = getNextLevel(b.level, 5);
    return [b.level + 1, next5, next5 + 5, next5 + 10, next5 + 15];
 }
+gt.getUpgradeTargetLevels = getUpgradeTargetLevels;
 
 export function isSpecialBuilding(building?: Building): boolean {
    if (!building) {
@@ -672,6 +735,7 @@ export function isSpecialBuilding(building?: Building): boolean {
    }
    return !isNullOrUndefined(Config.Building[building].special);
 }
+gt.isSpecialBuilding = isSpecialBuilding;
 
 export function isNaturalWonder(building?: Building): boolean {
    if (!building) {
@@ -679,6 +743,7 @@ export function isNaturalWonder(building?: Building): boolean {
    }
    return Config.Building[building].special === BuildingSpecial.NaturalWonder;
 }
+gt.isNaturalWonder = isNaturalWonder;
 
 export function isHeadquarter(building?: Building): boolean {
    if (!building) {
@@ -686,6 +751,7 @@ export function isHeadquarter(building?: Building): boolean {
    }
    return Config.Building[building].special === BuildingSpecial.HQ;
 }
+gt.isHeadquarter = isHeadquarter;
 
 export function isWorldWonder(building?: Building): boolean {
    if (!building) {
@@ -693,14 +759,17 @@ export function isWorldWonder(building?: Building): boolean {
    }
    return Config.Building[building].special === BuildingSpecial.WorldWonder;
 }
+gt.isWorldWonder = isWorldWonder;
 
 export function isWorldOrNaturalWonder(building?: Building): boolean {
    return isNaturalWonder(building) || isWorldWonder(building);
 }
+gt.isWorldOrNaturalWonder = isWorldOrNaturalWonder;
 
 export function getResourceImportCapacity(building: IHaveTypeAndLevel, multiplier: number): number {
    return multiplier * building.level * 10;
 }
+gt.getResourceImportCapacity = getResourceImportCapacity;
 
 export function getResourceImportIdleCapacity(xy: Tile, gs: GameState): number {
    const building = gs.tiles.get(xy)?.building;
@@ -719,6 +788,7 @@ export function getResourceImportIdleCapacity(xy: Tile, gs: GameState): number {
       )
    );
 }
+gt.getResourceImportIdleCapacity = getResourceImportIdleCapacity;
 
 export function getBuilderCapacity(
    building: IHaveTypeAndLevel,
@@ -736,6 +806,7 @@ export function getBuilderCapacity(
 
    return { multiplier: builder, base: baseCapacity, total: builder * baseCapacity };
 }
+gt.getBuilderCapacity = getBuilderCapacity;
 
 export function applyToAllBuildings<T extends IBuildingData>(
    building: Building,
@@ -749,13 +820,16 @@ export function applyToAllBuildings<T extends IBuildingData>(
    });
    return count;
 }
+gt.applyToAllBuildings = applyToAllBuildings;
 
 export function getMarketBaseSellAmount(sellResource: Resource, buyResource: Resource): number {
    return (
-      Math.sqrt((Config.ResourcePrice[sellResource] ?? 0) * (Config.ResourcePrice[buyResource] ?? 0)) /
-      (Config.ResourcePrice[sellResource] ?? 1)
+      (Math.sqrt((Config.ResourcePrice[sellResource] ?? 0) * (Config.ResourcePrice[buyResource] ?? 0)) /
+         (Config.ResourcePrice[sellResource] ?? 1)) *
+      BUILDING_LOGIC_MULTIS.marketBaseSellAmount
    );
 }
+gt.getMarketBaseSellAmount = getMarketBaseSellAmount;
 
 export function getMarketSellAmount(sellResource: Resource, xy: Tile, gs: GameState): number {
    const building = gs.tiles.get(xy)?.building;
@@ -769,6 +843,7 @@ export function getMarketSellAmount(sellResource: Resource, xy: Tile, gs: GameSt
       totalMultiplierFor(xy, "output", 1, false, gs)
    );
 }
+gt.getMarketSellAmount = getMarketSellAmount;
 
 export function getMarketBuyAmount(
    sellResource: Resource,
@@ -786,6 +861,7 @@ export function getMarketBuyAmount(
       (Config.ResourcePrice[buyResource] ?? 0)
    );
 }
+gt.getMarketBuyAmount = getMarketBuyAmount;
 
 export function getAvailableResource(sourceXy: Tile, destXy: Tile, res: Resource, gs: GameState): number {
    const building = getXyBuildings(gs).get(sourceXy);
@@ -825,6 +901,7 @@ export function getAvailableResource(sourceXy: Tile, destXy: Tile, res: Resource
 
    return amountInStorage;
 }
+gt.getAvailableResource = getAvailableResource;
 
 export function exploreTile(xy: Tile, gs: GameState): void {
    const tile = gs.tiles.get(xy);
@@ -833,11 +910,16 @@ export function exploreTile(xy: Tile, gs: GameState): void {
       OnTileExplored.emit(xy);
    }
 }
+gt.exploreTile = exploreTile;
 
 export const OnTileExplored = new TypedEvent<Tile>();
+gt.OnTileExplored = OnTileExplored;
 
 export const ST_PETERS_FAITH_MULTIPLIER = 0.01;
+gt.ST_PETERS_FAITH_MULTIPLIER = ST_PETERS_FAITH_MULTIPLIER;
+
 export const ST_PETERS_STORAGE_MULTIPLIER = 10 * 60 * 60;
+gt.ST_PETERS_STORAGE_MULTIPLIER = ST_PETERS_STORAGE_MULTIPLIER;
 
 export function getPowerRequired(building: IBuildingData): number {
    if (building.electrification <= 0) {
@@ -848,6 +930,7 @@ export function getPowerRequired(building: IBuildingData): number {
    }
    return Math.round(Math.pow(2, building.electrification - 1) * 10);
 }
+gt.getPowerRequired = getPowerRequired;
 
 export function canBeElectrified(b: Building): boolean {
    if (isSpecialBuilding(b)) {
@@ -874,12 +957,14 @@ export function canBeElectrified(b: Building): boolean {
    }
    return true;
 }
+gt.canBeElectrified = canBeElectrified;
 
 export const ElectrificationStatus = {
    NotActive: () => t(L.ElectrificationStatusNotActive),
    NoPower: () => t(L.ElectrificationStatusNoPowerV2),
    Active: () => t(L.ElectrificationStatusActive),
 } as const satisfies Record<string, () => string>;
+gt.ElectrificationStatus = ElectrificationStatus;
 
 export type ElectrificationStatus = keyof typeof ElectrificationStatus;
 
@@ -899,6 +984,7 @@ export function getElectrificationStatus(xy: Tile, gs: GameState): Electrificati
    }
    return "NoPower";
 }
+gt.getElectrificationStatus = getElectrificationStatus;
 
 export function hasRequiredDeposit(
    deposits: PartialSet<Deposit> | undefined,
@@ -923,6 +1009,7 @@ export function hasRequiredDeposit(
 
    return true;
 }
+gt.hasRequiredDeposit = hasRequiredDeposit;
 
 export function hasEnoughResource(xy: Tile, res: Resource, amount: number, gs: GameState): boolean {
    const resources = gs.tiles.get(xy)?.building?.resources;
@@ -931,6 +1018,7 @@ export function hasEnoughResource(xy: Tile, res: Resource, amount: number, gs: G
    }
    return (resources[res] ?? 0) >= amount;
 }
+gt.hasEnoughResource = hasEnoughResource;
 
 export function hasEnoughStorage(xy: Tile, amount: number, gs: GameState): boolean {
    const storage = getStorageFor(xy, gs);
@@ -938,6 +1026,7 @@ export function hasEnoughStorage(xy: Tile, amount: number, gs: GameState): boole
    // we consider there IS enough storage
    return clamp(storage.total - storage.used, 0, Number.POSITIVE_INFINITY) >= amount;
 }
+gt.hasEnoughStorage = hasEnoughStorage;
 
 export function getWorkingBuilding(xy: Tile, gs: GameState): IBuildingData | null {
    const tile = gs.tiles.get(xy);
@@ -946,8 +1035,9 @@ export function getWorkingBuilding(xy: Tile, gs: GameState): IBuildingData | nul
    }
    return tile.building;
 }
+gt.getWorkingBuilding = getWorkingBuilding;
 
-function hasDepositOnAnyTile(deposit: Deposit, tiles: Tile[], gs: GameState): boolean {
+export function hasDepositOnAnyTile(deposit: Deposit, tiles: Tile[], gs: GameState): boolean {
    for (const xy of tiles) {
       if (gs.tiles.get(xy)?.deposit[deposit]) {
          return true;
@@ -955,6 +1045,7 @@ function hasDepositOnAnyTile(deposit: Deposit, tiles: Tile[], gs: GameState): bo
    }
    return false;
 }
+gt.hasDepositOnAnyTile = hasDepositOnAnyTile;
 
 export function getBuildingThatExtract(d: Deposit): Building | null {
    let b: Building;
@@ -966,10 +1057,12 @@ export function getBuildingThatExtract(d: Deposit): Building | null {
    }
    return null;
 }
+gt.getBuildingThatExtract = getBuildingThatExtract;
 
 export function getExtraVisionRange(): number {
    return Tick.current.specialBuildings.has("GreatMosqueOfSamarra") ? 1 : 0;
 }
+gt.getExtraVisionRange = getExtraVisionRange;
 
 export function applyBuildingDefaults(building: IBuildingData, options: GameOptions): IBuildingData {
    const defaults = options.buildingDefaults[building.type];
@@ -1007,6 +1100,7 @@ export function applyBuildingDefaults(building: IBuildingData, options: GameOpti
 export function shouldAlwaysShowBuildingOptions(building: IBuildingData): boolean {
    return "resourceImports" in building || "sellResources" in building;
 }
+gt.shouldAlwaysShowBuildingOptions = shouldAlwaysShowBuildingOptions;
 
 export function isBuildingWellStocked(xy: Tile, gs: GameState): boolean {
    const building = gs.tiles.get(xy)?.building;
@@ -1021,6 +1115,7 @@ export function isBuildingWellStocked(xy: Tile, gs: GameState): boolean {
          Tick.current.notProducingReasons.get(xy) === NotProducingReason.NotEnoughWorkers)
    );
 }
+gt.isBuildingWellStocked = isBuildingWellStocked;
 
 export function getElectrificationEfficiency(b: Building) {
    if (Config.Building[b].power) {
@@ -1028,6 +1123,7 @@ export function getElectrificationEfficiency(b: Building) {
    }
    return 1;
 }
+gt.getElectrificationEfficiency = getElectrificationEfficiency;
 
 export function findSpecialBuilding(type: Building, gs: GameState): Required<ITileData> | null {
    if (!isSpecialBuilding(type)) return null;
@@ -1042,6 +1138,7 @@ export function findSpecialBuilding(type: Building, gs: GameState): Required<ITi
    }
    return null;
 }
+gt.findSpecialBuilding = findSpecialBuilding;
 
 export function addPetraOfflineTime(time: number, gs: GameState): void {
    const hq = findSpecialBuilding("Headquarter", gs);
@@ -1058,6 +1155,7 @@ export function addPetraOfflineTime(time: number, gs: GameState): void {
    const after = hq.building.resources.Warp;
    console.log("[addPetraOfflineTime]: Before:", before, "After:", after);
 }
+gt.addPetraOfflineTime = addPetraOfflineTime;
 
 export function getYellowCraneTowerRange(xy: Tile, gs: GameState): number {
    const building = gs.tiles.get(xy)?.building;
@@ -1072,6 +1170,7 @@ export function getYellowCraneTowerRange(xy: Tile, gs: GameState): number {
    }
    return 1;
 }
+gt.getYellowCraneTowerRange = getYellowCraneTowerRange;
 
 export function getGreatWallRange(xy: Tile, gs: GameState): number {
    const building = gs.tiles.get(xy)?.building;
@@ -1085,6 +1184,7 @@ export function getGreatWallRange(xy: Tile, gs: GameState): number {
    }
    return 1;
 }
+gt.getGreatWallRange = getGreatWallRange;
 
 export function getBuildingDescription(b: Building): string {
    const building = Config.Building[b];
@@ -1096,6 +1196,7 @@ export function getBuildingDescription(b: Building): string {
       mapOf(building.output, (res, value) => `${Config.Resource[res].name()} x${value}`).join(" + "),
    ].join("");
 }
+gt.getBuildingDescription = getBuildingDescription;
 
 export function getMultipliersDescription(m: IUnlockableMultipliers): string {
    return mapOf(m.globalMultiplier, (key, value) => `+${value} ${GlobalMultiplierNames[key]()}`)
@@ -1109,6 +1210,7 @@ export function getMultipliersDescription(m: IUnlockableMultipliers): string {
       )
       .join(", ");
 }
+gt.getMultipliersDescription = getMultipliersDescription;
 
 export function generateScienceFromFaith(xy: number, buildingType: Building, gs: GameState) {
    const hq = Tick.current.specialBuildings.get("Headquarter")?.building.resources;
@@ -1126,6 +1228,7 @@ export function generateScienceFromFaith(xy: number, buildingType: Building, gs:
       Tick.next.scienceProduced.set(xy, total);
    }
 }
+gt.generateScienceFromFaith = generateScienceFromFaith;
 
 export function getExplorerRange(gs: GameState): number {
    if (gs.unlockedTech.Aviation) {
@@ -1139,6 +1242,7 @@ export function getExplorerRange(gs: GameState): number {
    }
    return 1;
 }
+gt.getExplorerRange = getExplorerRange;
 
 export function getUniqueWonders(currentCity: City): Building[] {
    const result: Building[] = [];
@@ -1153,10 +1257,12 @@ export function getUniqueWonders(currentCity: City): Building[] {
 
    return result;
 }
+gt.getUniqueWonders = getUniqueWonders;
 
 export function getEastIndiaCompanyUpgradeCost(level: number): number {
    return Math.pow(2, level - 2) * 10_000_000_000_000;
 }
+gt.getEastIndiaCompanyUpgradeCost = getEastIndiaCompanyUpgradeCost;
 
 export function getPompidou(gs: GameState): ICentrePompidouBuildingData | null {
    const pompidou = findSpecialBuilding("CentrePompidou", gs);
@@ -1165,6 +1271,8 @@ export function getPompidou(gs: GameState): ICentrePompidouBuildingData | null {
    }
    return null;
 }
+gt.getPompidou = getPompidou;
+
 export function getRandomEmptyTiles(count: number, gameState: GameState): Tile[] {
    const grid = getGrid(gameState);
    const xys = shuffle(Array.from(gameState.tiles.keys()));
@@ -1188,3 +1296,5 @@ export function getRandomEmptyTiles(count: number, gameState: GameState): Tile[]
    }
    return result;
 }
+gt.getRandomEmptyTiles = getRandomEmptyTiles;
+

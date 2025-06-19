@@ -4,9 +4,12 @@ import { saveGame } from "../Global";
 import { showToast } from "../ui/GlobalModal";
 import { playError } from "../visuals/Sound";
 
+const gt = globalThis as any;
+
 export function isSteam(): boolean {
    return typeof IPCBridge !== "undefined";
 }
+gt.isSteam = isSteam;
 
 export const SteamClient = rpcClient<IPCService>({
    request: (method: string, params: any[]) => {
@@ -16,6 +19,7 @@ export const SteamClient = rpcClient<IPCService>({
       return IPCBridge.rpcCall(method, params);
    },
 });
+gt.SteamClient = SteamClient;
 
 if (typeof IPCBridge !== "undefined") {
    IPCBridge.onClose(() => {

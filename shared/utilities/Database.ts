@@ -300,7 +300,8 @@ export const MAP_MAX_Y = 100;
 
 export const ChatChannels = {
    en: "English",
-   zh: "中文",
+   nds: "#Nukedoves",
+   zh: "West Taiwanese",
    de: "Deutsch",
    ru: "Русский",
    fr: "Français",

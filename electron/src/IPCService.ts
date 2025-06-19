@@ -6,6 +6,8 @@ import { promisify } from "node:util";
 import { deflateRaw } from "node:zlib";
 import { MIN_HEIGHT, MIN_WIDTH, getGameSavePath, getLocalGameSavePath, type SteamClient } from ".";
 
+const gt = globalThis as any;
+
 const BACKUP_FREQ = 1000 * 60 * 10;
 
 export class IPCService {
@@ -135,4 +137,45 @@ export class IPCService {
       this._mainWindow.setAlwaysOnTop(false);
       this._mainWindow.setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
    }
+
+   // LMCBOOKMARK
+
+   // https://www.electronjs.org/docs/latest/api/app#appgetpathname
+
+   public appGetPathSync(
+      pathName: "home" | "appData" | "userData" | "sessionData" | "temp" | "exe" | "module" | "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos" | "recent" | "logs" | "crashDumps"
+   ): string | null {
+      try {
+         return app.getPath(pathName);
+      } catch (err) { return null; }
+   }
+
+   public async appGetPath(
+      pathName: "home" | "appData" | "userData" | "sessionData" | "temp" | "exe" | "module" | "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos" | "recent" | "logs" | "crashDumps"
+   ): Promise<string | null> {
+      return this.appGetPathSync(pathName);
+   }
+
+   public getAppDataRoamingSync(): string | null {
+      try {
+         return app.getPath("appData");
+      } catch (err) { return null; }
+   }
+
+   public async getAppDataRoaming(): Promise<string | null> {
+      return this.getAppDataRoamingSync();
+   }
+
+   public getProcessEnvSync(envVarName: string): string | null {
+      try {
+         return process.env[envVarName] ?? null;
+      } catch (err) { return null; }
+   }
+
+   public async getProcessEnv(envVarName: string): Promise<string | null> {
+      return this.getProcessEnvSync(envVarName);
+   }
+
+
 }
+gt.IPCService = IPCService;

@@ -41,3 +41,4 @@ export const Config = {
    BuildingHash,
    ResourceHash,
 } as const;
+globalThis.Config = Config;

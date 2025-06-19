@@ -44,6 +44,8 @@ import { makeObservableHook } from "../utilities/Hook";
 import { playBubble, playKaching } from "../visuals/Sound";
 import { SteamClient, isSteam } from "./SteamClient";
 
+let gt = globalThis as any;
+
 let user: IUser | null = null;
 let platformInfo: IPlatformInfo | null = null;
 
@@ -84,8 +86,16 @@ const playerMap: Map<string, IClientMapEntry> = new Map();
 export function getPlayerMap() {
    return playerMap;
 }
+gt.getPlayerMap = getPlayerMap;
 
 let ws: WebSocket | null = null;
+
+// added exposer for local ws variable
+export function getWebSocket(): WebSocket | null {
+   return ws;
+}
+gt.getWebSocket = getWebSocket;
+
 
 export const client = rpcClient<ServerImpl>({
    request: (method: string, params: any[]) => {
@@ -105,14 +115,16 @@ export const client = rpcClient<ServerImpl>({
       });
    },
 });
+gt.client = client;
 
-function getServerAddress(): string {
+export function getServerAddress(): string {
    if (import.meta.env.DEV) {
       const url = new URLSearchParams(window.location.search);
       return url.get("server") ?? "ws://localhost:8000";
    }
    return "wss://de.cividle.com";
 }
+gt.getServerAddress = getServerAddress;
 
 export function getTrades(): IClientTrade[] {
    return Array.from(trades.values()).filter((trade) => {
@@ -122,6 +134,7 @@ export function getTrades(): IClientTrade[] {
       return false;
    });
 }
+gt.getTrades = getTrades;
 
 export const usePlayerMap = makeObservableHook(OnPlayerMapChanged, () => playerMap);
 export const useChatMessages = makeObservableHook(OnChatMessage, () => chatMessages);
@@ -132,10 +145,12 @@ export const usePlatformInfo = makeObservableHook(OnPlatformInfoChanged, getPlat
 export function getUser(): IUser | null {
    return user;
 }
+gt.getUser = getUser;
 
 export function getPlatformInfo(): IPlatformInfo | null {
    return platformInfo;
 }
+gt.getPlatformInfo = getPlatformInfo;
 
 export function isOnlineUser(): boolean {
    if (import.meta.env.DEV) {
@@ -143,10 +158,12 @@ export function isOnlineUser(): boolean {
    }
    return (user?.level ?? AccountLevel.Tribune) > AccountLevel.Tribune;
 }
+gt.isOnlineUser = isOnlineUser;
 
 export function getUserLevel(): AccountLevel {
    return user?.level ?? AccountLevel.Tribune;
 }
+gt.getUserLevel = getUserLevel;
 
 // TODO: Need to properly implement this after supporting offline run
 export function canEarnGreatPeopleFromReborn(): boolean {
@@ -157,18 +174,27 @@ export function canEarnGreatPeopleFromReborn(): boolean {
    }
    return true;
 }
+gt.canEarnGreatPeopleFromReborn = canEarnGreatPeopleFromReborn;
 
 let chatId = 0;
 
 export function addSystemMessage(message: string): void {
-   chatMessages.push({ id: ++chatId, message });
-   OnChatMessage.emit(chatMessages);
+   // make sure it never throws errors
+   try {
+      chatMessages.push({ id: ++chatId, message });
+      OnChatMessage.emit(chatMessages);
+   } catch (err) { }
 }
+gt.addSystemMessage = addSystemMessage;
 
 export function clearSystemMessages(): void {
-   chatMessages = chatMessages.filter((c) => "channel" in c);
-   OnChatMessage.emit(chatMessages);
+   // make sure it never throws errors
+   try {
+      chatMessages = chatMessages.filter((c) => "channel" in c);
+      OnChatMessage.emit(chatMessages);
+   } catch (err) { }
 }
+gt.clearSystemMessages = clearSystemMessages;
 
 export const TileBuildings: Map<string, Building> = new Map();
 export const OnTileBuildingsChanged = new TypedEvent<void>();
@@ -206,6 +232,7 @@ async function populateTileBuildings() {
 }
 
 export const CLIENT_ID = "CIVIDLE_CLIENT_ID";
+gt.CLIENT_ID = CLIENT_ID;
 
 let reconnect = 0;
 let requestId = 0;
@@ -352,6 +379,7 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
             startTileBuildingTimer();
             w.offlineTime = Math.min(w.offlineTime, offlineTicks);
             resolve?.(w);
+            OnAfterWelcomeMessageProcessed.emit();
             break;
          }
          case MessageType.Trade: {
@@ -430,17 +458,20 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
 
    return promise;
 }
+gt.connectWebSocket = connectWebSocket;
 
 export function disconnectWebSocket() {
    ws?.close(ServerWSErrorCode.Background);
    reconnect = 0;
 }
+gt.disconnectWebSocket = disconnectWebSocket;
 
 export function reconnectWebSocket() {
    if (!ws) {
       connectWebSocket().then(convertOfflineTimeToWarp);
    }
 }
+gt.reconnectWebSocket = reconnectWebSocket;
 
 function retryConnect() {
    setTimeout(reconnectWebSocket, Math.min(Math.pow(2, reconnect++) * SECOND, 16 * SECOND));
