@@ -45,9 +45,9 @@ import { TilePage } from "../ui/TilePage";
 import { getColorCached } from "../utilities/CachedColor";
 import { Scene, destroyAllChildren, type ISceneContext } from "../utilities/SceneManager";
 import { Singleton } from "../utilities/Singleton";
+import type { Action } from "../utilities/pixi-actions/Action";
 import { Actions } from "../utilities/pixi-actions/Actions";
 import { Easing } from "../utilities/pixi-actions/Easing";
-import type { Action } from "../utilities/pixi-actions/actions/Action";
 import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { Fonts } from "../visuals/Fonts";
 import { playError } from "../visuals/Sound";
@@ -59,11 +59,13 @@ let viewportZoom: number | null = null;
 const MARGIN = 200;
 const SELECTOR_ALPHA = 0.4;
 const HIGHLIGHT_ALPHA = 0.2;
+const ANIMATION_TIME = 0.2;
 
 export class WorldScene extends Scene {
    private _width!: number;
    private _height!: number;
 
+   private _tileVisualContainer: Container;
    private _selectorContainer!: Container;
 
    private _transportContainer!: Container;
@@ -95,9 +97,13 @@ export class WorldScene extends Scene {
          ),
          2,
       );
+
+      this._tileVisualContainer = this.viewport.addChild(new Container());
+      this._tileVisualContainer.name = "TileVisualContainer";
+
       getGrid(getGameState()).forEach((grid) => {
          const xy = pointToTile(grid);
-         this._tiles.set(xy, this.viewport.addChild(new TileVisual(this, grid)));
+         this._tiles.set(xy, this._tileVisualContainer.addChild(new TileVisual(this, grid)));
       });
 
       this._tooltipContainer = this.viewport.addChild(new Container());
@@ -315,18 +321,30 @@ export class WorldScene extends Scene {
       destroyAllChildren(this._selectorContainer);
 
       const selector = this.createSelector();
-      selector.alpha = SELECTOR_ALPHA;
       selector.position = grid.gridToPosition(selected);
+      selector.alpha = 0;
+      Actions.to(selector, { alpha: SELECTOR_ALPHA }, ANIMATION_TIME, Easing.InQuad).start();
 
       if (highlights.length > 0) {
          highlights.forEach((tile) => {
             const selector = this.createSelector();
-            selector.alpha = HIGHLIGHT_ALPHA;
+            selector.alpha = 0;
+            Actions.to(selector, { alpha: HIGHLIGHT_ALPHA }, ANIMATION_TIME, Easing.InQuad).start();
             selector.position = grid.gridToPosition(tileToPoint(tile));
          });
       } else {
          this.drawBuildingDecors(getGameState());
       }
+   }
+
+   private highlightRange(grid: IPointData, range: number) {
+      const g = getGrid(getGameState());
+      g.getRange(grid, range).forEach((neighbor) => {
+         const selector = this.createSelector();
+         selector.alpha = 0;
+         Actions.to(selector, { alpha: HIGHLIGHT_ALPHA }, ANIMATION_TIME, Easing.InQuad).start();
+         selector.position = g.gridToPosition(neighbor);
+      });
    }
 
    selectGrid(grid: IPointData): void {
@@ -454,22 +472,13 @@ export class WorldScene extends Scene {
       });
    }
 
-   private highlightRange(grid: IPointData, range: number) {
-      const g = getGrid(getGameState());
-      g.getRange(grid, range).forEach((neighbor) => {
-         const selector = this.createSelector();
-         selector.alpha = HIGHLIGHT_ALPHA;
-         selector.position = g.gridToPosition(neighbor);
-      });
-   }
-
    updateTile(xy: Tile, dt: number): void {
       this._tiles.get(xy)?.update(dt);
    }
 
    resetTile(xy: Tile): void {
       this._tiles.get(xy)?.destroy({ children: true });
-      this._tiles.set(xy, this.viewport.addChild(new TileVisual(this, tileToPoint(xy))));
+      this._tiles.set(xy, this._tileVisualContainer.addChild(new TileVisual(this, tileToPoint(xy))));
    }
 
    revealTile(xy: Tile): void {
