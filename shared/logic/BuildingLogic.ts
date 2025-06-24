@@ -68,6 +68,7 @@ import {
 } from "./Tile";
 
 import { lilModCli } from "../lmc/LilModCli";
+import { get } from "http";
 
 const gt = globalThis as any;
 
@@ -1298,3 +1299,31 @@ export function getRandomEmptyTiles(count: number, gameState: GameState): Tile[]
 }
 gt.getRandomEmptyTiles = getRandomEmptyTiles;
 
+export function getBuildingCity(building: Building): City | null {
+   let result: City | null = null;
+   forEach(Config.City, (city, def) => {
+      if (def.uniqueBuildings[building]) {
+         result = city;
+         // break
+         return true;
+      }
+      if (def.naturalWonders[building]) {
+         result = city;
+         return true;
+      }
+   });
+   return result;
+}
+gt.getBuildingCity = getBuildingCity;
+
+export function isFestival(building: Building, gs: GameState): boolean {
+   if (!gs.festival) {
+      return false;
+   }
+   const city = getBuildingCity(building);
+   if (!city) {
+      return true;
+   }
+   return city === gs.city;
+}
+gt.isFestival = isFestival;

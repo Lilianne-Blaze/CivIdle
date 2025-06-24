@@ -18,7 +18,7 @@ import {
    makeGreatPeopleFromThisRunPermanent,
    rollPermanentGreatPeople,
 } from "../../../shared/logic/RebirthLogic";
-import { getCurrentAge } from "../../../shared/logic/TechLogic";
+import { getAgeForTech, getCurrentAge } from "../../../shared/logic/TechLogic";
 import { Tick } from "../../../shared/logic/TickLogic";
 import { UserAttributes } from "../../../shared/utilities/Database";
 import {
@@ -37,16 +37,19 @@ import { resetToCity, saveGame, useGameState } from "../Global";
 import { checkRebirthAchievements } from "../logic/Achievement";
 import { canEarnGreatPeopleFromReborn, client, isOnlineUser, useTrades, useUser } from "../rpc/RPCClient";
 import { jsxMapOf } from "../utilities/Helper";
+import { GreatPersonImage } from "../visuals/GreatPersonVisual";
 import { playClick, playError } from "../visuals/Sound";
 import { hideModal, showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { TextWithHelp } from "./TextWithHelpComponent";
+import { BuildingSpriteComponent, DepositTextureComponent, SupporterComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
 
 export function RebirthModal(): React.ReactNode {
    const trades = useTrades();
    const user = useUser();
+   const options = getGameOptions();
    const [tradeCount, setTradeCount] = useState<number>(
       trades.filter((t) => t.fromId === user?.userId).length,
    );
@@ -78,7 +81,6 @@ export function RebirthModal(): React.ReactNode {
       Number.POSITIVE_INFINITY,
    );
    const [pickPerRoll, setPickPerRoll] = useState(maxPickPerRoll);
-   console.log(Tick.current.specialBuildings.get("CentrePompidou"));
    const showPompidouWarning =
       Tick.current.specialBuildings.has("CentrePompidou") &&
       (getCurrentAge(gs) !== "InformationAge" || gs.city === nextCity);
@@ -88,81 +90,62 @@ export function RebirthModal(): React.ReactNode {
          <div className="title-bar">
             <div className="title-bar-text">{t(L.Reborn)}</div>
          </div>
-         <div className="window-body" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-            {tradeCount > 0 ? (
-               <WarningComponent icon="warning" className="mb10 text-small">
-                  <RenderHTML html={t(L.RebornTradeWarning)} />
-               </WarningComponent>
-            ) : null}
-            <WarningComponent icon="info" className="mb10 text-small">
-               <RenderHTML html={t(L.RebornModalDescV3)} />
-            </WarningComponent>
-            {canEarnGreatPeopleFromReborn() ? (
-               <ul className="tree-view">
-                  <li className="row">
-                     <div className="f1">{t(L.GreatPeopleThisRun)}</div>
-                     <div className="text-strong">
-                        {reduceOf(
-                           gs.greatPeople,
-                           (prev, k, v) => {
-                              return prev + v;
-                           },
-                           0,
-                        )}
-                     </div>
-                  </li>
-                  <li className="row">
-                     <div className="f1">{t(L.TotalEmpireValue)}</div>
-                     <div className="text-strong">
-                        <FormatNumber value={Tick.current.totalValue} />
-                     </div>
-                  </li>
-                  <li className="row">
-                     <div className="f1">{t(L.ExtraGreatPeopleAtReborn)}</div>
-                     <div className="text-strong">
-                        <TextWithHelp
-                           content={t(L.ClaimedGreatPeopleTooltip, {
-                              total: greatPeopleAtRebirthCount,
-                              claimed: gs.claimedGreatPeople,
-                           })}
-                        >
-                           {clamp(
-                              greatPeopleAtRebirthCount - gs.claimedGreatPeople,
-                              0,
-                              Number.POSITIVE_INFINITY,
-                           )}
-                        </TextWithHelp>
-                     </div>
-                  </li>
-                  <ul>
+         <div className="window-body">
+            <div style={{ maxHeight: "75vh", overflowY: "auto", margin: "-8px -8px 0 -8px", padding: 10 }}>
+               {tradeCount > 0 ? (
+                  <WarningComponent icon="warning" className="mb10 text-small">
+                     <RenderHTML html={t(L.RebornTradeWarning)} />
+                  </WarningComponent>
+               ) : null}
+               {options.rebirthInfo.length <= 0 ? (
+                  <WarningComponent icon="info" className="mb10 text-small">
+                     <RenderHTML html={t(L.RebornModalDescV3)} />
+                  </WarningComponent>
+               ) : null}
+               {canEarnGreatPeopleFromReborn() ? (
+                  <ul className="tree-view">
                      <li className="row">
-                        <div className="f1">{t(L.ClaimedGreatPeople)}</div>
-                        <div className="text-strong">{gs.claimedGreatPeople}</div>
+                        <div className="f1">{t(L.GreatPeopleThisRun)}</div>
+                        <div className="text-strong">
+                           {reduceOf(
+                              gs.greatPeople,
+                              (prev, k, v) => {
+                                 return prev + v;
+                              },
+                              0,
+                           )}
+                        </div>
+                     </li>
+                     <li className="row">
+                        <div className="f1">{t(L.TotalEmpireValue)}</div>
+                        <div className="text-strong">
+                           <FormatNumber value={Tick.current.totalValue} />
+                        </div>
+                     </li>
+                     <li className="row">
+                        <div className="f1">{t(L.ExtraGreatPeopleAtReborn)}</div>
+                        <div className="text-strong">
+                           <TextWithHelp
+                              content={t(L.ClaimedGreatPeopleTooltip, {
+                                 total: greatPeopleAtRebirthCount,
+                                 claimed: gs.claimedGreatPeople,
+                              })}
+                           >
+                              {clamp(
+                                 greatPeopleAtRebirthCount - gs.claimedGreatPeople,
+                                 0,
+                                 Number.POSITIVE_INFINITY,
+                              )}
+                           </TextWithHelp>
+                        </div>
                      </li>
                   </ul>
-               </ul>
-            ) : (
-               <WarningComponent icon="warning">{t(L.CannotEarnPermanentGreatPeopleDesc)}</WarningComponent>
-            )}
-            <div className="sep10" />
-            <fieldset>
-               <div className="row">
-                  <div className="f1">{t(L.GreatPeoplePickPerRoll)}</div>
-                  <select
-                     value={pickPerRoll}
-                     onChange={(e) => {
-                        setPickPerRoll(clamp(safeParseInt(e.target.value, 1), 1, maxPickPerRoll));
-                     }}
-                  >
-                     {range(1, maxPickPerRoll + 1).map((i) => (
-                        <option key={i} value={i}>
-                           {i}
-                        </option>
-                     ))}
-                  </select>
-               </div>
-            </fieldset>
-            <fieldset>
+               ) : (
+                  <WarningComponent icon="warning">
+                     {t(L.CannotEarnPermanentGreatPeopleDesc)}
+                  </WarningComponent>
+               )}
+               <div className="sep10" />
                {hasFlag(user?.attr ?? UserAttributes.None, UserAttributes.DLC1) ? null : (
                   <WarningComponent icon="info" className="text-small mb10">
                      <RenderHTML
@@ -181,138 +164,204 @@ export function RebirthModal(): React.ReactNode {
                      />
                   </WarningComponent>
                ) : null}
-               <div className="row">
-                  <div className="f1">{t(L.SelectCivilization)}</div>
-                  <select
-                     value={nextCity}
-                     onChange={(e) => {
-                        setNextCity(e.target.value as City);
-                     }}
-                  >
-                     {jsxMapOf(Config.City, (city, def) => {
-                        return (
-                           <option key={city} value={city}>
-                              {def.name()}
-                              {def.requireSupporterPack ? "*" : ""}
-                           </option>
-                        );
-                     })}
-                  </select>
-               </div>
-               <div className="separator"></div>
-               <div className="row">
+               <fieldset>
+                  <div className="row">
+                     <div className="f1 row">
+                        <div className="f1">{t(L.GreatPeoplePickPerRoll)}</div>
+                        <select
+                           value={pickPerRoll}
+                           onChange={(e) => {
+                              setPickPerRoll(clamp(safeParseInt(e.target.value, 1), 1, maxPickPerRoll));
+                           }}
+                        >
+                           {range(1, maxPickPerRoll + 1).map((i) => (
+                              <option key={i} value={i}>
+                                 {i}
+                              </option>
+                           ))}
+                        </select>
+                     </div>
+                     <div className="separator-vertical" style={{ height: 30, margin: "-5px 20px" }} />
+                     <div className="f1 row">
+                        <div className="f1">{t(L.SelectCivilization)}</div>
+                        <select
+                           value={nextCity}
+                           onChange={(e) => {
+                              setNextCity(e.target.value as City);
+                           }}
+                        >
+                           {jsxMapOf(Config.City, (city, def) => {
+                              return (
+                                 <option key={city} value={city}>
+                                    {def.name()}
+                                    {def.requireSupporterPack ? "*" : ""}
+                                 </option>
+                              );
+                           })}
+                        </select>
+                     </div>
+                  </div>
+                  <div className="separator" />
+                  <div className="row">
+                     <div className="row f1">
+                        <div className="f1">{t(L.GreatPersonLevelRequired)}</div>
+                        {permanentGreatPeopleLevel >= Config.City[nextCity].requireGreatPeopleLevel ? (
+                           <div className="m-icon small mr5 text-green">check_circle</div>
+                        ) : (
+                           <div className="m-icon small mr5 text-red">cancel</div>
+                        )}
+                        <div className="text-strong">
+                           <TextWithHelp
+                              content={t(L.GreatPersonLevelRequiredDescV2, {
+                                 city: Config.City[nextCity].name(),
+                                 required: Config.City[nextCity].requireGreatPeopleLevel,
+                                 current: permanentGreatPeopleLevel,
+                              })}
+                           >
+                              {Config.City[nextCity].requireGreatPeopleLevel}
+                           </TextWithHelp>
+                        </div>
+                     </div>
+                     {Config.City[nextCity].requireSupporterPack ? (
+                        <>
+                           <div className="separator-vertical" style={{ height: 30, margin: "-5px 20px" }} />
+                           <div className="row f1">
+                              <div className="mr5">{t(L.SupporterPackRequired)}</div>
+                              <SupporterComponent scale={0.2} />
+                              <div className="f1" />
+                              <div>
+                                 {hasFlag(user?.attr ?? UserAttributes.None, UserAttributes.DLC1) ? (
+                                    <div className="m-icon small text-green">check_circle</div>
+                                 ) : getFreeCityThisWeek() === nextCity ? (
+                                    <div className="text-green text-strong">{t(L.FreeThisWeek)}</div>
+                                 ) : (
+                                    <div className="m-icon small text-red">cancel</div>
+                                 )}
+                              </div>
+                           </div>
+                        </>
+                     ) : null}
+                  </div>
+               </fieldset>
+               <div className="row mb5">
                   <div className="text-strong">{t(L.Deposit)}</div>
                   <div className="text-desc ml5">
                      ({Config.City[nextCity].size}x{Config.City[nextCity].size})
                   </div>
                </div>
-               <div className="mb5">
+               <div
+                  className="inset-shallow white p5"
+                  style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "5px 20px" }}
+               >
                   {mapOf(Config.City[nextCity].deposits, (dep, value) => {
-                     return `${Config.Resource[dep].name()}: ${formatPercent(value)}`;
-                  }).join(", ")}
-               </div>
-               <div className="text-strong">{t(L.UniqueBuildings)}</div>
-               <div className="mb5">
-                  {jsxMapOf(Config.City[nextCity].uniqueBuildings, (building, tech) => {
                      return (
-                        <TextWithHelp
-                           className="mr10"
-                           key={building}
-                           content={getBuildingDescription(building)}
-                        >
-                           {Config.Building[building].name()}{" "}
-                           <span className="text-desc">({Config.Tech[tech].name()})</span>
-                        </TextWithHelp>
+                        <div className="row">
+                           <DepositTextureComponent
+                              deposit={dep}
+                              scale={0.25}
+                              style={{ filter: "invert(0.75)", margin: "0 10px 0 0" }}
+                           />
+                           <div className="f1">{Config.Resource[dep].name()}</div>
+                           <div className="text-strong">{formatPercent(value)}</div>
+                        </div>
                      );
                   })}
                </div>
-               <div className="text-strong">{t(L.NaturalWonders)}</div>
-               <div className="mb5">
-                  {jsxMapOf(Config.City[nextCity].naturalWonders, (building, tech) => {
-                     const def = Config.Building[building];
+               <div className="text-strong mt5 mb5">{t(L.UniqueBuildings)}</div>
+               <div className="inset-shallow white">
+                  {jsxMapOf(Config.City[nextCity].uniqueBuildings, (building, tech, i) => {
                      return (
-                        <TextWithHelp
-                           className="mr10"
-                           key={building}
-                           content={getBuildingDescription(building)}
-                        >
-                           {def.name()}
-                        </TextWithHelp>
+                        <div className="row p5" style={{ backgroundColor: i % 2 === 0 ? "#efefef" : "#fff" }}>
+                           <BuildingSpriteComponent
+                              building={building}
+                              scale={0.5}
+                              style={{ filter: "invert(0.75)", margin: "0 10px 0 0" }}
+                           />
+                           <div className="f1">
+                              <div className="row">
+                                 <div className="text-strong f1">{Config.Building[building].name()}</div>
+                                 <div className="text-desc">{Config.Tech[tech].name()}</div>
+                              </div>
+                              <div>{getBuildingDescription(building)}</div>
+                           </div>
+                        </div>
+                     );
+                  })}
+               </div>
+               <div className="text-strong mt5 mb5">{t(L.NaturalWonders)}</div>
+               <div className="inset-shallow white">
+                  {jsxMapOf(Config.City[nextCity].naturalWonders, (building, tech, i) => {
+                     return (
+                        <div className="row p5" style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#efefef" }}>
+                           <BuildingSpriteComponent
+                              building={building}
+                              scale={0.5}
+                              style={{ filter: "invert(0.75)", margin: "0 10px 0 0" }}
+                           />
+                           <div className="f1">
+                              <div className="text-strong">{Config.Building[building].name()}</div>
+                              <div>{getBuildingDescription(building)}</div>
+                           </div>
+                        </div>
                      );
                   })}
                </div>
                {isEmpty(Config.City[nextCity].uniqueMultipliers) ? null : (
                   <>
-                     <div className="text-strong">{t(L.UniqueTechMultipliers)}</div>
-                     <div className="mb5">
-                        {jsxMapOf(Config.City[nextCity].uniqueMultipliers, (tech, multipliers) => {
+                     <div className="text-strong mt5 mb5">{t(L.UniqueTechMultipliers)}</div>
+                     <div className="inset-shallow white">
+                        {jsxMapOf(Config.City[nextCity].uniqueMultipliers, (tech, multipliers, i) => {
                            return (
-                              <TextWithHelp
-                                 className="mr10"
-                                 key={tech}
-                                 content={getMultipliersDescription(multipliers)}
+                              <div
+                                 className="row p5"
+                                 style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#efefef" }}
                               >
-                                 {Config.Tech[tech].name()}
-                              </TextWithHelp>
+                                 <div className="text-strong f1">
+                                    {Config.Tech[tech].name()} ({Config.TechAge[getAgeForTech(tech)].name()})
+                                 </div>
+                                 <div className="text-desc">{getMultipliersDescription(multipliers)}</div>
+                              </div>
                            );
                         })}
                      </div>
                   </>
                )}
-               <div className="text-strong">{t(L.GreatPeople)}</div>
-               <div className="mb5">
-                  {jsxMapOf(Config.GreatPerson, (person, def) => {
+               <div className="text-strong mt5 mb5">{t(L.GreatPeople)}</div>
+               <div className="inset-shallow white">
+                  {jsxMapOf(Config.GreatPerson, (person, def, i) => {
                      if (def.city === nextCity) {
                         return (
-                           <TextWithHelp className="mr10" key={person} content={def.desc(def, 1)}>
-                              {def.name()}
-                           </TextWithHelp>
+                           <div className="row p5">
+                              <GreatPersonImage
+                                 greatPerson={person}
+                                 style={{ height: 50, margin: "0 10px 0 0" }}
+                              />
+                              <div className="f1">
+                                 <div className="row">
+                                    <div className="f1 text-strong">{def.name()}</div>
+                                    <div className="text-desc">{Config.TechAge[def.age].name()}</div>
+                                 </div>
+                                 <div>{def.desc(def, 1)}</div>
+                              </div>
+                           </div>
                         );
                      }
                      return null;
                   })}
                </div>
-               <div className="text-strong">{t(L.Festival)}</div>
-               <div className="mb5">{Config.City[nextCity].festivalDesc()}</div>
-               <div className="separator" />
-               <div className="row">
-                  <div className="f1">{t(L.GreatPersonLevelRequired)}</div>
-                  {permanentGreatPeopleLevel >= Config.City[nextCity].requireGreatPeopleLevel ? (
-                     <div className="m-icon small mr5 text-green">check_circle</div>
-                  ) : (
-                     <div className="m-icon small mr5 text-red">cancel</div>
-                  )}
-                  <div className="text-strong">
-                     <TextWithHelp
-                        content={t(L.GreatPersonLevelRequiredDescV2, {
-                           city: Config.City[nextCity].name(),
-                           required: Config.City[nextCity].requireGreatPeopleLevel,
-                           current: permanentGreatPeopleLevel,
-                        })}
-                     >
-                        {Config.City[nextCity].requireGreatPeopleLevel}
-                     </TextWithHelp>
+               <div className="text-strong mt5 mb5">{t(L.Festival)}</div>
+               <div className="inset-shallow white">
+                  <div className="row p5">
+                     <BuildingSpriteComponent
+                        building={`Headquarter_${nextCity}` as any}
+                        scale={0.5}
+                        style={{ filter: "invert(0.75)", margin: "0 10px 0 0" }}
+                     />
+                     <div className="f1">{Config.City[nextCity].festivalDesc()}</div>
                   </div>
                </div>
-               {Config.City[nextCity].requireSupporterPack ? (
-                  <>
-                     <div className="separator" />
-                     <div className="row">
-                        <div className="f1 mr10">{t(L.SupporterPackRequired)}</div>
-                        <div>
-                           {hasFlag(user?.attr ?? UserAttributes.None, UserAttributes.DLC1) ? (
-                              <div className="m-icon small text-green">check_circle</div>
-                           ) : getFreeCityThisWeek() === nextCity ? (
-                              <div className="text-green text-strong">{t(L.FreeThisWeek)}</div>
-                           ) : (
-                              <div className="m-icon small text-red">cancel</div>
-                           )}
-                        </div>
-                     </div>
-                  </>
-               ) : null}
-            </fieldset>
-            <div className="sep5"></div>
+            </div>
+            <div className="separator" style={{ margin: "0 -8px 8px -8px" }} />
             <div className="text-right row" style={{ justifyContent: "flex-end" }}>
                <button
                   style={{ padding: "0 15px" }}

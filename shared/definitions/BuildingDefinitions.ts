@@ -50,6 +50,11 @@ export class BuildingDefinitions {
       output: { Worker: 510 },
       construction: { Concrete: 3, Steel: 1 },
    };
+   Penthouse: IBuildingDefinition = {
+      name: () => t(L.Penthouse),
+      input: { Bond: 1 },
+      output: { Worker: 4358 },
+   };
    // #endregion /////////////////////////////////////////////////////////////////////////////////////////////
 
    // #region Resources //////////////////////////////////////////////////////////////////////////////////////
@@ -1962,6 +1967,72 @@ export class BuildingDefinitions {
       max: 1,
       special: BuildingSpecial.WorldWonder,
       wikipedia: "Easter_Bunny",
+   };
+
+   BlueMosque: IBuildingDefinition = {
+      name: () => t(L.BlueMosque),
+      desc: () => t(L.BlueMosqueDesc),
+      input: {},
+      output: {},
+      construction: { Cannon: 100, Lens: 100, Banknote: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Blue_Mosque,_Istanbul",
+   };
+
+   TopkapiPalace: IBuildingDefinition = {
+      name: () => t(L.TopkapiPalace),
+      desc: () => t(L.TopkapiPalaceDesc),
+      input: {},
+      output: {},
+      construction: { Biplane: 100, Tank: 100, Ironclad: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "Topkapı_Palace",
+   };
+
+   Cappadocia: IBuildingDefinition = {
+      name: () => t(L.Cappadocia),
+      desc: () => t(L.CappadociaDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Cappadocia",
+   };
+
+   Pamukkale: IBuildingDefinition = {
+      name: () => t(L.Pamukkale),
+      desc: () => t(L.PamukkaleDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Pamukkale",
+   };
+
+   MountArarat: IBuildingDefinition = {
+      name: () => t(L.MountArarat),
+      desc: () => t(L.MountAraratDesc),
+      input: {},
+      output: {},
+      construction: {},
+      max: 0,
+      special: BuildingSpecial.NaturalWonder,
+      wikipedia: "Mount_Ararat",
+   };
+
+   SwissBank: IBuildingDefinition = {
+      name: () => t(L.SwissBank),
+      desc: () => t(L.SwissBankDesc),
+      input: {},
+      output: {},
+      construction: { Forex: 100, Diplomacy: 100, Radio: 100 },
+      max: 1,
+      special: BuildingSpecial.WorldWonder,
+      wikipedia: "UBS",
    };
 
    // #endregion /////////////////////////////////////////////////////////////////////////////////////////////
