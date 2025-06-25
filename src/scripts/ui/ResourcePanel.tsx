@@ -340,6 +340,7 @@ export function ResourcePanel(): React.ReactNode {
                      <FormatNumber value={scienceDelta * 3600 * 24} />
                      &nbsp;sci/day
                   </div>
+
                   <div>&nbsp;</div>
                   <div>Time remaining:</div>
                   {Object.entries(getTechsOfInterestTable(gs)).map(([k, v]) => {
@@ -350,7 +351,7 @@ export function ResourcePanel(): React.ReactNode {
                      const hasEnoughScience = scienceAvailable >= unlockCost;
                      const remainingUnlockCost = unlockCost - scienceAvailable;
                      const remainingUnlockCostMillis = remainingUnlockCost / scienceDelta * 1000;
-                     const unlockCostFormatted = hasEnoughScience ? "available" : formatMillisToYMDHM(remainingUnlockCostMillis);
+                     const unlockCostFormatted = (scienceDelta <= 0) ? "unknown" : hasEnoughScience ? "available" : formatMillisToYMDHM(remainingUnlockCostMillis);
 
                      return (
                         <div className="row text-small">

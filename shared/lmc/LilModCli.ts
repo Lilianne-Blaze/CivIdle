@@ -54,6 +54,14 @@ export const lilModOption = {
    // v23.11
    enablePotatoTransports1: "enablePotatoTransports1",
 
+   // v23.11
+   chatAlwaysScroll: "chatAlwaysScroll",
+   mapBetterStatusIcons: "mapBetterStatusIcons",
+
+   // v23.27
+   logOutgoingMqttMessages: "logOutgoingMqttMessages",
+   logIncomingMqttMessages: "logIncomingMqttMessages",
+
 
 };
 
@@ -95,6 +103,13 @@ export const lilModOptionDefs = {
    // v23.11
    enablePotatoTransports1: false,
 
+   //v23.11
+   chatAlwaysScroll: false,
+   mapBetterStatusIcons: true,
+
+   // v23.27
+   logOutgoingMqttMessages: false,
+   logIncomingMqttMessages: false,
 
 
 };

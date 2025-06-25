@@ -69,7 +69,7 @@ export async function handleChatCommand(command: string): Promise<void> {
       case "modVer":
       case "modver": {
          addSystemMessage(
-            `LMC Version: ${LMC_MAJOR_VER}.${LMC_MINOR_VER} for build (${LMC_FOR_BUILD}), note: ${LMC_VER_NOTE}`);
+            `LMC Version: ${LMC_MAJOR_VER}.${LMC_MINOR_VER} for build ${LMC_FOR_BUILD}, note: ${LMC_VER_NOTE}`);
          break;
       }
 

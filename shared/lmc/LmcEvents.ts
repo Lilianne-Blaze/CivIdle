@@ -19,12 +19,22 @@ gt.OnAtBottomOfTickEverySecond = OnAtBottomOfTickEverySecond;
 export const OnSoonAfterGameStartedOrLoaded = new TypedEvent<GameStateAndOfflineFlagEvent>();
 gt.OnSoonAfterGameStartedOrLoaded = OnSoonAfterGameStartedOrLoaded;
 
+export type TileSelectedEvent = {
+   tileX: number;
+   tileY: number;
+   isLeftClick: boolean;
+   isCity?: boolean;
+   isWorld?: boolean;
+   gs?: GameState | null | undefined;
+   fpEvent?: MouseEvent | TouchEvent | null | undefined;
+};
+
 // tileX, tileY, isLeftClick, grid.x,grid.y, gs, e
-export const OnCityTileSelected = new TypedEvent();
+export const OnCityTileSelected = new TypedEvent<TileSelectedEvent>();
 gt.OnCityTileSelected = OnCityTileSelected;
 
 // tileX, tileY, isLeftClick
-export const OnWorldTileSelected = new TypedEvent();
+export const OnWorldTileSelected = new TypedEvent<TileSelectedEvent>();
 gt.OnWorldTileSelected = OnWorldTileSelected;
 
 // =====

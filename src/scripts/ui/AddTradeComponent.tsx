@@ -25,6 +25,7 @@ import { playError, playKaching } from "../visuals/Sound";
 import type { IBuildingComponentProps } from "./BuildingPage";
 import { showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
+import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
 
 const INPUT_WIDTH = 100;
 
@@ -34,11 +35,16 @@ export function AddTradeComponent({ gameState, xy }: IBuildingComponentProps): R
    const enabled =
       !isNullOrUndefined(user) &&
       trades.filter((t) => t.fromId === user.userId).length < getMaxActiveTrades(user);
-   const buyResources = keysOf(unlockedResources(gameState)).filter((r) => !NoStorage[r] && !NoPrice[r]);
+   // const buyResources = keysOf(unlockedResources(gameState)).filter((r) => !NoStorage[r] && !NoPrice[r]);
+   // const availableResources = combineResources(
+   //    Array.from(Tick.current.playerTradeBuildings.values()).map((m) => m.resources),
+   // );
+   // const sellResources = keysOf(availableResources);
+   const buyResources = getSeenResourceKeys();
    const availableResources = combineResources(
       Array.from(Tick.current.playerTradeBuildings.values()).map((m) => m.resources),
    );
-   const sellResources = keysOf(availableResources);
+   const sellResources = getSeenResourceKeys();
    const [trade, setTrade] = useState<IAddTradeRequest>({
       buyResource: buyResources[0],
       buyAmount: 0,
@@ -102,7 +108,7 @@ export function AddTradeComponent({ gameState, xy }: IBuildingComponentProps): R
                <div className="f1">
                   0 ~ <FormatNumber value={availableResources[trade.sellResource] ?? 0} />
                </div>
-               {[0.1, 0.25, 0.5, 1].map((pct) => {
+               {[0.01, 0.1, 0.25, 0.5, 0.75, 0.95, 1].map((pct) => {
                   return (
                      <div
                         key={pct}
@@ -154,7 +160,7 @@ export function AddTradeComponent({ gameState, xy }: IBuildingComponentProps): R
                   <FormatNumber value={buyAmountRange.min} /> ~ <FormatNumber value={buyAmountRange.max} />
                </div>
                <div className="f1" />
-               {[-percentage, -percentage / 2, 0, percentage / 2, percentage].map((pct) => {
+               {[-percentage, -percentage / 2, -0.03, 0, 0.03, percentage / 2, percentage].map((pct) => {
                   return (
                      <div
                         key={pct}

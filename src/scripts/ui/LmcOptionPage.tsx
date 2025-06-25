@@ -194,6 +194,10 @@ export function LmcOptionPage(): React.ReactNode {
                />
             </fieldset>
 
+            <WarningComponent icon="info" className="mb10 text-small">
+               <RenderHTML html={"Keep in mind that some UI options will refresh with a delay or after you reload the game."} />
+            </WarningComponent>
+
             <fieldset>
                <legend>User interface</legend>
 
@@ -207,6 +211,18 @@ export function LmcOptionPage(): React.ReactNode {
                      notifyGameOptionsUpdate(options);
                   }}
                />
+
+               <ToggleComponent
+                  title="Always scroll to bottom in chat"
+                  contentHTML="If enabled, the chat will always scroll to the bottom when a new message arrives."
+                  value={lilModCli.isOption(lilModOption.chatAlwaysScroll)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.chatAlwaysScroll);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
             </fieldset>
 
             <fieldset>
@@ -244,6 +260,18 @@ export function LmcOptionPage(): React.ReactNode {
                      notifyGameOptionsUpdate(options);
                   }}
                />
+
+               <ToggleComponent
+                  title="Show better status icons"
+                  contentHTML="Show more visible status icons in the city map"
+                  value={lilModCli.isOption(lilModOption.mapBetterStatusIcons)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.mapBetterStatusIcons);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
             </fieldset>
 
             <fieldset>
@@ -270,6 +298,13 @@ export function LmcOptionPage(): React.ReactNode {
                      notifyGameOptionsUpdate(options);
                   }}
                />
+
+               <WarningComponent icon="warning" className="mb10 text-small">
+                  <RenderHTML html={"This blocks some transports to reduce the number of transports active at once." +
+                     " It may cause delays in resource delivery, or slowdown overall production." +
+                     " If you notice any anomalies, try increasing your stockpile limits."} />
+               </WarningComponent>
+
             </fieldset>
          </div>
       </div>

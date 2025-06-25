@@ -2,7 +2,7 @@ import mqtt from "mqtt";
 import { getGameOptions } from "../logic/GameStateLogic";
 import { fs, isFsLoaded, CHANNEL_GUID_ROOT } from "./LmcConstsEarly";
 import { OnAfterWelcomeMessageProcessed, OnAtEndOfSetCityOverride, OnUserIdChanged } from "./LmcEvents";
-import { getUserScriptsPath } from "./LmcScriptsShared";
+import { addSystemMessageSafe, getUserScriptsPath } from "./LmcScriptsShared";
 import { atMostOnce, atMostOncePerXSecs, sha1Hex } from "./MiscFuncs";
 import { lilModCli } from "./LilModCli";
 import { log } from "console";
@@ -103,3 +103,15 @@ export function ensureLmcUserScriptsLoaded() {
       console.debug("ensureLmcUserScriptsLoaded called.");
    }
 }
+
+// =====
+
+export function println(message: string | null | undefined): void {
+   if (message === null || message === undefined) { return; }
+   addSystemMessageSafe(message);
+   console.log(message);
+}
+gt.println = println;
+
+
+// =====

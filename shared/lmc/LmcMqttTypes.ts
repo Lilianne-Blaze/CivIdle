@@ -65,7 +65,7 @@ export interface ModVersionPayload {
 export interface ChatMessagePayload {
     message: string,
     channel: string,
-    userHandle: string,
+    userHandle?: string | null, // should never be null, but just in case
     userId?: string | null,
     time?: number | null,
     timedGuid48?: string | null,

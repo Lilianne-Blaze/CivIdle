@@ -67,7 +67,7 @@ import {
    type ITileData,
 } from "./Tile";
 
-import { lilModCli } from "../lmc/LilModCli";
+import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { get } from "http";
 
 const gt = globalThis as any;
@@ -633,7 +633,7 @@ export function getCurrentPriority(building: IBuildingData, gs: GameState): numb
    // const balancedTransportsEnabledDefault = false;
    // const balancedTransportsEnabled =
    //    savedGame?.options?.lilModCli?.enableBalancedTransports ?? balancedTransportsEnabledDefault;
-   const balancedTransportsEnabled = lilModCli.isOption("enableBalancedTransports");
+   const balancedTransportsEnabled = lilModCli.isOption(lilModOption.balancedTransports);
    const adjustment = balancedTransportsEnabled ? (Math.random() - 0.5) * 0.9 : 0;
 
    switch (building.status) {
@@ -660,6 +660,13 @@ export function getMaxInputDistance(building: IBuildingData, gs: GameState): num
    if (!hasFeature(GameFeature.BuildingInputMode, gs)) {
       return Number.POSITIVE_INFINITY;
    }
+
+   if (lilModCli.isOption(lilModOption.ignoreMaxDistanceWhenBuildingOrUpgrading)) {
+      if (building.status == "building" || building.status == "upgrading") {
+         return Number.POSITIVE_INFINITY;
+      }
+   }
+
    // Managed import rule does not apply when the building is being upgraded!
    if (building.status === "completed" && "resourceImports" in building) {
       const ri = building as IResourceImportBuildingData;

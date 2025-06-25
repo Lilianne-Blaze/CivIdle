@@ -1,5 +1,6 @@
 import type { Building, IBuildingDefinition } from "../definitions/BuildingDefinitions";
 import type { Deposit, Resource } from "../definitions/ResourceDefinitions";
+import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { OnAtEndOfClearIntraTickCache } from "../lmc/LmcEvents";
 import { checkMarketTrade } from "../lmc/LmcMarkets";
 import { Grid } from "../utilities/Grid";
@@ -73,6 +74,8 @@ export function getBuildingIO(
    options: IOCalculation,
    gs: GameState,
 ): Readonly<PartialTabulate<Resource>> {
+   //const enableLogging = Math.random() < 0.0001;
+
    const key =
       (tileToHash(xy) << (IOCalculation.TotalUsedBits + 1)) | (options << 1) | (type === "input" ? 1 : 0);
    const cached = _cache.buildingIO.get(key);
@@ -87,36 +90,39 @@ export function getBuildingIO(
          const market = b as IMarketBuildingData;
          if (type === "input") {
             const { total, used } = getStorageFor(xy, gs);
+            const freeStorage = total - used;
+
             forEach(market.sellResources, (sellResource) => {
                const buyResource = market.availableResources[sellResource];
+
                if (buyResource) {
-                  const sellAmount = clamp(
+                  const maybeSellAmount = clamp(
                      b.capacity * getMarketSellAmount(sellResource, xy, gs),
                      0,
-                     b.resources[sellResource] ?? 0,
+                     freeStorage,
                   );
-                  if (sellAmount <= 0) {
+                  if (maybeSellAmount <= 0) {
                      return;
                   }
+                  const buyAmount = getMarketBuyAmount(sellResource, maybeSellAmount, buyResource, xy, gs);
 
-                  const buyAmount = getMarketBuyAmount(sellResource, sellAmount, buyResource, xy, gs);
-                  if (used - sellAmount + buyAmount > total) {
+                  if (used - maybeSellAmount + buyAmount > total) {
                      // is it needed? needs more testing
                      //Tick.next.notProducingReasons.set(xy, NotProducingReason.StorageFull);
                      return;
                   }
 
-                  const sellValue = (Config.ResourcePrice[sellResource] ?? 0) * sellAmount;
+                  const sellValue = (Config.ResourcePrice[sellResource] ?? 0) * maybeSellAmount;
                   const buyValue = (Config.ResourcePrice[buyResource] ?? 0) * buyAmount;
                   if (sellValue <= 0 || buyValue <= 0) {
                      return;
                   }
                   const tradeValue = buyValue / sellValue;
-                  const amountRatio = buyAmount / sellAmount;
+                  const amountRatio = buyAmount / maybeSellAmount;
                   const params = {
                      sellResource,
                      buyResource,
-                     sellAmount,
+                     sellAmount: maybeSellAmount,
                      buyAmount,
                      sellValue,
                      buyValue,
@@ -126,12 +132,11 @@ export function getBuildingIO(
                      gs,
                      checkType: "import",
                   };
-
                   const allowTrade = checkMarketTrade(params);
-
                   if (allowTrade) {
                      resources[sellResource] = getMarketBaseSellAmount(sellResource, buyResource);
                   }
+
                }
             });
          }
@@ -154,8 +159,8 @@ export function getBuildingIO(
          const rib = b as IResourceImportBuildingData;
          const totalSetCapacity = reduceOf(rib.resourceImports, (prev, k, v) => prev + v.perCycle, 0);
 
-         // LMCBOOKMARK
-         const allowScaleUp = true;
+         // LMCBOOKMARK always use full import capacity
+         const allowScaleUp = lilModCli.isOption(lilModOption.alwaysUseFullImportCapacity);
          const scaleFactor = clamp(
             totalSetCapacity > 0 ? totalCapacity / totalSetCapacity : 0,
             0,

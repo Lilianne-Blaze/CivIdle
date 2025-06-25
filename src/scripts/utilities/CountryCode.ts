@@ -162,7 +162,7 @@ export const CountryCode = {
    QA: "Qatar",
    RO: "Romania",
    RS: "Serbia",
-   RU: "Russian Federation",
+   RU: "Ruzzia",
    RW: "Rwanda",
    SA: "Saudi Arabia",
    SB: "Solomon Islands",

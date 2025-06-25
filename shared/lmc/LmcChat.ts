@@ -6,6 +6,7 @@ import { addSystemMessageSafe, getUserSafe, showToastSafe } from "./LmcScriptsSh
 import { ChatMessagePayload, LmcMqttPackage, newMqttPublishOptions, newUserDataPayload } from "./LmcMqttTypes";
 import { atMostOnce, newTimedGuid48 } from "./MiscFuncs";
 import { lmcMqtt } from "./LmcMqtt";
+import { ChatAttributes, UserAttributes } from "../utilities/Database";
 
 const gt = globalThis as any;
 (globalThis as any).temp = (globalThis as any).temp + Math.random();
@@ -31,24 +32,31 @@ export const lmcChat = {
         //console.debug("[LmcChat]", "lmcChat.maybeRedirectChatMessage called", JSON.stringify(event));
 
         const channel = String(event.channel);
+        const chatLine = event.chat.trim();
         if (channel !== "nds" && channel !== "t1") {
             // not a special channel, do nothing and let the game handle it
+            event.blockSending = false;
+            return;
+        } else if (chatLine.startsWith("/")) {
+            // it's a command, do nothing and let the game handle it
             event.blockSending = false;
             return;
         }
 
         event.blockSending = true;
-        const chatLine = event.chat.trim();
 
         const user = getUserSafe();
+        const userAttrs = user?.attr || 0;
+        const chatAttrs = ((userAttrs & UserAttributes.Mod) ? ChatAttributes.Mod : 0) | ((userAttrs & UserAttributes.DLC1) ? ChatAttributes.Supporter : 0);
         const chatMessagePayload: ChatMessagePayload = {
             channel: channel,
             message: chatLine,
-            userHandle: event.user.handle,
+            userHandle: user?.handle,
+            userId: user?.userId,
             time: event.timeMillis,
             flag: user?.flag,
             level: user?.level,
-            attr: user?.attr,
+            attr: chatAttrs,
             color: user?.color,
         }
 

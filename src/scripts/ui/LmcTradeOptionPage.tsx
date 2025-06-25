@@ -38,9 +38,10 @@ import { TextWithHelp } from "./TextWithHelpComponent";
 import { WarningComponent } from "./WarningComponent";
 import { TitleBarComponent } from "./TitleBarComponent";
 
-import { lilModCli } from "../../../shared/lmc/LilModCli";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 import { useState } from "react";
 import { ToggleComponent } from "./ToggleComponent";
+import { parseNumberTolerant } from "../../../shared/lmc/MiscFuncs";
 
 export function LmcTradeOptionPage(): React.ReactNode {
    const options = useGameOptions();
@@ -50,7 +51,30 @@ export function LmcTradeOptionPage(): React.ReactNode {
          <TitleBarComponent>{t(L.Gameplay)}</TitleBarComponent>
          <MenuComponent />
          <div className="window-body">
+
+            <WarningComponent icon="info" className="mb10 text-small">
+               <RenderHTML html={"Most text fields accept both scientific (1e6, 12e9) and regular (1m, 12b) notation."} />
+            </WarningComponent>
+
             <fieldset>
+
+               <legend>Storage</legend>
+
+               <ToggleComponent
+                  title="Bigger stockpiles"
+                  contentHTML="Doubles the limits, and enables more precise stockpile settings."
+                  value={lilModCli.isOption(lilModOption.buildingsBiggerStockpiles)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.buildingsBiggerStockpiles);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+            </fieldset>
+
+            <fieldset>
+
                <legend>Markets</legend>
 
                <ToggleComponent
@@ -86,12 +110,12 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   }}
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontSellFoodIfBelow"
                   label="Don't sell food if amount is below"
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontBuyFoodIfAbove"
                   label="Don't buy food if amount is above"
                />
@@ -107,12 +131,12 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   }}
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontSellBuildMaterialsIfBelow"
                   label="Don't sell building materials if amount is below"
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontBuyBuildMaterialsIfAbove"
                   label="Don't buy building materials if amount is above"
                />
@@ -128,12 +152,12 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   }}
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontSellOthersIfBelow"
                   label="Don't sell other goods if amount is below"
                />
 
-               <LmcAmountOptionComponent
+               <LmcAmountOptionRowComponent
                   optionName="marketsDontBuyOthersIfAbove"
                   label="Don't buy other goods if amount is above"
                />
@@ -148,9 +172,10 @@ export function LmcTradeOptionPage(): React.ReactNode {
 const defaultGetOption = (...args) => lilModCli.getOption(...args);
 const defaultSetOption = (...args) => lilModCli.setOption(...args);
 const defaultFormatNumber = (...args) => formatNumber(...args);
-const defaultParseNumber = (arg1) => lmcParseNumber2(arg1, true);
+//const defaultParseNumber = (arg1) => lmcParseNumber2(arg1, true);
+const defaultParseNumber = (arg1) => parseNumberTolerant(arg1, 0);
 
-export function LmcAmountOptionComponent({
+export function LmcAmountOptionRowComponent({
    getOption = defaultGetOption,
    setOption = defaultSetOption,
    formatNumber = defaultFormatNumber,

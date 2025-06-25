@@ -13,13 +13,14 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 11;
+export const LMC_MINOR_VER = 31;
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
-export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
+//export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
+export const LMC_VER_NUMBER = LMC_MAJOR_VER * 1000 + LMC_MINOR_VER;
 gt.LMC_VER_NUMBER = LMC_VER_NUMBER;
 
-export const LMC_FOR_BUILD = 609;
+export const LMC_FOR_BUILD = 620;
 gt.LMC_FOR_BUILD = LMC_FOR_BUILD;
 
 export const LMC_VER_NOTE = "internal alpha";
@@ -67,9 +68,17 @@ gt.MQTT_DEFAULT_EXPIRY_SECONDS = MQTT_DEFAULT_EXPIRY_SECONDS;
 export const LONG_TERM_BACKUPS_EVERY_X_SECONDS = 60 * 60 * 6; // 6 hours
 gt.LONG_TERM_BACKUPS_EVERY_X_SECONDS = LONG_TERM_BACKUPS_EVERY_X_SECONDS;
 
-export const CustomRedOpenPadlock_png = "" + new URL("custom-red-open-padlock.png", import.meta.url).href;
+export const POTATO_TRANSPORTS1_DIVIDER = 4;
+gt.POTATO_TRANSPORTS1_DIVIDER = POTATO_TRANSPORTS1_DIVIDER;
 
-export const CustomNukeDove100_png = "" + new URL("custom-nukedove100.png", import.meta.url).href;
+// export const CustomRedOpenPadlock_png = "" + new URL("custom-red-open-padlock.png", import.meta.url).href;
+// gt.CustomRedOpenPadlock_png = CustomRedOpenPadlock_png;
+
+// export const CustomNukeDove100_png = "" + new URL("custom-nukedove100.png", import.meta.url).href;
+// gt.CustomNukeDove100_png = CustomNukeDove100_png;
+
+// export const CustomBlackCalculator_png = "" + new URL("custom-black-calculator.png", import.meta.url).href;
+// gt.CustomBlackCalculator_png = CustomBlackCalculator_png;
 
 export const path = requireSafeFallback("path");
 gt.path = path;
@@ -153,6 +162,7 @@ export const ResourceIsIdea = {
 export const ResourceIsUltimate = {
    PlanetaryRover: true,
    Bitcoin: true,
+   Koti: true,
 };
 
 export const BuildingIsPowerPlant = {

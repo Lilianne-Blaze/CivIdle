@@ -86,7 +86,7 @@ gt.sortMapByValue = sortMapByValue;
 
 // =====
 
-export function zeroAllButThreeHighestDigits(num: number, notFiniteToZero = false) {
+export function zeroAllButThreeHighestDigits(num: number | string | null | undefined, notFiniteToZero = false) {
    return zeroAllButXHighestDigits(num, 3, notFiniteToZero ? 0 : undefined);
 }
 gt.zeroAllButThreeHighestDigits = zeroAllButThreeHighestDigits;
@@ -585,4 +585,3 @@ export function mergeTimedGuid48(timeMillis: number, uuid: string): string {
 gt.mergeTimedGuid48 = mergeTimedGuid48;
 
 // =====
-

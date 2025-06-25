@@ -2,7 +2,7 @@ import { NoPrice, Resource } from "../definitions/ResourceDefinitions";
 import { Config } from "../logic/Config";
 import { Tick } from "../logic/TickLogic";
 import { clearObject, forEach, type Tile } from "../utilities/Helper";
-import { lilModCli } from "./LilModCli";
+import { lilModCli, lilModOption } from "./LilModCli";
 import { ResourceIsBuildMaterial, ResourceIsFood } from "./LmcConstsEarly";
 import { addSystemMessageSafe } from "./LmcScriptsShared";
 import { OnAtEndOfClearIntraTickCache } from "./LmcEvents";
@@ -99,9 +99,9 @@ function initMarketTradesCache() {
 
 export function checkMarketTrade(params: CheckMarketTradeParams): boolean {
    const enableLogging = false;
-   // const enableLogging = Math.random() < 0.0001;
+   //const enableLogging = Math.random() < 0.0001;
 
-   if (lilModCli.isOption("marketsDontSellLessForMore")) {
+   if (lilModCli.isOption(lilModOption.marketsDontSellLessForMore)) {
       if (params.amountRatio > 1) {
          if (enableLogging) {
             addSystemMessageSafe(
@@ -112,7 +112,7 @@ export function checkMarketTrade(params: CheckMarketTradeParams): boolean {
       }
    }
 
-   if (lilModCli.isOption("marketsDontSellAtLoss")) {
+   if (lilModCli.isOption(lilModOption.marketsDontSellAtLoss)) {
       if (params.tradeValue < 1) {
          if (enableLogging) {
             addSystemMessageSafe(

@@ -8,6 +8,7 @@ import { getFullVersion } from "../logic/Version";
 import { SteamClient, isSteam } from "../rpc/SteamClient";
 import { useTypedEvent } from "../utilities/Hook";
 import { openUrl } from "../utilities/Platform";
+import { lilModCli } from "../../../shared/lmc/LilModCli";
 
 export enum LoadingPageStage {
    LoadSave = 0,
@@ -49,6 +50,8 @@ export function LoadingPage({
          <img className="energy-star" src={energyStar} />
          CivIdle {getFullVersion()}
          <br />
+         Lilianne's mod {lilModCli.getVersionDesc()}
+         <br /><br />
          Proudly Presented by Fish Pond Studio
          <br />
          <br />

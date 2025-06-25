@@ -526,6 +526,7 @@ export function getTechsOfInterest(gs: GameState = getGameState(), includeUnlock
       "Democracy",
       "Capitalism",
       "Skyscraper",
+      "MonetarySystem",
       "Software",
       "Future"];
 

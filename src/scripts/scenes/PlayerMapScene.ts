@@ -1,7 +1,6 @@
 import { SmoothGraphics } from "@pixi/graphics-smooth";
 import type { ColorSource, FederatedPointerEvent, IPointData, Texture } from "pixi.js";
 import { BitmapText, Container, LINE_CAP, LINE_JOIN, ParticleContainer, Sprite } from "pixi.js";
-import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import WorldMap from "../../../shared/definitions/WorldMap.json";
 import { isTileReserved } from "../../../shared/logic/PlayerTradeLogic";
 import {
@@ -28,10 +27,11 @@ import { AccountLevelImages } from "../ui/TextureSprites";
 import { getColorCached } from "../utilities/CachedColor";
 import { Scene, destroyAllChildren, type ISceneContext } from "../utilities/SceneManager";
 import { Singleton } from "../utilities/Singleton";
-import { Easing } from "../utilities/pixi-actions/Easing";
-import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { Fonts } from "../visuals/Fonts";
 import { findPath, getOwnedTradeTile } from "./PathFinder";
+import { OnWorldTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
+import { getGameState } from "../../../shared/logic/GameStateLogic";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
@@ -71,6 +71,26 @@ export class PlayerMapScene extends Scene {
          const sprite = this._landTiles.addChild(new Sprite(this.context.textures.Misc_100x100));
          sprite.tint = 0x3498db;
          sprite.position.set(point.x * GridSize, point.y * GridSize);
+
+
+         // LMCBOOKMARK add coords to world map tiles
+         if (lilModCli.isOption(lilModOption.worldMapShowCoords)) {
+            const coordsTxt = this._landTiles.addChild(
+               new BitmapText(`${point.x}, ${point.y}`, {
+                  fontName: Fonts.Cabin,
+                  fontSize: 16,
+                  tint: 0xffffff,
+               }),
+            );
+            coordsTxt.anchor.set(0.5, 0.5);
+            coordsTxt.position.set(
+               point.x * GridSize + 0.5 * GridSize,
+               point.y * GridSize + 0.5 * GridSize + 40,
+            );
+            coordsTxt.alpha = 1;
+            coordsTxt.text = `${point.x}, ${point.y}`;
+         }
+
       });
 
       this._path = this.viewport.addChild(new Container());
@@ -164,7 +184,23 @@ export class PlayerMapScene extends Scene {
             building.position.set(point.x * GridSize + GridSize / 2, point.y * GridSize + GridSize / 2);
             building.scale.set(0.75);
             building.tint = 0xffffff;
-            building.alpha = 0.2;
+
+            // LMCBOOKMARK work in progress
+            building.alpha = 0.4;
+            if (b == "Condo" || b == "Apartment" || b == "Pizzeria") {
+               building.tint = 0xffff00; // yellow
+               building.alpha = 0.8;
+            }
+            if (b == "CloneLab" || b == "ComputerLab" || b == "ResearchLab") {
+               building.tint = 0x0000ff; // blue
+               building.alpha = 0.8;
+            }
+            if (b == "SpaceCenter" || b == "BitcoinMiner" || b == "CloneFactory") {
+               building.tint = 0x00ff00; // green
+               building.alpha = 0.8;
+            }
+
+
          }
       });
       getPlayerMap().forEach((entry, xy) => {
@@ -202,6 +238,13 @@ export class PlayerMapScene extends Scene {
       const pos = this.viewport.screenToWorld(e);
       const tileX = Math.floor(pos.x / GridSize);
       const tileY = Math.floor(pos.y / GridSize);
+
+      const event = {
+         tileX, tileY, isLeftClick: e.button === 0,
+         fpEvent: e, isWorld: true, gs: getGameState()
+      } as TileSelectedEvent;
+      OnWorldTileSelected.emit(event);
+
       this.selectTile(tileX, tileY);
    }
 
@@ -407,6 +450,25 @@ class PlayerTile extends Container {
             buildingSprite.position.set(x * GridSize + 0.5 * GridSize, y * GridSize + 0.5 * GridSize);
             buildingSprite.alpha = 0.25;
          }
+
+         // LMCBOOKMARK add coords to world map tiles, second time in case it got covered
+         if (lilModCli.isOption(lilModOption.worldMapShowCoords)) {
+            const coordsTxt = this.addChild(
+               new BitmapText(`${tile.x}, ${tile.y}`, {
+                  fontName: Fonts.Cabin,
+                  fontSize: 16,
+                  tint: 0xffffff,
+               }),
+            );
+            coordsTxt.anchor.set(0.5, 0.5);
+            coordsTxt.position.set(
+               tile.x * GridSize + 0.5 * GridSize,
+               tile.y * GridSize + 0.5 * GridSize + 40,
+            );
+            coordsTxt.alpha = 1;
+            coordsTxt.text = `${tile.x}, ${tile.y}`;
+         }
+
       }
 
       const flag = this.addChild(new Sprite(textures[`Flag_${data.flag.toUpperCase()}`]));
@@ -453,13 +515,15 @@ class PlayerTile extends Container {
       handle.position.set(x * GridSize + 0.5 * GridSize, y * GridSize + 0.5 * GridSize);
       handle.alpha = isReserved ? 1 : 0.5;
 
+      // LMCBOOKMARK made fontSize smaller (20 to 16) for coords to fit better
       const tariff = this.addChild(
          new BitmapText(formatPercent(data.tariffRate), {
             fontName: Fonts.Cabin,
-            fontSize: 20,
+            fontSize: 16,
             tint: isMyself ? 0xffeaa7 : 0xffffff,
          }),
       );
+
       tariff.anchor.set(0.5, 0.5);
       tariff.position.set(x * GridSize + 0.5 * GridSize, y * GridSize + 0.5 * GridSize + 20);
       tariff.alpha = isReserved ? 1 : 0.5;

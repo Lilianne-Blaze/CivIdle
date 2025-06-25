@@ -2,8 +2,10 @@ import type { Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
-import { lilModCli } from "../lmc/LilModCli";
+import { lilModCli, lilModOption } from "../lmc/LilModCli";
+import { POTATO_TRANSPORTS1_DIVIDER } from "../lmc/LmcConstsEarly";
 import { checkMarketTrade } from "../lmc/LmcMarkets";
+import { getSeenResourcesTable } from "../lmc/LmcScriptsShared";
 import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
 import {
@@ -101,11 +103,14 @@ import {
    type IWarehouseBuildingData,
 } from "./Tile";
 
+const gt = globalThis as any;
+
 export const UPDATE_MULTIS = {
    grandBazaarRange: 1,
    marketRefreshPeriod: 1,
+   alwaysDifferentTrades: false,
 };
-globalThis.UPDATE_MULTIS = UPDATE_MULTIS;
+gt.UPDATE_MULTIS = UPDATE_MULTIS;
 
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
@@ -613,6 +618,14 @@ export function transportAndConsumeResources(
             result.push({ xy, resource: buyResource, amount: buyAmount });
             // safeAdd(building.resources, buyResource, buyAmount);
             totalBought += buyAmount;
+
+            // LMCBOOKMARK add EIC points from Market trades
+            const eic = Tick.current.specialBuildings.get("EastIndiaCompany");
+            if (eic) {
+               const value = (Config.ResourcePrice[sellResource] ?? 0) * sellAmount;
+               safeAdd(eic.building.resources, "TradeValue", value);
+            }
+
          }
       });
       if (totalBought > 0) {
@@ -859,6 +872,15 @@ export function transportResource(
    sourcesOverride: Tile[] | undefined = undefined,
 ): number {
    let amountLeft = amount;
+
+   // LMCBOOKMARK potato transports v1
+   if (lilModCli.isOption(lilModOption.enablePotatoTransports1)) {
+      const tickPlusCoords = gs.tick + targetXy;
+      if (!(tickPlusCoords % POTATO_TRANSPORTS1_DIVIDER == 0)) {
+         return amountLeft;
+      }
+   }
+
    const grid = getGrid(gs);
    const targetPoint = tileToPoint(targetXy);
    // We are out of workers, no need to run the expensive sorting!
@@ -1032,10 +1054,16 @@ export function tickPrice(gs: GameState) {
       gs.lastPriceUpdated = priceId;
       OnPriceUpdated.emit(gs);
    }
+
+   // const resources = filterOf(
+   //    unlockedResources(gs),
+   //    (res) => !NoPrice[res] && !NoStorage[res] && res !== "Koti",
+   // );
    const resources = filterOf(
-      unlockedResources(gs),
-      (res) => !NoPrice[res] && !NoStorage[res] && res !== "Koti",
+      getSeenResourcesTable(),
+      (res) => !NoPrice[res] && !NoStorage[res],
    );
+
    const grandBazaar = findSpecialBuilding("GrandBazaar", gs);
    const grid = getGrid(gs);
    getBuildingsByType("Market", gs)?.forEach((tile, xy) => {
@@ -1046,8 +1074,9 @@ export function tickPrice(gs: GameState) {
       const market = building as IMarketBuildingData;
       if (forceUpdatePrice || sizeOf(market.availableResources) === 0) {
          const nextToGrandBazaar =
-            grandBazaar?.building.status === "completed" &&
-            grid.distanceTile(grandBazaar.tile, xy) <= 1 * UPDATE_MULTIS.grandBazaarRange;
+            (grandBazaar?.building.status === "completed" &&
+               grid.distanceTile(grandBazaar.tile, xy) <= 1 * UPDATE_MULTIS.grandBazaarRange)
+            || UPDATE_MULTIS.alwaysDifferentTrades;
          const seed = nextToGrandBazaar ? `${priceId},${xy}` : `${priceId}`;
          const buy = shuffle(keysOf(resources), srand(seed));
          const sell = shuffle(keysOf(resources), srand(seed));

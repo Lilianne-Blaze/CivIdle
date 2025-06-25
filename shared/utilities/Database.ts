@@ -304,7 +304,7 @@ export const ChatChannels = {
    t1: "#Test1",
    zh: "West Taiwanese",
    de: "Deutsch",
-   ru: "Русский",
+   ru: "Ruzzian",
    fr: "Français",
    kr: "한국어",
    jp: "日本語",

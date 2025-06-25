@@ -37,6 +37,8 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { TableView } from "./TableView";
 import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
+import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
+import { formatNumberTradeTable } from "../../../shared/lmc/CiScripts";
 
 const savedResourceWantFilters: Set<Resource> = new Set();
 const savedResourceOfferFilters: Set<Resource> = new Set();
@@ -86,7 +88,7 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
       setShowFilters(false);
    };
 
-   const resources = keysOf(unlockedResources(gameState)).filter((r) => !NoStorage[r] && !NoPrice[r]);
+   const resources = getSeenResourceKeys();
    return (
       <article role="tabpanel" style={{ padding: "8px" }}>
          <div className="sep5" />
@@ -303,13 +305,19 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
                            {Config.Resource[trade.buyResource].name()}
                         </div>
                         <div className="text-small text-strong text-desc">
-                           <FormatNumber value={trade.buyAmount} />
+                           {"Want: " + formatNumberTradeTable(trade.buyAmount)}
+                        </div>
+                        <div className="text-small text-strong text-desc">
+                           {"You: " + formatNumberTradeTable(Tick.current.resourceAmount.get(trade.buyResource))}
                         </div>
                      </td>
                      <td>
                         <div>{Config.Resource[trade.sellResource].name()}</div>
                         <div className="text-small text-strong text-desc">
-                           <FormatNumber value={trade.sellAmount} />
+                           {"Offer: " + formatNumberTradeTable(trade.sellAmount)}
+                        </div>
+                        <div className="text-small text-strong text-desc">
+                           {"You: " + formatNumberTradeTable(Tick.current.resourceAmount.get(trade.sellResource))}
                         </div>
                      </td>
                      <td

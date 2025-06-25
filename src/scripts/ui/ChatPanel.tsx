@@ -42,6 +42,13 @@ import { SelectChatChannelModal } from "./SelectChatChannelModal";
 import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
 import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
 
+import CustomBlackCalculator_png from "../../images/custom-black-calculator.png";
+globalThis.CustomBlackCalculator_png = CustomBlackCalculator_png;
+
+import CustomNukeDove100_png from "../../images/custom-nukedove100.png";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+globalThis.CustomNukeDove100_png = CustomNukeDove100_png;
+
 const SetChatInput = new TypedEvent<{ channel: ChatChannel; getContent: (old: string) => string }>();
 
 export function ChatPanel(): React.ReactNode {
@@ -172,7 +179,8 @@ function ChatWindow({
          <div
             ref={scrollAreaRef}
             onMouseEnter={() => {
-               shouldScroll.current = false;
+               //shouldScroll.current = false;
+               shouldScroll.current = lilModCli.isOption(lilModOption.chatAlwaysScroll);
             }}
             onMouseLeave={() => {
                shouldScroll.current = true;
@@ -221,7 +229,6 @@ function ChatInput({
          setChat("");
          return;
       }
-
 
       if (chat.startsWith("/")) {
          const command = chat.substring(1);
@@ -290,6 +297,7 @@ function ChatMessage({
    chat: IClientChat;
    onImageLoaded: () => void;
 }): React.ReactNode {
+   const isBrokie = !hasFlag(chat.attr, ChatAttributes.Supporter) && chat.level > 2;
    return (
       <div
          className={classNames({
@@ -326,6 +334,11 @@ function ChatMessage({
                      <img src={AccountLevelMod} className="player-flag" />
                   </Tippy>
                ) : null}
+               {isBrokie ? (
+                  <Tippy content={"Makes server hamster cry"}>
+                     <img src={CustomBlackCalculator_png} className="player-flag" />
+                  </Tippy>
+               ) : null}
             </div>
          ) : (
             <div className="row text-small text-desc">
@@ -356,6 +369,11 @@ function ChatMessage({
                {hasFlag(chat.attr, ChatAttributes.Mod) ? (
                   <Tippy content={t(L.AccountLevelMod)}>
                      <img src={AccountLevelMod} className="player-flag" />
+                  </Tippy>
+               ) : null}
+               {isBrokie ? (
+                  <Tippy content={"Makes server hamster cry"}>
+                     <img src={CustomBlackCalculator_png} className="player-flag" />
                   </Tippy>
                ) : null}
                <div className="f1"></div>

@@ -43,6 +43,7 @@ import { idbGet, idbSet } from "../utilities/BrowserStorage";
 import { makeObservableHook } from "../utilities/Hook";
 import { playBubble, playKaching } from "../visuals/Sound";
 import { SteamClient, isSteam } from "./SteamClient";
+import { OnAfterWelcomeMessageProcessed } from "../../../shared/lmc/LmcEvents";
 
 let gt = globalThis as any;
 
@@ -208,6 +209,19 @@ export function clearSystemMessages(): void {
    } catch (err) { }
 }
 gt.clearSystemMessages = clearSystemMessages;
+
+export function pushChatMessage(chatMessage: IClientChat, vacuum = false): void {
+   // check if a message with same userHandle and time already exists
+   // @ts-expect-error
+   if (chatMessages.some((c) => c.userHandle === chatMessage.userHandle && c.time === chatMessage.time)) {
+      return;
+   }
+
+   chatMessages.push({ ...chatMessage, id: ++chatId });
+   if (vacuum) { chatMessages = vacuumChat(chatMessages); }
+   OnChatMessage.emit(chatMessages);
+}
+gt.pushChatMessage = pushChatMessage;
 
 export const TileBuildings: Map<string, Building> = new Map();
 export const OnTileBuildingsChanged = new TypedEvent<void>();
@@ -392,7 +406,7 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
             startTileBuildingTimer();
             w.offlineTime = Math.min(w.offlineTime, offlineTicks);
             resolve?.(w);
-            OnAfterWelcomeMessageProcessed.emit();
+            OnAfterWelcomeMessageProcessed.emit({});
             break;
          }
          case MessageType.Trade: {

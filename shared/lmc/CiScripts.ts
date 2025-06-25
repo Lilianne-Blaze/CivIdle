@@ -2,7 +2,7 @@ import { getGameOptions, getGameState } from "../logic/GameStateLogic";
 import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
 import { UserAttributes } from "../utilities/Database";
-import { hasFlag } from "../utilities/Helper";
+import { hasFlag, humanFormat, NUMBER_SUFFIX_1 } from "../utilities/Helper";
 import { isFsLoaded } from "./LmcConstsEarly";
 
 
@@ -128,5 +128,27 @@ export function getAppDataRoaming() {
    return appDataRoamingCached;
 }
 gt.getAppDataRoaming = getAppDataRoaming;
+
+// =====
+
+export function formatNumberTradeTable(num: number | null | undefined, binary = false, scientific = false) {
+   try {
+      if (num === null || num === undefined) {
+         return "0";
+      }
+      if (num <= 0) {
+         return "0";
+      }
+
+      if (!Number.isFinite(num)) {
+         return String(num);
+      }
+
+      return humanFormat(num, NUMBER_SUFFIX_1);
+   } catch (e) {
+      return "0";
+   }
+}
+gt.formatNumberTradeTable = formatNumberTradeTable;
 
 // =====

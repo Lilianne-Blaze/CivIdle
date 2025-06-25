@@ -462,6 +462,50 @@ export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Ti
             <div className="row">
                <button onClick={hideModal}>{t(L.ChangePlayerHandleCancel)}</button>
                <div className="f1"></div>
+
+               <button
+                  onClick={() => {
+                     const fills = calculateMaxFill(0.01);
+                     if (fills.size > 0) {
+                        doFill(fills);
+                     } else {
+                        playError();
+                        showToast(t(L.PlayerTradeNoFillBecauseOfResources));
+                        hideModal();
+                     }
+                  }}
+               >
+                  {"Fill 1%"}
+               </button>
+               <button
+                  onClick={() => {
+                     const fills = calculateMaxFill(0.1);
+                     if (fills.size > 0) {
+                        doFill(fills);
+                     } else {
+                        playError();
+                        showToast(t(L.PlayerTradeNoFillBecauseOfResources));
+                        hideModal();
+                     }
+                  }}
+               >
+                  {"Fill 10%"}
+               </button>
+               <button
+                  onClick={() => {
+                     const fills = calculateMaxFill(0.25);
+                     if (fills.size > 0) {
+                        doFill(fills);
+                     } else {
+                        playError();
+                        showToast(t(L.PlayerTradeNoFillBecauseOfResources));
+                        hideModal();
+                     }
+                  }}
+               >
+                  {"Fill 25%"}
+               </button>
+
                <button
                   onClick={() => {
                      const fills = calculateMaxFill(0.5);

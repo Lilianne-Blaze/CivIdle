@@ -218,7 +218,7 @@ export function MenuComponent(): React.ReactNode {
                         Singleton().routeTo(LmcTradeOptionPage, {});
                      }}
                   >
-                     <MenuItem check={false}>Modded client, trade</MenuItem>
+                     <MenuItem check={false}>Modded client, trade/storage</MenuItem>
                   </div>
 
                   <div
