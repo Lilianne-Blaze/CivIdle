@@ -1055,10 +1055,6 @@ export function tickPrice(gs: GameState) {
       OnPriceUpdated.emit(gs);
    }
 
-   // const resources = filterOf(
-   //    unlockedResources(gs),
-   //    (res) => !NoPrice[res] && !NoStorage[res] && res !== "Koti",
-   // );
    const resources = filterOf(
       getSeenResourcesTable(),
       (res) => !NoPrice[res] && !NoStorage[res],

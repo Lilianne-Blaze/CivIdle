@@ -1707,14 +1707,17 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             }
          }
          if (resource && price) {
-            const { amount, rollback } = deductResourceFrom(
+            const { amount } = deductResourceFrom(
                resource,
                (10_000_000 * multiplier) / price,
                warehouses,
                gs,
             );
-            safeAdd(building.resources, "Koti", (amount * price) / 10_000_000);
-            rollback();
+            const kotiAmount = (amount * price) / 10_000_000;
+            safeAdd(building.resources, "Koti", kotiAmount);
+
+            mapSafeAdd(Tick.next.wonderConsumptions, resource, amount);
+            mapSafeAdd(Tick.next.wonderProductions, "Koti", kotiAmount);
          }
          break;
       }

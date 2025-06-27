@@ -1,5 +1,5 @@
 import type { Building, IBuildingDefinition } from "../definitions/BuildingDefinitions";
-import type { Deposit, Resource } from "../definitions/ResourceDefinitions";
+import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { OnAtEndOfClearIntraTickCache } from "../lmc/LmcEvents";
 import { checkMarketTrade } from "../lmc/LmcMarkets";
@@ -181,6 +181,9 @@ export function getBuildingIO(
 
       if ("inputResource" in b) {
          const s = b as ICloneBuildingData;
+         if (NoStorage[s.inputResource] || NoPrice[s.inputResource] || s.inputResource === "Koti") {
+            s.inputResource = "Computer";
+         }
          if (type === "input") {
             resources[s.inputResource] = 1;
          }
@@ -333,6 +336,9 @@ export function getResourceIO(gameState: GameState): IResourceIO {
       forEach(output, (res, amount) => mapSafeAdd(result.theoreticalOutput, res, amount));
    });
 
+   Tick.current.wonderConsumptions.forEach((amount, res) => mapSafeAdd(result.theoreticalInput, res, amount));
+   Tick.current.wonderConsumptions.forEach((amount, res) => mapSafeAdd(result.actualInput, res, amount));
+
    Tick.current.wonderProductions.forEach((amount, res) => mapSafeAdd(result.theoreticalOutput, res, amount));
    Tick.current.wonderProductions.forEach((amount, res) => mapSafeAdd(result.actualOutput, res, amount));
 
@@ -374,20 +380,25 @@ export function unlockedBuildings(gs: GameState): PartialSet<Building> {
 }
 gt.unlockedBuildings = unlockedBuildings;
 
-export function unlockedResources(gs: GameState): PartialSet<Resource> {
+export function unlockedResources(gs: GameState, ...include: Resource[]): PartialSet<Resource> {
    if (_cache.unlockedResources) {
-      return _cache.unlockedResources;
+      const result = { ..._cache.unlockedResources };
+      include.forEach((res) => {
+         result[res] = true;
+      });
+      return result;
    }
    _cache.unlockedResources = {};
    forEach(unlockedBuildings(gs), (b) => {
-      if (b === "SwissBank") {
-         _cache.unlockedResources!.Koti = true;
-      }
       forEach(Config.Building[b].output, (res) => {
          _cache.unlockedResources![res] = true;
       });
    });
-   return _cache.unlockedResources;
+   const result = { ..._cache.unlockedResources };
+   include.forEach((res) => {
+      result[res] = true;
+   });
+   return result;
 }
 gt.unlockedResources = unlockedResources;
 
