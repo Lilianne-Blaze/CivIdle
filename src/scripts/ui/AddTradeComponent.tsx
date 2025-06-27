@@ -26,25 +26,24 @@ import type { IBuildingComponentProps } from "./BuildingPage";
 import { showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
+import { lilModCli } from "../../../shared/lmc/LilModCli";
 
 const INPUT_WIDTH = 100;
 
 export function AddTradeComponent({ gameState, xy }: IBuildingComponentProps): React.ReactNode {
+   const carasIOfferShowEverything = lilModCli.isOption("carasIOfferShowEverything");
    const user = useUser();
    const trades = useTrades();
    const enabled =
       !isNullOrUndefined(user) &&
       trades.filter((t) => t.fromId === user.userId).length < getMaxActiveTrades(user);
-   // const buyResources = keysOf(unlockedResources(gameState)).filter((r) => !NoStorage[r] && !NoPrice[r]);
-   // const availableResources = combineResources(
-   //    Array.from(Tick.current.playerTradeBuildings.values()).map((m) => m.resources),
-   // );
-   // const sellResources = keysOf(availableResources);
    const buyResources = getSeenResourceKeys();
    const availableResources = combineResources(
       Array.from(Tick.current.playerTradeBuildings.values()).map((m) => m.resources),
    );
-   const sellResources = getSeenResourceKeys();
+   const sellResources = carasIOfferShowEverything ?
+      getSeenResourceKeys() :
+      keysOf(availableResources);
    const [trade, setTrade] = useState<IAddTradeRequest>({
       buyResource: buyResources[0],
       buyAmount: 0,

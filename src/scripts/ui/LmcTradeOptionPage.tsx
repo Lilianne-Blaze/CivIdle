@@ -62,11 +62,28 @@ export function LmcTradeOptionPage(): React.ReactNode {
 
                <ToggleComponent
                   title="Bigger stockpiles"
-                  contentHTML="Doubles the limits, and enables more precise stockpile settings."
+                  contentHTML="Doubles the limits, and enables more precise stockpile settings. Doesn't affect capacity."
                   value={lilModCli.isOption(lilModOption.buildingsBiggerStockpiles)}
                   onValueChange={(value) => {
                      playClick();
                      lilModCli.toggleOption(lilModOption.buildingsBiggerStockpiles);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+            </fieldset>
+
+            <fieldset>
+
+               <legend>Caravansaries</legend>
+
+               <ToggleComponent
+                  title="'I Offer' list always shows all goods"
+                  contentHTML="Always show all goods, preventing flickering when goods quickly switch between available/unavailable."
+                  value={lilModCli.isOption(lilModOption.carasIOfferShowEverything)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.carasIOfferShowEverything);
                      notifyGameOptionsUpdate(options);
                   }}
                />

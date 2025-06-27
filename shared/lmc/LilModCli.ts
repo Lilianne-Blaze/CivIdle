@@ -62,6 +62,9 @@ export const lilModOption = {
    logOutgoingMqttMessages: "logOutgoingMqttMessages",
    logIncomingMqttMessages: "logIncomingMqttMessages",
 
+   // 2025-06-28
+   carasIOfferShowEverything: "carasIOfferShowEverything",
+
 
 };
 
@@ -110,6 +113,9 @@ export const lilModOptionDefs = {
    // v23.27
    logOutgoingMqttMessages: false,
    logIncomingMqttMessages: false,
+
+   // 2025-06-28
+   carasIOfferShowEverything: false,
 
 
 };
