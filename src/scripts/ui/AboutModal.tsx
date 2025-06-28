@@ -1,3 +1,4 @@
+import { lilModCli } from "../../../shared/lmc/LilModCli";
 import { BACKUP_RECOVERY_URL } from "../../../shared/logic/Constants";
 import { L, t } from "../../../shared/utilities/i18n";
 import logo from "../../images/icon.png";

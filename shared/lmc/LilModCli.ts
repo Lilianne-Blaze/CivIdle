@@ -64,6 +64,7 @@ export const lilModOption = {
 
    // 2025-06-28
    carasIOfferShowEverything: "carasIOfferShowEverything",
+   exportDebugJsonsOnSave: "exportDebugJsonsOnSave",
 
 
 };
@@ -116,6 +117,7 @@ export const lilModOptionDefs = {
 
    // 2025-06-28
    carasIOfferShowEverything: false,
+   exportDebugJsonsOnSave: false,
 
 
 };

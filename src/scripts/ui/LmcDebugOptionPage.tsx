@@ -41,6 +41,17 @@ export function LmcDebugOptionPage(): React.ReactNode {
                   }}
                />
 
+               <ToggleComponent
+                  title="Export debug JSONs on save"
+                  contentHTML=""
+                  value={lilModCli.isOption(lilModOption.exportDebugJsonsOnSave)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.exportDebugJsonsOnSave);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
 
             </fieldset>
          </div>

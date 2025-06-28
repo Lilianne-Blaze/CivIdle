@@ -105,7 +105,12 @@ gt.getPlayerMap = getPlayerMap;
 
 let ws: WebSocket | null = null;
 
-// added exposer for local ws variable
+// LMCBOOKMARK 2025-06-28 adding some exposers
+export function getChatMessages(): LocalChat[] {
+   return chatMessages;
+}
+gt.getChatMessages = getChatMessages;
+
 export function getWebSocket(): WebSocket | null {
    return ws;
 }

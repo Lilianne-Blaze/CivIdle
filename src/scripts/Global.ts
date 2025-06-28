@@ -14,6 +14,7 @@ import {
    getGameOptions,
    getGameState,
    notifyGameStateUpdate,
+   replacer,
    savedGame,
    serializeSave,
    serializeSaveLite,
@@ -37,7 +38,7 @@ import {
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { migrateSavedGame } from "./MigrateSavedGame";
 import { tickEverySecond } from "./logic/ClientUpdate";
-import { CLIENT_ID, client } from "./rpc/RPCClient";
+import { CLIENT_ID, client, getChatMessages, getTrades } from "./rpc/RPCClient";
 import { SteamClient, isSteam } from "./rpc/SteamClient";
 import { WorldScene } from "./scenes/WorldScene";
 import { showToast } from "./ui/GlobalModal";
@@ -46,6 +47,7 @@ import { makeObservableHook } from "./utilities/Hook";
 import { isAndroid, isIOS } from "./utilities/Platforms";
 import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
+import { lilModCli, lilModOption } from "../../shared/lmc/LilModCli";
 
 const gt = globalThis as any;
 
@@ -152,6 +154,22 @@ export async function doSaveGame(task: ISaveGameTask): Promise<void> {
          const compressed = await compressSave(savedGame);
          await idbSet(SAVE_KEY, compressed);
       }
+
+      // LMCBOOKMARK 2025-06-28 export debug jsons on save
+      if (lilModCli.isOption(lilModOption.exportDebugJsonsOnSave)) {
+         try {
+            console.log("Exporting debug jsons on save");
+            SteamClient.fileWriteBytes("last_trades.json", new TextEncoder().encode(JSON.stringify(getTrades(), replacer, 2)));
+            SteamClient.fileWriteBytes("last_savegame.json", new TextEncoder().encode(JSON.stringify(savedGame, replacer, 2)));
+            SteamClient.fileWriteBytes("last_messages.json", new TextEncoder().encode(JSON.stringify(getChatMessages(), replacer, 2)));
+            SteamClient.fileWriteBytes("last_tiles.json", new TextEncoder().encode(JSON.stringify(getGameState().tiles, replacer, 2)));
+         }
+         catch (err) {
+            console.log("Failed to export debug jsons on save", err);
+         }
+      }
+
+
       task.resolve();
    } catch (error) {
       task.reject(error);

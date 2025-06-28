@@ -13,7 +13,7 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 41;
+export const LMC_MINOR_VER = 53;
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
@@ -85,6 +85,9 @@ gt.path = path;
 
 export const fs = requireSafeFallback("fs");
 gt.fs = fs;
+
+export const os = requireSafeFallback("os");
+gt.os = os;
 
 export const isFsLoadedFlag = fs && typeof fs.readFile === "function" && typeof fs.writeFile === "function";
 gt.isFsLoadedFlag = isFsLoadedFlag;

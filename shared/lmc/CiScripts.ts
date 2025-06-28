@@ -3,7 +3,8 @@ import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
 import { UserAttributes } from "../utilities/Database";
 import { hasFlag, humanFormat, NUMBER_SUFFIX_1 } from "../utilities/Helper";
-import { isFsLoaded } from "./LmcConstsEarly";
+import { fs, isFsLoaded, os, path } from "./LmcConstsEarly";
+import { isTruthyStringSafe } from "./MiscFuncs";
 
 
 const gt = globalThis as any;
@@ -109,9 +110,25 @@ export function getAppDataRoaming() {
 
    try {
       const val = process.env["AppData"];
-      appDataRoamingCached = val ?? appDataRoamingCached;
-      console.debug("getAppDataRoaming, using process.env:", appDataRoamingCached);
-   } catch (err) { }
+      if (isTruthyStringSafe(val)) {
+         appDataRoamingCached = val ?? appDataRoamingCached;
+      } else {
+
+         console.log("isFsLoaded: " + isFsLoaded());
+         if (isFsLoaded()) {
+            const homeDir = os.homedir();
+            console.log("os.homedir(): " + homeDir);
+
+            const tryLinux = path.join(homeDir, ".config/CivIdleLocal/CivIdle.log");
+            const tryLinuxExists = fs.existsSync(tryLinux)
+            console.log("File CivIdle.log exists in typical Linux path: " + tryLinuxExists);
+            if (tryLinuxExists) {
+               appDataRoamingCached = path.join(homeDir, ".config");
+            }
+         }
+      }
+   } catch (err) {
+   }
    if (appDataRoamingCached) {
       return appDataRoamingCached;
    }
