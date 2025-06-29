@@ -72,13 +72,13 @@ import { get } from "http";
 
 const gt = globalThis as any;
 
-export const BUILDING_LOGIC_MULTIS = {
-   marketStorage: 1,
-   caravansaryStorage: 1,
-   warehouseStorage: 1,
-   marketBaseSellAmount: 1,
+export const BUILDING_LOGIC_PARAMS = {
+   marketStorageMulti: 1,
+   caravansaryStorageMulti: 1,
+   warehouseStorageMulti: 1,
+   marketBaseSellAmountMulti: 1,
 };
-gt.BUILDING_LOGIC_MULTIS = BUILDING_LOGIC_MULTIS;
+gt.BUILDING_LOGIC_PARAMS = BUILDING_LOGIC_PARAMS;
 
 export function totalMultiplierFor(
    xy: Tile,
@@ -281,14 +281,14 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
 
    switch (building?.type) {
       case "Market": {
-         base = building.level * STORAGE_TO_PRODUCTION * 10 * BUILDING_LOGIC_MULTIS.marketStorage;
+         base = building.level * STORAGE_TO_PRODUCTION * 10 * BUILDING_LOGIC_PARAMS.marketStorageMulti;
          break;
       }
       case "Caravansary": {
          base =
             getResourceImportCapacity(building, 1) *
             STORAGE_TO_PRODUCTION *
-            BUILDING_LOGIC_MULTIS.caravansaryStorage;
+            BUILDING_LOGIC_PARAMS.caravansaryStorageMulti;
          break;
       }
       case "Warehouse": {
@@ -296,7 +296,7 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
             getResourceImportCapacity(building, 1) *
             STORAGE_TO_PRODUCTION *
             10 *
-            BUILDING_LOGIC_MULTIS.warehouseStorage;
+            BUILDING_LOGIC_PARAMS.warehouseStorageMulti;
          break;
       }
       case "Petra": {
@@ -834,7 +834,7 @@ export function getMarketBaseSellAmount(sellResource: Resource, buyResource: Res
    return (
       (Math.sqrt((Config.ResourcePrice[sellResource] ?? 0) * (Config.ResourcePrice[buyResource] ?? 0)) /
          (Config.ResourcePrice[sellResource] ?? 1)) *
-      BUILDING_LOGIC_MULTIS.marketBaseSellAmount
+      BUILDING_LOGIC_PARAMS.marketBaseSellAmountMulti
    );
 }
 gt.getMarketBaseSellAmount = getMarketBaseSellAmount;

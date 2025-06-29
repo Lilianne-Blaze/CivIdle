@@ -14,6 +14,14 @@ import { getTypeBuildings, getXyBuildings } from "./IntraTickCache";
 import { getCurrentAge } from "./TechLogic";
 import { Tick } from "./TickLogic";
 
+const gt = globalThis as any;
+
+export const HAPPINESS_PARAMS = {
+   minCap: -50,
+   maxCap: 50,
+};
+gt.HAPPINESS_PARAMS = HAPPINESS_PARAMS;
+
 export const HappinessNames = {
    fromUnlockedTech: () => t(L.HappinessFromUnlockedTech),
    fromUnlockedAge: () => t(L.HappinessFromUnlockedAge),
@@ -97,7 +105,8 @@ export function calculateHappiness(gs: GameState) {
       reduceOf(positive, (prev, _, value) => prev + value, 0) +
       sum(Tick.current.globalMultipliers.happiness, "value") -
       reduceOf(negative, (prev, _, value) => prev + value, 0);
-   const value = clamp(uncapped, -50, 50);
+   //const value = clamp(uncapped, -50, 50);
+   const value = clamp(uncapped, HAPPINESS_PARAMS.minCap, HAPPINESS_PARAMS.maxCap);
    const workerPercentage = (100 + value * HAPPINESS_MULTIPLIER) / 100;
    const normalized = (value + 50) / 100;
    return {

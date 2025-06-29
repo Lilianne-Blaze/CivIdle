@@ -1,3 +1,4 @@
+import { lmcDeserializeSaveAtEnd, lmcSerializeSaveAtStart } from "../lmc/LmcSavedGame";
 import { wyhash } from "../thirdparty/wyhash";
 import { safeAdd } from "../utilities/Helper";
 import { TypedEvent } from "../utilities/TypedEvent";
@@ -29,6 +30,8 @@ export function getGameOptions(): GameOptions {
 gt.getGameOptions = getGameOptions;
 
 export function serializeSave(save: SavedGame = savedGame): string {
+   lmcSerializeSaveAtStart(save);
+
    const transportation = save.current.transportationV2;
    save.current.transportationV2 = [];
    // Clone without transportation
@@ -74,6 +77,8 @@ export function deserializeSave(str: string): SavedGame {
    if ("transportation" in saveGame.current) {
       checksum.actual = checksum.expected;
    }
+
+   lmcDeserializeSaveAtEnd(saveGame);
    return saveGame;
 }
 gt.deserializeSave = deserializeSave;

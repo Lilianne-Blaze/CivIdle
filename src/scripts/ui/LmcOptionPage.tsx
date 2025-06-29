@@ -108,13 +108,13 @@ export function LmcOptionPage(): React.ReactNode {
                   <input
                      type="number"
                      step="1"
-                     max="100"
+                     max="1000"
                      min="2"
                      style={{ width: "75px" }}
                      value={lilModCli.getOption(lilModOption.autoUpgradeBuildingsMinCount)}
                      onChange={(e) => {
                         const parsed = safeParseInt(e.target.value);
-                        if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 100) {
+                        if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 1000) {
                            lilModCli.setOption(lilModOption.autoUpgradeBuildingsMinCount, parsed);
                            notifyGameOptionsUpdate(options);
                         }
@@ -146,13 +146,13 @@ export function LmcOptionPage(): React.ReactNode {
                   <input
                      type="number"
                      step="1"
-                     max="100"
+                     max="1000"
                      min="2"
                      style={{ width: "75px" }}
                      value={lilModCli.getOption(lilModOption.autoUpgradeBuildingsMaxLevel)}
                      onChange={(e) => {
                         const parsed = safeParseInt(e.target.value);
-                        if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 100) {
+                        if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 1000) {
                            lilModCli.setOption(lilModOption.autoUpgradeBuildingsMaxLevel, parsed);
                            notifyGameOptionsUpdate(options);
                         }

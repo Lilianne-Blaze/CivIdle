@@ -293,6 +293,9 @@ export function getUserScriptsPath(userId = getGameOptions().userId, createIfMis
    const appDataRoaming = getAppDataRoaming();
    const appName = "CivIdleLilModCli";
    const safeUserId = userId.replace(/:/g, "_");
+
+   console.log("getUserScriptsPath called: appDataRoaming=", appDataRoaming, ", safeUserId=", safeUserId);
+
    const us = "UserScripts";
    const p = path.join(appDataRoaming, appName, safeUserId, us);
    if (createIfMissing) {

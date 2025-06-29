@@ -108,6 +108,26 @@ export function getAppDataRoaming() {
       return appDataRoamingCached;
    }
 
+   const homeDir = os.homedir();
+   const osType = os.type(); // e.g., "Linux", "Windows_NT"
+   console.log("getAppDataRoaming, os.type() =   " + osType + ", os.homedir() = " + homeDir);
+   const subDir = osType === "Linux" ? ".config" : "AppData\\Roaming";
+   const appDataPath = path.join(homeDir, subDir);
+   const testDir = path.join(appDataPath, "CivIdleLocal");
+   const testDirExists = appDataPath && testDir && fs.existsSync(testDir);
+   if (testDirExists) {
+      appDataRoamingCached = appDataPath;
+      return appDataRoamingCached;
+   }
+   else {
+      console.warn("getAppDataRoaming: WTF? Both Linux and Windows AppData paths do not exist.");
+      console.log("osType: " + osType);
+      console.log("homeDir: " + homeDir);
+      console.log("appDataPath: " + appDataPath);
+      console.log("testDir: " + testDir);
+      console.log("testDirExists: " + testDirExists);
+   }
+
    try {
       const val = process.env["AppData"];
       if (isTruthyStringSafe(val)) {

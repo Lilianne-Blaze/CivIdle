@@ -105,12 +105,12 @@ import {
 
 const gt = globalThis as any;
 
-export const UPDATE_MULTIS = {
+export const UPDATE_PARAMS = {
    grandBazaarRange: 1,
-   marketRefreshPeriod: 1,
+   marketRefreshPeriodMulti: 1,
    alwaysDifferentTrades: false,
 };
-gt.UPDATE_MULTIS = UPDATE_MULTIS;
+gt.UPDATE_PARAMS = UPDATE_PARAMS;
 
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
@@ -1039,11 +1039,11 @@ export function addMultiplier(k: Building, multiplier: MultiplierWithStability, 
 }
 
 function getPriceId() {
-   return Math.floor(Date.now() / (HOUR * UPDATE_MULTIS.marketRefreshPeriod));
+   return Math.floor(Date.now() / (HOUR * UPDATE_PARAMS.marketRefreshPeriodMulti));
 }
 
 export function convertPriceIdToTime(priceId: number) {
-   return priceId * (HOUR * UPDATE_MULTIS.marketRefreshPeriod);
+   return priceId * (HOUR * UPDATE_PARAMS.marketRefreshPeriodMulti);
 }
 
 export function tickPrice(gs: GameState) {
@@ -1071,8 +1071,8 @@ export function tickPrice(gs: GameState) {
       if (forceUpdatePrice || sizeOf(market.availableResources) === 0) {
          const nextToGrandBazaar =
             (grandBazaar?.building.status === "completed" &&
-               grid.distanceTile(grandBazaar.tile, xy) <= 1 * UPDATE_MULTIS.grandBazaarRange)
-            || UPDATE_MULTIS.alwaysDifferentTrades;
+               grid.distanceTile(grandBazaar.tile, xy) <= UPDATE_PARAMS.grandBazaarRange)
+            || UPDATE_PARAMS.alwaysDifferentTrades;
          const seed = nextToGrandBazaar ? `${priceId},${xy}` : `${priceId}`;
          const buy = shuffle(keysOf(resources), srand(seed));
          const sell = shuffle(keysOf(resources), srand(seed));

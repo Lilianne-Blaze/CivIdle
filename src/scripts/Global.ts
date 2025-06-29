@@ -48,6 +48,8 @@ import { isAndroid, isIOS } from "./utilities/Platforms";
 import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
 import { lilModCli, lilModOption } from "../../shared/lmc/LilModCli";
+import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShared";
+import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
 
 const gt = globalThis as any;
 
@@ -124,6 +126,7 @@ interface ISaveGameTask {
 const saveGameQueue: ISaveGameTask[] = [];
 
 export async function saveGame(): Promise<void> {
+   lmcSaveGameAtStart();
    let resolve: (() => void) | null = null;
    let reject: (() => void) | null = null;
 
@@ -158,7 +161,9 @@ export async function doSaveGame(task: ISaveGameTask): Promise<void> {
       // LMCBOOKMARK 2025-06-28 export debug jsons on save
       if (lilModCli.isOption(lilModOption.exportDebugJsonsOnSave)) {
          try {
-            console.log("Exporting debug jsons on save");
+            if (atMostOncePerRebirthPerSession("doSaveGame.exportDebugJsonsOnSave.once")) {
+               console.log("Exporting debug jsons on save");
+            }
             SteamClient.fileWriteBytes("last_trades.json", new TextEncoder().encode(JSON.stringify(getTrades(), replacer, 2)));
             SteamClient.fileWriteBytes("last_savegame.json", new TextEncoder().encode(JSON.stringify(savedGame, replacer, 2)));
             SteamClient.fileWriteBytes("last_messages.json", new TextEncoder().encode(JSON.stringify(getChatMessages(), replacer, 2)));

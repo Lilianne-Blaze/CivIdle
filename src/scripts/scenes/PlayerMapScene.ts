@@ -32,6 +32,9 @@ import { findPath, getOwnedTradeTile } from "./PathFinder";
 import { OnWorldTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
 import { getGameState } from "../../../shared/logic/GameStateLogic";
 import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
+import { Easing } from "../utilities/pixi-actions/Easing";
+import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
