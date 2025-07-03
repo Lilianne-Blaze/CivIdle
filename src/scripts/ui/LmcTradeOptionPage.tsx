@@ -137,6 +137,7 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   label="Don't buy food if amount is above"
                />
 
+
                <ToggleComponent
                   title="Manage Building Materials"
                   contentHTML=""
@@ -157,6 +158,51 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   optionName="marketsDontBuyBuildMaterialsIfAbove"
                   label="Don't buy building materials if amount is above"
                />
+
+
+               <ToggleComponent
+                  title="Manage currencies"
+                  contentHTML=""
+                  value={lilModCli.isOption("marketsManageCurrencies")}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption("marketsManageCurrencies");
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontSellCurrenciesIfBelow"
+                  label="Don't sell currencies if amount is below"
+               />
+
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontBuyCurrenciesIfAbove"
+                  label="Don't buy currencies if amount is above"
+               />
+
+
+               <ToggleComponent
+                  title="Manage ultimates"
+                  contentHTML="Manage end-game resources which are only used to store EV and upgrade Wonders."
+                  value={lilModCli.isOption("marketsManageUltimates")}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption("marketsManageUltimates");
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontSellUltimatesIfBelow"
+                  label="Don't sell ultimates if amount is below"
+               />
+
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontBuyUltimatesIfAbove"
+                  label="Don't buy ultimates if amount is above"
+               />
+
 
                <ToggleComponent
                   title="Manage other goods"

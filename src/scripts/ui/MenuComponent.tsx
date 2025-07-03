@@ -30,6 +30,7 @@ import { LmcOptionPage } from "./LmcOptionPage";
 import { LmcTradeOptionPage } from "./LmcTradeOptionPage";
 import { LmcDebugOptionPage } from "./LmcDebugOptionPage";
 import { LmcMultiplayerOptionPage } from "./LmcMultiplayerOptionPage";
+import { lmcMqtt } from "../../../shared/lmc/LmcMqtt";
 
 type MenuItemOptions = "view" | "options" | "help" | null;
 
@@ -344,8 +345,12 @@ export function MenuComponent(): React.ReactNode {
                      <div
                         className="menu-popover-item"
                         onPointerDown={() => {
+                           console.debug("SaveAndExit menu item clicked.");
                            saveGame()
-                              .then(() => SteamClient.quit())
+                              .then(() => {
+                                 SteamClient.quit()
+                                 lmcMqtt.disconnectNowForce();
+                              })
                               .catch((e) => {
                                  playError();
                                  showToast(String(e));

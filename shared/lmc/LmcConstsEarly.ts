@@ -13,7 +13,7 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 65;
+export const LMC_MINOR_VER = 71;
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
@@ -173,6 +173,11 @@ export const BuildingIsPowerPlant = {
    GasPowerPlant: true,
    HydroDam: true,
    NuclearPowerPlant: true,
+};
+
+export const BuildingIsStorage = {
+   Warehouse: true,
+   Caravansary: true,
 };
 
 export const BuildingIsPureProducer = {

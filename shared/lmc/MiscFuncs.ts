@@ -53,6 +53,18 @@ export function shuffleMap(map: Map<any, any>) {
 }
 gt.shuffleMap = shuffleMap;
 
+export function shuffleObjectProps<T extends Record<string, any>>(obj: T): T {
+   const entries = Object.entries(obj);
+   // Shuffle key-value pairs (entries) together
+   for (let i = entries.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [entries[i], entries[j]] = [entries[j], entries[i]];
+   }
+   // Create a new object from the shuffled entries
+   return Object.fromEntries(entries) as T;
+}
+gt.shuffleObjectProps = shuffleObjectProps;
+
 /**
  * Returns a new Map with the same entries as the input map, but sorted by value.
  * Added before 2025-06-15.

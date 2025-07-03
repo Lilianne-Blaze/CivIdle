@@ -135,6 +135,10 @@ app.on('window-all-closed', () => {
 });
 
 function quit() {
+   setTimeout(() => {
+      console.warn('Forced exit due to timeout (139)');
+      app.exit(0);
+   }, 20000);
    app.quit();
 }
 

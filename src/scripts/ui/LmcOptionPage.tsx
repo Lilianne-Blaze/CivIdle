@@ -172,6 +172,17 @@ export function LmcOptionPage(): React.ReactNode {
                />
 
                <ToggleComponent
+                  title="Autoupgrade storage buildings"
+                  contentHTML="Keep upgrading Warehouses and Caravansaries. Note this option can disrupt your supply chains."
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsStorages)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsStorages);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <ToggleComponent
                   title="Autoupgrade paused buildings"
                   contentHTML=""
                   value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsPausedBuildings)}

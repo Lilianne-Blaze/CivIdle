@@ -21,6 +21,7 @@ import {
 import { getResourceAmount } from "../../../shared/logic/ResourceLogic";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
 import {
+   HOUR,
    Rounding,
    clamp,
    forEach,
@@ -53,6 +54,8 @@ import { TilePage } from "./TilePage";
 import { getEmpireValueDeltaSmoothed, getNextGpMilestones, getScienceDeltaSmoothed, getTechsOfInterestTable } from "../../../shared/lmc/LmcScriptsShared";
 import { getScienceAmount, getTotalTechUnlockCost } from "../../../shared/logic/TechLogic";
 import { formatMillisToYMDHM, zeroAllButXHighestDigits } from "../../../shared/lmc/MiscFuncs";
+import { formatFestivalPoints } from "../../../shared/lmc/LmcFormattersParsers";
+import { getFestivalPoints } from "../../../shared/lmc/CiScripts";
 
 const gt = globalThis as any;
 
@@ -87,9 +90,7 @@ export function ResourcePanel(): React.ReactNode {
    const scienceDelta = getScienceDeltaSmoothed(preciseDeltas) ?? 0;
    const scienceAvailable = getScienceAmount(gs);
 
-   const festivalPts = Tick.current.specialBuildings.get("Headquarter")?.building.resources.Festival ?? 0;
-   const festivalHours = zeroAllButXHighestDigits(festivalPts / FESTIVAL_CONVERSION_RATE / 3600, 2);
-   const festivalTxt = `${festivalHours}h`;
+   const festivalTxt = formatFestivalPoints(getFestivalPoints());
 
    const [favoriteActive, setFavoriteActive] = useState(false);
    useEffect(() => {
@@ -258,6 +259,11 @@ export function ResourcePanel(): React.ReactNode {
             </div>
          ) : null}
          <div className="separator-vertical" />
+
+         {
+            // ===== ===== =====
+            // ===== festival
+         }
          <Tippy disabled={isFloating} content={Config.City[gs.city].festivalDesc()}>
             <div
                className={classNames({
@@ -276,6 +282,11 @@ export function ResourcePanel(): React.ReactNode {
                <div style={{ width: "5rem" }}>{festivalTxt}</div>
             </div>
          </Tippy>
+         {
+            // ===== festival
+            // ===== ===== =====
+         }
+
          <div className="separator-vertical" />
          <div className="section">
             <div

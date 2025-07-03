@@ -18,14 +18,14 @@ import { getXyBuildings, unlockedResources } from "../logic/IntraTickCache";
 import { NoPrice, NoStorage } from "../definitions/ResourceDefinitions";
 import { combineResources } from "../logic/ResourceLogic";
 import { Tick } from "../logic/TickLogic";
-import { lilModCli } from "./LilModCli";
+import { lilModCli, lilModOption } from "./LilModCli";
 import { getAppDataRoaming, getCiSteamIdNumber, getEffectiveGpLevel } from "./CiScripts";
 import { Config } from "../logic/Config";
 import type { GameState } from "../logic/GameState";
 import type { Tech } from "../definitions/TechDefinitions";
 import { getTotalTechUnlockCost } from "../logic/TechLogic";
 import { type GameStateAndOfflineFlagEvent, OnAtBottomOfTickEverySecond } from "./LmcEvents";
-import { BuildingIsPowerPlant, BuildingIsPureProducer, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path } from "./LmcConstsEarly";
+import { BuildingIsPowerPlant, BuildingIsPureProducer, BuildingIsStorage, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path } from "./LmcConstsEarly";
 import { getRebirthGreatPeopleCount } from "../logic/RebirthLogic";
 import { IUser } from '../utilities/Database';
 
@@ -111,6 +111,7 @@ export function keepUpgradingBuildings(e: GameStateAndOfflineFlagEvent): void {
    const aubOnePerX = clamp(lilModCli.getOption("autoUpgradeBuildingsOnePerX"), 2, MAX);
    const aubMaxLevel = clamp(lilModCli.getOption("autoUpgradeBuildingsMaxLevel"), 1, MAX);
    const aubPowerPlants = lilModCli.isOption("autoUpgradeBuildingsPowerPlants");
+   const aubStorages = lilModCli.isOption(lilModOption.autoUpgradeBuildingsStorages);
    const aubPausedBuildings = lilModCli.isOption("autoUpgradeBuildingsPausedBuildings");
    const aubMinesNoMaxLevel = lilModCli.isOption("autoUpgradeBuildingsMinesNoMaxLevel");
 
@@ -153,6 +154,13 @@ export function keepUpgradingBuildings(e: GameStateAndOfflineFlagEvent): void {
    if (!aubPowerPlants) {
       for (const [type, count] of mapBuildingTypeCount) {
          if (BuildingIsPowerPlant[type as keyof typeof BuildingIsPowerPlant]) {
+            mapBuildingTypeCount.delete(type);
+         }
+      }
+   }
+   if (!aubStorages) {
+      for (const [type, count] of mapBuildingTypeCount) {
+         if (BuildingIsStorage[type as keyof typeof BuildingIsStorage]) {
             mapBuildingTypeCount.delete(type);
          }
       }

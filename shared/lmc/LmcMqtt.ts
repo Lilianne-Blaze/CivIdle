@@ -108,6 +108,10 @@ export const lmcMqtt = {
         })
     },
 
+    disconnectNowForce() {
+        this.mainMqttClient?.endAsync(true);
+    },
+
     reconnect() {
         this.mainMqttClient?.reconnect();
     },

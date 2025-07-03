@@ -1,6 +1,7 @@
 import { getGameOptions, getGameState } from "../logic/GameStateLogic";
 import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
+import { Tick } from "../logic/TickLogic";
 import { UserAttributes } from "../utilities/Database";
 import { hasFlag, humanFormat, NUMBER_SUFFIX_1 } from "../utilities/Helper";
 import { fs, isFsLoaded, os, path } from "./LmcConstsEarly";
@@ -187,5 +188,12 @@ export function formatNumberTradeTable(num: number | null | undefined, binary = 
    }
 }
 gt.formatNumberTradeTable = formatNumberTradeTable;
+
+// =====
+
+export function getFestivalPoints(): number {
+   return Tick.current.specialBuildings.get("Headquarter")?.building.resources.Festival ?? 0;
+}
+gt.getFestivalPoints = getFestivalPoints;
 
 // =====

@@ -37,6 +37,7 @@ export const lilModOption = {
    autoUpgradeBuildingsOnePerX: "autoUpgradeBuildingsOnePerX",
    autoUpgradeBuildingsMaxLevel: "autoUpgradeBuildingsMaxLevel",
    autoUpgradeBuildingsPowerPlants: "autoUpgradeBuildingsPowerPlants",
+   autoUpgradeBuildingsStorages: "autoUpgradeBuildingsStorages",
    autoUpgradeBuildingsPausedBuildings: "autoUpgradeBuildingsPausedBuildings",
    autoUpgradeBuildingsMinesNoMaxLevel: "autoUpgradeBuildingsMinesNoMaxLevel",
 
@@ -90,6 +91,7 @@ export const lilModOptionDefs = {
    autoUpgradeBuildingsOnePerX: 10,
    autoUpgradeBuildingsMaxLevel: 40,
    autoUpgradeBuildingsPowerPlants: false,
+   autoUpgradeBuildingsStorages: true,
    autoUpgradeBuildingsPausedBuildings: false,
    autoUpgradeBuildingsMinesNoMaxLevel: true,
 

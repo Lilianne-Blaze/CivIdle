@@ -6,6 +6,7 @@ import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { POTATO_TRANSPORTS1_DIVIDER } from "../lmc/LmcConstsEarly";
 import { checkMarketTrade } from "../lmc/LmcMarkets";
 import { getSeenResourcesTable } from "../lmc/LmcScriptsShared";
+import { shuffleObjectProps } from "../lmc/MiscFuncs";
 import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
 import {
@@ -509,8 +510,11 @@ export function transportAndConsumeResources(
    }
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   const input = filterTransportable(
-      getBuildingIO(xy, "input", IOCalculation.Multiplier | IOCalculation.Capacity, gs),
+   // LMCBOOKMARK 2025-07-04 randomize inputs order
+   const input = shuffleObjectProps(
+      filterTransportable(
+         getBuildingIO(xy, "input", IOCalculation.Multiplier | IOCalculation.Capacity, gs),
+      )
    );
    const worker = getWorkersFor(xy, gs);
    const inputWorkerCapacity = totalMultiplierFor(xy, "worker", 1, false, gs);

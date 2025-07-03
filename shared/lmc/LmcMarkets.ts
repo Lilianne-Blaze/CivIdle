@@ -3,7 +3,7 @@ import { Config } from "../logic/Config";
 import { Tick } from "../logic/TickLogic";
 import { clearObject, forEach, type Tile } from "../utilities/Helper";
 import { lilModCli, lilModOption } from "./LilModCli";
-import { ResourceIsBuildMaterial, ResourceIsFood } from "./LmcConstsEarly";
+import { ResourceIsBuildMaterial, ResourceIsCurrency, ResourceIsFood, ResourceIsUltimate } from "./LmcConstsEarly";
 import { addSystemMessageSafe } from "./LmcScriptsShared";
 import { OnAtEndOfClearIntraTickCache } from "./LmcEvents";
 import type { GameState } from "../logic/GameState";
@@ -57,6 +57,20 @@ function initMarketTradesCache() {
       Number.MAX_SAFE_INTEGER,
    );
 
+   const manageCurrencies = lilModCli.isOption("marketsManageCurrencies");
+   const minCurrencies = ifZeroishThen(lilModCli.getOption("marketsDontSellCurrenciesIfBelow"), 0);
+   const maxCurrencies = ifZeroishThen(
+      lilModCli.getOption("marketsDontBuyCurrenciesIfAbove"),
+      Number.MAX_SAFE_INTEGER,
+   );
+
+   const manageUltimates = lilModCli.isOption("marketsManageUltimates");
+   const minUltimates = ifZeroishThen(lilModCli.getOption("marketsDontSellUltimatesIfBelow"), 0);
+   const maxUltimates = ifZeroishThen(
+      lilModCli.getOption("marketsDontBuyUltimatesIfAbove"),
+      Number.MAX_SAFE_INTEGER,
+   );
+
    const manageOthers = lilModCli.isOption("marketsManageOthers");
    const minOthers = ifZeroishThen(lilModCli.getOption("marketsDontSellOthersIfBelow"), 0);
    const maxOthers = ifZeroishThen(
@@ -69,6 +83,7 @@ function initMarketTradesCache() {
          return;
       }
 
+      // @ts-expect-error
       if (manageFood && ResourceIsFood[res]) {
          const amount = Tick.current.resourceAmount.get(res);
          if ((amount ?? 0) < minFood) {
@@ -77,6 +92,7 @@ function initMarketTradesCache() {
          if ((amount ?? 0) > maxFood) {
             lmcMarketsCache.dontBuy[res] = true;
          }
+         // @ts-expect-error
       } else if (manageBuildMaterials && ResourceIsBuildMaterial[res]) {
          const amount = Tick.current.resourceAmount.get(res);
          if ((amount ?? 0) < minBuildMaterials) {
@@ -85,6 +101,26 @@ function initMarketTradesCache() {
          if ((amount ?? 0) > maxBuildMaterials) {
             lmcMarketsCache.dontBuy[res] = true;
          }
+         // @ts-expect-error
+      } else if (manageUltimates && ResourceIsUltimate[res]) {
+         // process ultimates before currencies, so if both are enabled Bitcoins will be processed as ultimates
+         const amount = Tick.current.resourceAmount.get(res);
+         if ((amount ?? 0) < minUltimates) {
+            lmcMarketsCache.dontSell[res] = true;
+         }
+         if ((amount ?? 0) > maxUltimates) {
+            lmcMarketsCache.dontBuy[res] = true;
+         }
+         // @ts-expect-error
+      } else if (manageCurrencies && ResourceIsCurrency[res]) {
+         const amount = Tick.current.resourceAmount.get(res);
+         if ((amount ?? 0) < minCurrencies) {
+            lmcMarketsCache.dontSell[res] = true;
+         }
+         if ((amount ?? 0) > maxCurrencies) {
+            lmcMarketsCache.dontBuy[res] = true;
+         }
+
       } else if (manageOthers) {
          const amount = Tick.current.resourceAmount.get(res);
          if ((amount ?? 0) < minOthers) {
