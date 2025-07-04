@@ -234,20 +234,13 @@ export const OnTileBuildingsChanged = new TypedEvent<void>();
 
 const TileBuildingsSeed = "TileBuildingsSeed";
 let weekId = 0;
-let intervalId = 0;
 
-function startTileBuildingTimer() {
-   if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = 0;
+export async function populateTileBuildings() {
+   if (TileBuildings.size <= 0) {
+      weekId = 0;
    }
-   populateTileBuildings();
-   intervalId = window.setInterval(populateTileBuildings, 1000);
-}
-
-async function populateTileBuildings() {
    const currentWeek = Math.floor(Date.now() / WEEK);
-   if (weekId === currentWeek) {
+   if (!ws || weekId === currentWeek) {
       return;
    }
    weekId = currentWeek;
@@ -409,7 +402,6 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
                JSON.stringify(w),
             );
             setServerNow(w.now);
-            startTileBuildingTimer();
             w.offlineTime = Math.min(w.offlineTime, offlineTicks);
             resolve?.(w);
             OnAfterWelcomeMessageProcessed.emit({});
@@ -546,3 +538,13 @@ OnUserChanged.on((user) => {
       return;
    }
 });
+
+export function isAllyWith(tile: IClientMapEntry): boolean {
+   if (!user) {
+      return false;
+   }
+   if (!tile.flag || tile.flag.toUpperCase() === "EARTH" || user.flag === "EARTH") {
+      return false;
+   }
+   return tile.flag === user.flag;
+}
