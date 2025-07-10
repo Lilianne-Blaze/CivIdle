@@ -38,6 +38,7 @@ export function escapeHtml(unsafe: string): string {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
 }
+gt.escapeHtml = escapeHtml;
 
 function scientificFormat(num: number): string {
    return num.toExponential(2).replace("00e+", "e").replace("0e+", "e").replace("e+", "e");
@@ -79,6 +80,7 @@ export function formatNumber(num: number | undefined | null, binary = false, sci
    }
    return humanFormat(num, NUMBER_SUFFIX_1);
 }
+gt.formatNumber = formatNumber;
 
 export enum Rounding {
    Floor = 0,
@@ -96,10 +98,12 @@ export function round(num: number, decimal: number, mode = Rounding.Round): numb
    const fac = Math.pow(10, decimal);
    return FormatFunc[mode](num * fac) / fac;
 }
+gt.round = round;
 
 export function formatPercent(p: number, decimal = 2, mode = Rounding.Round) {
    return `${round(p * 100, Math.abs(p) < 0.1 ? decimal + 1 : decimal, mode)}%`;
 }
+gt.formatPercent = formatPercent;
 
 export function mathSign(n: number, epsilon = Number.EPSILON): string {
    if (n > epsilon) {
@@ -110,15 +114,18 @@ export function mathSign(n: number, epsilon = Number.EPSILON): string {
    }
    return "";
 }
+gt.mathSign = mathSign;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function keysOf<T extends {}>(obj: T): Array<keyof T> {
    return Object.keys(obj) as Array<keyof T>;
 }
+gt.keysOf = keysOf;
 
 export function entriesOf<K extends string, V>(obj: Record<K, V>): [K, V][] {
    return Object.entries(obj) as [K, V][];
 }
+gt.entriesOf = entriesOf;
 
 export function forEach<T extends {}>(
    obj: T | undefined,
@@ -133,6 +140,7 @@ export function forEach<T extends {}>(
       }
    }
 }
+gt.forEach = forEach;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function firstKeyOf<T extends {}>(obj: T | undefined) {

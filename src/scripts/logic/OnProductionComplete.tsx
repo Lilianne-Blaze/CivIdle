@@ -93,6 +93,14 @@ import { hasOpenModal, showModal } from "../ui/GlobalModal";
 import { Singleton } from "../utilities/Singleton";
 import { playAgeUp } from "../visuals/Sound";
 
+const gt = globalThis as any;
+
+export const ON_PRODUCTION_COMPLETE_PARAMS = {
+   swissBankMulti: 1,
+   swissBankUsesCaravans: false,
+};
+gt.ON_PRODUCTION_COMPLETE_PARAMS = ON_PRODUCTION_COMPLETE_PARAMS;
+
 let votedBoost: IGetVotedBoostResponse | null = null;
 let lastVotedBoostUpdatedAt = 0;
 let lastFujiGeneratedAt = Date.now();
@@ -877,7 +885,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             if (!building || isSpecialBuilding(building.type)) continue;
             let count = Math.abs(
                Config.TechAge[getCurrentAge(gs)].idx -
-                  Config.TechAge[getBuildingUnlockAge(building.type)].idx,
+               Config.TechAge[getBuildingUnlockAge(building.type)].idx,
             );
             if (isFestival("GreatWall", gs)) {
                count *= 2;
@@ -1730,11 +1738,14 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             if (building && building.type === "Warehouse") {
                warehouses.push(tile);
             }
+            if (ON_PRODUCTION_COMPLETE_PARAMS.swissBankUsesCaravans && building && building.type === "Caravansary") {
+               warehouses.push(tile);
+            }
          }
          if (resource && price) {
             const { amount } = deductResourceFrom(
                resource,
-               (10_000_000 * multiplier * building.level) / price,
+               (10_000_000 * multiplier * building.level * ON_PRODUCTION_COMPLETE_PARAMS.swissBankMulti) / price,
                warehouses,
                gs,
             );

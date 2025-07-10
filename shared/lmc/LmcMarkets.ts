@@ -8,6 +8,9 @@ import { addSystemMessageSafe } from "./LmcScriptsShared";
 import { OnAtEndOfClearIntraTickCache } from "./LmcEvents";
 import type { GameState } from "../logic/GameState";
 import { ifZeroishThen } from "./MiscFuncs";
+import { clear } from "console";
+import { getGameState } from "../logic/GameStateLogic";
+import { getBuildingCost, isWorldWonder } from "../logic/BuildingLogic";
 
 // =====
 
@@ -38,13 +41,19 @@ OnAtEndOfClearIntraTickCache.on(() => {
  */
 const lmcMarketsCache = {
    dontSell: {} as Record<string, boolean>,
-   dontBuy: {} as Record<string, boolean>
+   dontBuy: {} as Record<string, boolean>,
+   alwaysBuyForBuildWonders: {} as Record<string, boolean>,
+   neverSellForBuildWonders: {} as Record<string, boolean>,
 };
 gt.lmcMarketsCache = lmcMarketsCache;
 
 function initMarketTradesCache() {
    clearObject(lmcMarketsCache.dontSell);
    clearObject(lmcMarketsCache.dontBuy);
+   clearObject(lmcMarketsCache.alwaysBuyForBuildWonders);
+   clearObject(lmcMarketsCache.neverSellForBuildWonders);
+
+   const gs = getGameState();
 
    const manageFood = lilModCli.isOption("marketsManageFoods");
    const minFood = ifZeroishThen(lilModCli.getOption("marketsDontSellFoodIfBelow"), 0);
@@ -77,6 +86,30 @@ function initMarketTradesCache() {
       lilModCli.getOption("marketsDontBuyOthersIfAbove"),
       Number.MAX_SAFE_INTEGER,
    );
+
+   // -----
+
+   gs.tiles.forEach((tile, xy) => {
+      try {
+         if (tile.building) {
+            const bu = tile.building;
+            const buType = bu.type;
+            const isWonder = isWorldWonder(buType);
+            if (isWonder && bu.status !== "completed") {
+               const buCost = getBuildingCost(bu);
+               for (const k in buCost) {
+                  if (buCost[k] > bu.resources[k]) {
+                     lmcMarketsCache.alwaysBuyForBuildWonders[k] = true;
+                     lmcMarketsCache.neverSellForBuildWonders[k] = true;
+                  }
+               }
+            }
+         }
+      } catch (err) { }
+   });
+
+
+   // -----
 
    forEach(Config.Resource, (res) => {
       if (NoPrice[res]) {
@@ -134,8 +167,29 @@ function initMarketTradesCache() {
 }
 
 export function checkMarketTrade(params: CheckMarketTradeParams): boolean {
-   const enableLogging = false;
-   //const enableLogging = Math.random() < 0.0001;
+   // const enableLogging = false;
+   const enableLogging = Math.random() < 0.0001 && lilModCli.isOption(lilModOption.marketsPrintSomeDebugMessages);
+
+   if (lilModCli.isOption(lilModOption.marketsAlwaysBuildWonders)) {
+      if (lmcMarketsCache.alwaysBuyForBuildWonders[params.buyResource] &&
+         !lmcMarketsCache.dontSell[params.sellResource]
+      ) {
+         if (enableLogging) {
+            addSystemMessageSafe(
+               `Allowing ${params.checkType}: ${params.sellResource} for ${params.buyResource} because it's needed for a wonder.`,
+            );
+         }
+         return true;
+      }
+      if (lmcMarketsCache.neverSellForBuildWonders[params.sellResource]) {
+         if (enableLogging) {
+            addSystemMessageSafe(
+               `Disallowing ${params.checkType}: ${params.sellResource} for ${params.buyResource} because it's needed for a wonder.`,
+            );
+         }
+         return false;
+      }
+   }
 
    if (lilModCli.isOption(lilModOption.marketsDontSellLessForMore)) {
       if (params.amountRatio > 1) {
@@ -176,5 +230,19 @@ export function checkMarketTrade(params: CheckMarketTradeParams): boolean {
       return false;
    }
 
+   if (lilModCli.isOption(lilModOption.marketsDefaultRuleBlock)) {
+      if (enableLogging) {
+         addSystemMessageSafe(
+            `Blocking ${params.checkType}: ${params.sellResource} for ${params.buyResource}, no other conditions met.`,
+         );
+      }
+      return false;
+   }
+
+   if (enableLogging) {
+      addSystemMessageSafe(
+         `Allowing ${params.checkType}: ${params.sellResource} for ${params.buyResource}, no special conditions met.`,
+      );
+   }
    return true;
 }

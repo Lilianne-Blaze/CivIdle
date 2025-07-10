@@ -600,7 +600,9 @@ export function transportAndConsumeResources(
 
          // is it needed after adding import filtering? needs more testing
          // const allowTrade = checkMarketTrade(params);
-         const allowTrade = true;
+         // const allowTrade = true;
+         const allowTrade = lilModCli.isOption(lilModOption.marketsBlockOnlyImports) ? true :
+            checkMarketTrade(params);
 
          if (allowTrade) {
             safeAdd(building.resources, sellResource, -sellAmount);

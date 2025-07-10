@@ -117,6 +117,54 @@ export function LmcTradeOptionPage(): React.ReactNode {
                />
 
                <ToggleComponent
+                  title="Always supply Wonders being built/upgraded"
+                  contentHTML="Always buy (and never sell) resources needed for building/upgrading Wonders, regardless of all other filter options except minimums."
+                  value={lilModCli.isOption(lilModOption.marketsAlwaysBuildWonders)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.marketsAlwaysBuildWonders);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <ToggleComponent
+                  title="Block trades if no buy/sell conditions are met"
+                  contentHTML="Mostly for debugging / testing."
+                  value={lilModCli.isOption(lilModOption.marketsDefaultRuleBlock)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.marketsDefaultRuleBlock);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <ToggleComponent
+                  title="Filter imports only"
+                  contentHTML="If true, filter only what markets import, not the trades themselves (recommended). If false, blocks both imports and trades (can lead to clogging)."
+                  value={lilModCli.isOption(lilModOption.marketsBlockOnlyImports)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.marketsBlockOnlyImports);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <ToggleComponent
+                  title="Print some debug messages"
+                  contentHTML="For debugging."
+                  value={lilModCli.isOption(lilModOption.marketsPrintSomeDebugMessages)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.marketsPrintSomeDebugMessages);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <div className="sep5" />
+               <div className="separator"></div>
+               <div className="sep5" />
+
+               <ToggleComponent
                   title="Manage Food"
                   contentHTML=""
                   value={lilModCli.isOption("marketsManageFoods")}

@@ -15,6 +15,11 @@ export const lilModOption = {
    marketsDontSellLessForMore: "marketsDontSellLessForMore",
    marketsDontSellAtLoss: "marketsDontSellAtLoss",
 
+   marketsAlwaysBuildWonders: "marketsAlwaysBuildWonders",
+   marketsDefaultRuleBlock: "marketsDefaultRuleBlock",
+   marketsPrintSomeDebugMessages: "marketsPrintSomeDebugMessages",
+   marketsBlockOnlyImports: "marketsBlockOnlyImports",
+
    // early v22
    debugFlag1: "debugFlag1",
    debugFlag2: "debugFlag2",
@@ -78,6 +83,11 @@ export const lilModOptionDefs = {
    // v21
    marketsDontSellLessForMore: false,
    marketsDontSellAtLoss: false,
+
+   marketsAlwaysBuildWonders: false,
+   marketsDefaultRuleBlock: false,
+   marketsPrintSomeDebugMessages: false,
+   marketsBlockOnlyImports: true,
 
    // v21
    balancedTransports: true,
