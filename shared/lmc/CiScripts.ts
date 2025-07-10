@@ -197,3 +197,26 @@ export function getFestivalPoints(): number {
 gt.getFestivalPoints = getFestivalPoints;
 
 // =====
+
+export function playerNameMatchesAnyFragments(playerName: string, playerFragments: string): boolean {
+   const fragments = playerFragments
+      .split(/[;, \s]+/)
+      .filter((fragment) => fragment.length > 0);
+   for (const fragment of fragments) {
+      if (fragment.endsWith("*")) {
+         // if the fragment ends with a star, remove the star to use it as a prefix.
+         const prefix = fragment.slice(0, -1);
+         if (playerName.startsWith(prefix)) {
+            return true;
+         }
+      } else {
+         if (playerName.includes(fragment)) {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+gt.playerNameMatchesAnyFragments = playerNameMatchesAnyFragments;
+
+// =====

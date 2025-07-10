@@ -38,7 +38,7 @@ import { TableView } from "./TableView";
 import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
 import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
-import { formatNumberTradeTable } from "../../../shared/lmc/CiScripts";
+import { formatNumberTradeTable, playerNameMatchesAnyFragments } from "../../../shared/lmc/CiScripts";
 
 const savedResourceWantFilters: Set<Resource> = new Set();
 const savedResourceOfferFilters: Set<Resource> = new Set();
@@ -245,20 +245,18 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
             ]}
             sortingState={playerTradesSortingState}
             data={trades.filter((trade) => {
-               const resourceFilter =
+
+               let resourceFilter =
                   (resourceWantFilters.size === 0 && resourceOfferFilters.size === 0) ||
                   resourceWantFilters.has(trade.buyResource) ||
                   resourceOfferFilters.has(trade.sellResource);
+               if (resourceOfferFilters.size !== 0 && resourceWantFilters.size !== 0) {
+                  resourceFilter =
+                     resourceWantFilters.has(trade.buyResource) && resourceOfferFilters.has(trade.sellResource);
+               }
 
-               const filterNames = playerNameFilter
-                  .toLowerCase()
-                  .split(" ")
-                  .map((name) => name.trim())
-                  .filter((name) => name.length > 0);
-
-               const nameFilter =
-                  filterNames.length === 0 ||
-                  filterNames.some((name) => trade.from.toLowerCase().includes(name));
+               const nameFilter = playerNameFilter.trim().length === 0 ||
+                  playerNameMatchesAnyFragments(trade.from.toLowerCase(), playerNameFilter.toLowerCase());
 
                const amountFilter =
                   tradeAmountFilter === 0 || (tradeAmountFilter > 0 && trade.buyAmount <= tradeAmountFilter);
