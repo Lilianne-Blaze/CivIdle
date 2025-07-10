@@ -1152,10 +1152,10 @@ export function findSpecialBuilding(type: Building, gs: GameState): Required<ITi
 }
 gt.findSpecialBuilding = findSpecialBuilding;
 
-export function addPetraOfflineTime(time: number, gs: GameState): void {
+export function addPetraOfflineTime(time: number, gs: GameState): number {
    const hq = findSpecialBuilding("Headquarter", gs);
    if (!hq) {
-      return;
+      return 0;
    }
    const storage = getMaxWarpStorage(gs);
    if (!hq.building.resources.Warp) {
@@ -1166,6 +1166,7 @@ export function addPetraOfflineTime(time: number, gs: GameState): void {
    hq.building.resources.Warp = clamp(hq.building.resources.Warp, 0, storage);
    const after = hq.building.resources.Warp;
    console.log("[addPetraOfflineTime]: Before:", before, "After:", after);
+   return after - before;
 }
 gt.addPetraOfflineTime = addPetraOfflineTime;
 
@@ -1236,7 +1237,7 @@ export function generateScienceFromFaith(xy: number, buildingType: Building, gs:
       });
       total *= 10;
       safeAdd(hq, "Science", total);
-      mapSafeAdd(Tick.next.wonderProductions, "Science", total);
+      Tick.next.additionalProductions.push({ xy, res: "Science", amount: total });
       Tick.next.scienceProduced.set(xy, total);
    }
 }

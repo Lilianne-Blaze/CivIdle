@@ -72,6 +72,7 @@ export class GameState {
    claimedGreatPeople = 0;
    valueTrackers = new Map<ValueToTrack, IValueTracker>();
    speedUp = 1;
+   pinStatPanel = false;
 }
 
 export type GreatPeopleChoice = GreatPerson[];
@@ -223,6 +224,7 @@ export class GameOptions {
    greatPeopleChoicesV2: GreatPeopleChoiceV2[] = [];
    language: keyof typeof Languages = "en";
    disabledTutorials = new Set<Advisor>();
+   buildNumber = 0;
 }
 
 export enum RebirthFlags {

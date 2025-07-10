@@ -98,7 +98,7 @@ body {
    overflow-y: auto;
 }
 
-#global-modal .overlay {
+#global-modal.overlay {
    position: absolute;
    left: 0;
    right: 0;
@@ -133,4 +133,10 @@ body .tippy-box {
    font-size: 1.1rem;
    font-family: "Pixelated MS Sans Serif", sans-serif;
    -webkit-font-smoothing: none;
+}
+
+#patch-notes-panel {
+   position: absolute;
+   top: 5.5rem;
+   left: 1rem;
 }

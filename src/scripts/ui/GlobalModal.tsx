@@ -46,7 +46,11 @@ export function GlobalModal(): React.ReactNode {
       return null;
    }
 
-   return <div className="overlay">{content}</div>;
+   return (
+      <div id="global-modal" className="overlay">
+         {content}
+      </div>
+   );
 }
 gt.GlobalModal = GlobalModal;
 
@@ -92,7 +96,11 @@ export function GlobalToast(): React.ReactNode {
       return null;
    }
 
-   return <RenderHTML className="toast" html={content} />;
+   return (
+      <div id="global-toast">
+         <RenderHTML className="toast" html={content} />
+      </div>
+   );
 }
 gt.GlobalToast = GlobalToast;
 

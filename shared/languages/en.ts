@@ -1577,4 +1577,12 @@ export const EN = {
    ColorNone: "None",
    PlayerMapMapNeighborTileBonus: "Neighbor Trade Tile Bonus",
    PlayerMapMapAllyTileBonus: "Ally Trade Tile Bonus",
+   HighlightMoreBuildings: "Highlight More Buildings",
+   PinResourceTab: "Pin Resource Tab",
+   PlayerMapRanking: "Ranking",
+   PlayerMapRankingDesc: "Ranking By Number Of Trade Tiles",
+   ActualConsumptionPerCycle: "Actual Consumption Per Cycle",
+   ActualProductionPerCycle: "Actual Production Per Cycle",
+   WarpStorageFullHTML: "Your warp storage is full. To increase warp storage, build and upgrade <b>Petra (Wonder)</b> or upgrade <b>Zenobia (Great Person)</b>",
+   ReadPatchNotesHTML: "You've updated to <b>%{version}</b> (<b>%{build}</b>), read patch notes on <b>Steam</b>",
 };

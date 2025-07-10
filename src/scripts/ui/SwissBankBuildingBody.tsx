@@ -4,6 +4,7 @@ import { NoPrice, NoStorage, type Resource } from "../../../shared/definitions/R
 import { getBuildingCost, getMultipliersFor, totalMultiplierFor } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
+import { Tick } from "../../../shared/logic/TickLogic";
 import type { ISwissBankBuildingData } from "../../../shared/logic/Tile";
 import { formatNumber, keysOf } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
@@ -12,6 +13,7 @@ import { playClick } from "../visuals/Sound";
 import { BuildingColorComponent } from "./BuildingColorComponent";
 import { BuildingDescriptionComponent } from "./BuildingDescriptionComponent";
 import type { IBuildingComponentProps } from "./BuildingPage";
+import { BuildingStorageComponent } from "./BuildingStorageComponent";
 import { BuildingValueComponent } from "./BuildingValueComponent";
 import { BuildingWikipediaComponent } from "./BuildingWikipediaComponent";
 import { ResourceAmountComponent } from "./ResourceAmountComponent";
@@ -90,15 +92,43 @@ export function SwissBankBuildingBody({ gameState, xy }: IBuildingComponentProps
             </select>
             <div className="separator" />
             <ul className="tree-view">
-               <li className="row">
-                  <div className="text-strong f1">{t(L.KotiInStorage)}</div>
-                  <div className="text-strong">{formatNumber(building.resources.Koti ?? 0)}</div>
+               <li>
+                  <div className="text-strong">{t(L.ActualConsumptionPerCycle)}</div>
+                  <ul>
+                     {Tick.current.additionalConsumptions.map(({ xy: xy_, res, amount }) => {
+                        if (xy !== xy_) {
+                           return null;
+                        }
+                        return (
+                           <li key={res} className="row">
+                              <div className="f1">{Config.Resource[res].name()}</div>
+                              <div className="text-strong">{formatNumber(amount)}</div>
+                           </li>
+                        );
+                     })}
+                  </ul>
                </li>
                <li>
-                  <li className="row">
+                  <div className="text-strong">{t(L.ActualProductionPerCycle)}</div>
+                  <ul>
+                     {Tick.current.additionalProductions.map(({ xy: xy_, res, amount }) => {
+                        if (xy !== xy_) {
+                           return null;
+                        }
+                        return (
+                           <li key={res} className="row">
+                              <div className="f1">{Config.Resource[res].name()}</div>
+                              <div className="text-strong">{formatNumber(amount)}</div>
+                           </li>
+                        );
+                     })}
+                  </ul>
+               </li>
+               <li>
+                  <div className="row">
                      <div className="text-strong f1">{t(L.KotiProduction)}</div>
                      <div className="text-strong">{formatNumber(building.level * multiplier)}</div>
-                  </li>
+                  </div>
                   <ul>
                      <li className="row">
                         <div className="f1">{t(L.BaseProduction)}</div>
@@ -132,9 +162,14 @@ export function SwissBankBuildingBody({ gameState, xy }: IBuildingComponentProps
                      </ul>
                   </ul>
                </li>
+               <li className="row">
+                  <div className="text-strong f1">{t(L.KotiInStorage)}</div>
+                  <div className="text-strong">{formatNumber(building.resources.Koti ?? 0)}</div>
+               </li>
             </ul>
          </fieldset>
          <BuildingDescriptionComponent gameState={gameState} xy={xy} />
+         <BuildingStorageComponent gameState={gameState} xy={xy} />
          <BuildingValueComponent gameState={gameState} xy={xy} />
          <BuildingWikipediaComponent gameState={gameState} xy={xy} />
          <BuildingColorComponent gameState={gameState} xy={xy} />
