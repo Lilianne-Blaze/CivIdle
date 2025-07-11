@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { getStorageFor, hasEnoughResource, hasEnoughStorage } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { getSeaTileCost, getTotalSeaTileCost } from "../../../shared/logic/PlayerTradeLogic";
@@ -25,8 +25,8 @@ import { hideModal, showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { WarningComponent } from "./WarningComponent";
 
-export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode {
-   const [tiles, setTiles] = useState<string[]>([]);
+export function FillPlayerTradeModal({ tradeId, xy, execNow = false, percent = 1 }: { tradeId: string; xy?: Tile; execNow: boolean; percent: number }): React.ReactNode {
+   let [tiles, setTiles] = useState<string[]>([]);
    const map = usePlayerMap();
    const gs = useGameState();
    const trades = useTrades();
@@ -35,7 +35,7 @@ export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Ti
    const allTradeBuildings = Tick.current.playerTradeBuildings;
    const [fills, setFills] = useState(new Map<Tile, number>());
 
-   useEffect(() => {
+   useLayoutEffect(() => {
       if (!trade) {
          return;
       }
@@ -51,7 +51,24 @@ export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Ti
          }
       });
       const path = findPath(xyToPoint(myXy), xyToPoint(targetXy), freeTiles);
-      setTiles(path.map((x) => pointToXy(x)));
+      tiles = path.map((x) => pointToXy(x)); // make sure it's visible in same iteration
+      setTiles(tiles);
+
+      if (hasValidPath() && execNow) {
+         let percent2 = percent;
+         if (Math.random() < 0.5) {
+            percent2 = percent2 * 0.99;
+         }
+         const fills2 = calculateMaxFill(percent2);
+         if (fills2.size > 0) {
+            doFill(fills2);
+            hideModal();
+         } else {
+            showToast(t(L.PlayerTradeNoFillBecauseOfResources));
+            hideModal();
+         }
+      }
+
    }, [trade, myXy, map]);
 
    if (!trade) {

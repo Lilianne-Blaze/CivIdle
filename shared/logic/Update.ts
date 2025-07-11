@@ -4,8 +4,11 @@ import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefini
 import type { Tech } from "../definitions/TechDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { POTATO_TRANSPORTS1_DIVIDER } from "../lmc/LmcConstsEarly";
-import { checkMarketTrade } from "../lmc/LmcMarkets";
+import { OnCheckMarketTrade } from "../lmc/LmcEvents";
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
+import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { getSeenResourcesTable } from "../lmc/LmcScriptsShared";
+import { decayBuildingResources } from "../lmc/LmcUpdateUtils";
 import { shuffleObjectProps } from "../lmc/MiscFuncs";
 import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
@@ -103,13 +106,6 @@ import {
 } from "./Tile";
 
 const gt = globalThis as any;
-
-export const UPDATE_PARAMS = {
-   grandBazaarRange: 1,
-   marketRefreshPeriodMulti: 1,
-   alwaysDifferentTrades: false,
-};
-gt.UPDATE_PARAMS = UPDATE_PARAMS;
 
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
@@ -435,8 +431,11 @@ export function transportAndConsumeResources(
          for (const point of getGrid(gs).getNeighbors(tileToPoint(xy))) {
             const nxy = pointToTile(point);
             const b = gs.tiles.get(nxy)?.building;
-            if (b?.type === "Warehouse" && b.status === "completed") {
-               Tick.next.playerTradeBuildings.set(nxy, b);
+            if (b?.status === "completed") {
+               // LMCBOOKMARK 2025-06-xx allow Caravansaries to use Markets too
+               if (b?.type === "Warehouse" || b?.type === "Market") {
+                  Tick.next.playerTradeBuildings.set(nxy, b);
+               }
             }
          }
       }
@@ -561,15 +560,26 @@ export function transportAndConsumeResources(
    // Production
    //////////////////////////////////////////////////
 
+   if (lilModCli.isOption(lilModOption.storageNegativeOrOverflowDecay)) {
+      if (building.status === "completed") {
+         if (building.type === "Market" || building.type === "Caravansary" || building.type === "Warehouse") {
+            decayBuildingResources(xy, building, gs);
+         }
+      }
+   }
+
    if (building.type === "Market") {
       const market = building as IMarketBuildingData;
       let totalBought = 0;
-      forEach(market.sellResources, function marketProduction(sellResource) {
+      const shuffledSellResources = shuffleObjectProps(market.sellResources);
+      forEach(shuffledSellResources, function marketProduction(sellResource) {
+         // forEach(market.sellResources, function marketProduction(sellResource) {
          const buyResource = market.availableResources[sellResource];
          if (!buyResource) {
             delete market.sellResources[sellResource];
             return;
          }
+         const storeAmount = building.resources[sellResource] ?? 0;
          const sellAmount = clamp(
             building.capacity * getMarketSellAmount(sellResource, xy, gs),
             0,
@@ -585,25 +595,27 @@ export function transportAndConsumeResources(
          const buyValue = Config.ResourcePrice[buyResource] * buyAmount;
          const tradeValue = buyValue / sellValue;
          const amountRatio = buyAmount / sellAmount;
-         const params = {
+         const checkTradeParams: CheckMarketTradeParams = {
             sellResource,
             buyResource,
             sellAmount,
             buyAmount,
+            storeAmount,
             sellValue,
             buyValue,
             tradeValue,
             amountRatio,
             xy,
             gs,
-            checkType: "trade",
+            checkType: "sell",
          };
 
-         // is it needed after adding import filtering? needs more testing
-         // const allowTrade = checkMarketTrade(params);
-         // const allowTrade = true;
-         const allowTrade = lilModCli.isOption(lilModOption.marketsBlockOnlyImports) ? true :
-            checkMarketTrade(params);
+         let allowTrade = false;
+         if (!allowTrade) {
+            const checkTradeEvent = new CheckMarketTradeEvent(checkTradeParams);
+            OnCheckMarketTrade.emit(checkTradeEvent);
+            allowTrade = checkTradeEvent.isAllowed();
+         }
 
          if (allowTrade) {
             safeAdd(building.resources, sellResource, -sellAmount);
@@ -611,11 +623,14 @@ export function transportAndConsumeResources(
             // safeAdd(building.resources, buyResource, buyAmount);
             totalBought += buyAmount;
 
-            // LMCBOOKMARK add EIC points from Market trades
+            // LMCBOOKMARK 2025-06-xx add EIC points from Market trades
             const eic = Tick.current.specialBuildings.get("EastIndiaCompany");
             if (eic) {
                const value = (Config.ResourcePrice[sellResource] ?? 0) * sellAmount;
-               safeAdd(eic.building.resources, "TradeValue", value);
+               if (value > 0) {
+                  // just in case. negatives sometimes happen with bugged Markets, which permabugs EIC too
+                  safeAdd(eic.building.resources, "TradeValue", value);
+               }
             }
 
          }
@@ -1031,11 +1046,11 @@ export function addMultiplier(k: Building, multiplier: MultiplierWithStability, 
 }
 
 function getPriceId() {
-   return Math.floor(Date.now() / (HOUR * UPDATE_PARAMS.marketRefreshPeriodMulti));
+   return Math.floor(Date.now() / (HOUR * GLOBAL_PARAMS.MARKETS_REFRESH_PERIOD_MULTI));
 }
 
 export function convertPriceIdToTime(priceId: number) {
-   return priceId * (HOUR * UPDATE_PARAMS.marketRefreshPeriodMulti);
+   return priceId * (HOUR * GLOBAL_PARAMS.MARKETS_REFRESH_PERIOD_MULTI);
 }
 
 export function tickPrice(gs: GameState) {
@@ -1063,8 +1078,8 @@ export function tickPrice(gs: GameState) {
       if (forceUpdatePrice || sizeOf(market.availableResources) === 0) {
          const nextToGrandBazaar =
             (grandBazaar?.building.status === "completed" &&
-               grid.distanceTile(grandBazaar.tile, xy) <= UPDATE_PARAMS.grandBazaarRange)
-            || UPDATE_PARAMS.alwaysDifferentTrades;
+               grid.distanceTile(grandBazaar.tile, xy) <= GLOBAL_PARAMS.GRAND_BAZAAR_RANGE)
+            || GLOBAL_PARAMS.MARKETS_ALWAYS_DIFFERENT_TRADES;
          const seed = nextToGrandBazaar ? `${priceId},${xy}` : `${priceId}`;
          const buy = shuffle(keysOf(resources), srand(seed));
          const sell = shuffle(keysOf(resources), srand(seed));

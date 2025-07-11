@@ -402,20 +402,36 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
                               delete
                            </div>
                         ) : (
-                           <div
-                              className={classNames({
-                                 "text-link": !disableFill,
-                                 "text-strong": true,
-                                 "text-desc": disableFill,
-                              })}
-                              onClick={() => {
-                                 if (!disableFill) {
-                                    showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} />);
-                                 }
-                              }}
-                           >
-                              {t(L.PlayerTradeFill)}
-                           </div>
+                           <>
+                              <div
+                                 className={classNames({
+                                    "text-link": !disableFill,
+                                    "text-strong": true,
+                                    "text-desc": disableFill,
+                                 })}
+                                 onClick={() => {
+                                    if (!disableFill) {
+                                       showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} />);
+                                    }
+                                 }}
+                              >
+                                 {"Trade..."}
+                              </div>
+                              <div
+                                 className={classNames({
+                                    "text-link": !disableFill,
+                                    "text-strong": true,
+                                    "text-desc": disableFill,
+                                 })}
+                                 onClick={() => {
+                                    if (!disableFill) {
+                                       showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} execNow={true} percent={1} />);
+                                    }
+                                 }}
+                              >
+                                 {"TrdMax"}
+                              </div>
+                           </>
                         )}
                      </td>
                   </tr>

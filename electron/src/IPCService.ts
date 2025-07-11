@@ -106,6 +106,11 @@ export class IPCService {
       app.exit(0);
    }
 
+   public quitForced(): void {
+      app.exit(0);
+      process.abort();
+   }
+
    public minimize(): void {
       this._mainWindow.minimize();
    }

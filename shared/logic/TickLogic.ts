@@ -38,7 +38,7 @@ interface ITickData {
    storagePercentages: Map<Tile, number>;
    additionalProductions: { xy: Tile; res: Resource; amount: number }[];
    additionalConsumptions: { xy: Tile; res: Resource; amount: number }[];
-   playerTradeBuildings: Map<Tile, IBuildingData>;
+   playerTradeBuildings: Map<Tile, IBuildingData>; // all Caravansaries plus adjacent Warehouses
    resourceImportBuildings: Map<Tile, IResourceImportBuildingIndex>;
    globalMultipliers: GlobalMultipliers;
    notProducingReasons: Map<Tile, NotProducingReason>;

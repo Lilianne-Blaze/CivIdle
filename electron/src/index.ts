@@ -9,6 +9,8 @@ gt.electronApp = app;
 
 export type SteamClient = Omit<Client, "init" | "runCallbacks">;
 
+//app.disableHardwareAcceleration();
+
 app.commandLine.appendSwitch("enable-logging", "file");
 
 const logPath = path.join(getLocalGameSavePath(), "CivIdle.log");
@@ -122,22 +124,25 @@ app.on("window-all-closed", () => {
 app.on('before-quit', () => {
    console.log("Before quit event triggered");
    setTimeout(() => {
-      console.warn('Forced exit due to timeout (124)');
-      app.exit(0);
+      console.warn('Forced exit due to timeout (127)');
+      //app.exit(0);
+      process.abort();
    }, 20000);
 });
 app.on('window-all-closed', () => {
    console.log("Window all closed event triggered");
    setTimeout(() => {
-      console.warn('Forced exit due to timeout (130)');
-      app.exit(0);
+      console.warn('Forced exit due to timeout (135)');
+      //app.exit(0);
+      process.abort();
    }, 20000);
 });
 
 function quit() {
    setTimeout(() => {
-      console.warn('Forced exit due to timeout (139)');
-      app.exit(0);
+      console.warn('Forced exit due to timeout (143)');
+      //app.exit(0);
+      process.abort();
    }, 20000);
    app.quit();
 }

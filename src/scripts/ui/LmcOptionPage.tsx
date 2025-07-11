@@ -316,6 +316,17 @@ export function LmcOptionPage(): React.ReactNode {
                      " If you notice any anomalies, try increasing your stockpile limits."} />
                </WarningComponent>
 
+               <ToggleComponent
+                  title="Overflow/negative storage slowfix v1"
+                  contentHTML="EXPERIMENTAL: if a storage has negative or overflowing resources it slowly 'decays' until it's in 0-100% range."
+                  value={lilModCli.isOption(lilModOption.storageNegativeOrOverflowDecay)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.storageNegativeOrOverflowDecay);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
             </fieldset>
          </div>
       </div>

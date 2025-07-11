@@ -5,11 +5,11 @@ const gt = globalThis as any;
 (globalThis as any).temp = (globalThis as any).temp + Math.random();
 
 
-import mqttImported, { IClientOptions, MqttClient, IClientPublishOptions, IPublishPacket, IClientSubscribeOptions } from "mqtt";
+import mqttImported, { type IClientOptions, type MqttClient, type IClientPublishOptions, type IPublishPacket, type IClientSubscribeOptions } from "mqtt";
 import { OnEveryFiveMins, OnSoonAfterGameStartedOrLoaded } from "./LmcEvents";
 import { CHANNEL_GUID_BASIC_STATE, CHANNEL_GUID_MOD_VER, CHANNEL_GUID_NDS, CHANNEL_GUID_ROOT, CHANNEL_GUID_TEST1 } from "./LmcConstsEarly";
 import { getUserId } from "./CiScripts";
-import { LmcMqttPackage, newModVersionPayload, newMqttPublishOptions, newUserDataPayload, newBasicStatePayload, ChatMessagePayload, LmcMqttEnvelope } from "./LmcMqttTypes";
+import { type LmcMqttPackage, newModVersionPayload, newMqttPublishOptions, newUserDataPayload, newBasicStatePayload, type ChatMessagePayload, LmcMqttEnvelope } from "./LmcMqttTypes";
 import { lilModCli, lilModOption } from "./LilModCli";
 
 
@@ -109,7 +109,13 @@ export const lmcMqtt = {
     },
 
     disconnectNowForce() {
+
+        setTimeout(() => {
+            require('why-is-node-running')();
+        }, 5000);
+
         this.mainMqttClient?.endAsync(true);
+        this.mainMqttClient = null;
     },
 
     reconnect() {

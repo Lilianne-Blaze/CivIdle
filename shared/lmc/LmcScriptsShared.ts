@@ -68,7 +68,7 @@ gt.showToastSafe = showToastSafe;
 
 export function getSeenResourceKeys() {
    const cacheSecs = 1;
-   return calcAtMostOncePerXSeconds("seenResourceKeys", cacheSecs, getSeenResourceKeys0);
+   return calcAtMostOncePerXSeconds("seenResourceKeys.retVal", cacheSecs, getSeenResourceKeys0);
 }
 gt.getSeenResourceKeys = getSeenResourceKeys;
 
@@ -83,10 +83,11 @@ function getSeenResourceKeys0() {
    const storageResourceKeys = keysOf(availableResources);
    const seenResourceKeys = unlockedResourceKeys.slice();
    storageResourceKeys.forEach((item) => {
-      if (!seenResourceKeys.includes(item)) {
-         seenResourceKeys.push(item);
-      }
+      if (!seenResourceKeys.includes(item)) { seenResourceKeys.push(item); }
    });
+   if (hasCompletedOrUpgradingSwissBank()) {
+      if (!seenResourceKeys.includes("Koti")) { seenResourceKeys.push("Koti"); }
+   }
    return seenResourceKeys;
 }
 
@@ -688,5 +689,39 @@ export function getUserSafe(): IUser | null {
    return null;
 }
 gt.getUserSafe = getUserSafe;
+
+// =====
+
+export function hasSwissBank(): boolean {
+   try {
+      const sbTile = Tick.current.specialBuildings.get("SwissBank");
+      return !!sbTile;
+   } catch (err) {
+      return false;
+   }
+}
+gt.hasSwissBank = hasSwissBank;
+
+export function hasNonEmptySwissBank(): boolean {
+   try {
+      const sbTile = Tick.current.specialBuildings.get("SwissBank");
+      const sbBuilding = sbTile?.building;
+      return (sbBuilding?.resources?.Koti ?? 0) > 0;
+   } catch (err) {
+      return false;
+   }
+}
+gt.hasNonEmptySwissBank = hasNonEmptySwissBank;
+
+export function hasCompletedOrUpgradingSwissBank(): boolean {
+   try {
+      const sbTile = Tick.current.specialBuildings.get("SwissBank");
+      const sbBuilding = sbTile?.building;
+      return sbBuilding?.status === "completed" || sbBuilding?.status === "upgrading";
+   } catch (err) {
+      return false;
+   }
+}
+gt.hasCompletedOrUpgradingSwissBank = hasCompletedOrUpgradingSwissBank;
 
 // =====

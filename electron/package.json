@@ -23,7 +23,7 @@
    "license": "MIT",
    "dependencies": {
       "@fishpondstudio/steamworks.js": "^0.3.7",
-      "@types/node": "^18.19.118",
+      "@types/node": "^18.19.120",
       "fs-extra": "^11.1.0",
       "libsodium-sumo": "^0.7.15",
       "mime": "^3.0.0",

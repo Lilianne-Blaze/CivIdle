@@ -380,6 +380,7 @@ export class TileVisual extends Container {
             this.toggleConstructionTween(true);
             this.showTimeLeft(tileData, gameState);
             this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
             return;
          }
          case "upgrading": {
@@ -397,6 +398,7 @@ export class TileVisual extends Container {
             }
             this.showTimeLeft(tileData, gameState);
             this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
             return;
          }
          case "completed": {
@@ -438,12 +440,14 @@ export class TileVisual extends Container {
             }
             if (isCityMapShowBothEvAndPct()) {
                try {
-                  const ev =
-                     (Tick.current.buildingValueByTile.get(tileData.tile) ?? 0) +
-                     (Tick.current.resourceValueByTile.get(tileData.tile) ?? 0);
+                  const evBuilding = Tick.current.buildingValueByTile.get(tileData.tile) ?? 0;
+                  const evResources = Tick.current.resourceValueByTile.get(tileData.tile) ?? 0;
+                  const ev = evBuilding + evResources;
+
                   const pct = Tick.current.storagePercentages.get(tileData.tile);
                   const ev2 = zeroAllButThreeHighestDigits(ev, true);
                   const pct2 = zeroAllButThreeHighestDigits(pct, true);
+                  // biome-ignore lint/style/useTemplate: <explanation>
                   const line1 = formatNumber(ev2) + " / " + formatPercent(pct2);
                   this._bottomText.text = line1;
                   this._bottomText.visible = true;
@@ -454,6 +458,7 @@ export class TileVisual extends Container {
 
             }
             this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
 
 
             const level = getBuildingLevelLabel(this._tile.building);
@@ -514,6 +519,42 @@ export class TileVisual extends Container {
          }
          bt.visible = true;
       }
+   }
+
+   private maybeColorBottomText(): void {
+      switch (this._tile?.building?.status) {
+         case "building": {
+            this._bottomText.tint = getColorCached("#ffffff");
+            return;
+         }
+         case "upgrading": {
+            this._bottomText.tint = getColorCached("#ffffff");
+            return;
+         }
+         case "completed": {
+            try {
+               const tileData = this._tile;
+               const evResources = Tick.current.resourceValueByTile.get(tileData.tile) ?? 0;
+               const storPercent = Tick.current.storagePercentages.get(tileData.tile);
+               if (storPercent && storPercent < (-1 / 1_000_000)) {
+                  this._bottomText.tint = getColorCached("#ff0000");
+               } else if ((storPercent && storPercent < 0.05) || storPercent == 0) {
+                  this._bottomText.tint = getColorCached("#ffff88");
+               } else if (storPercent && storPercent > 0.95) {
+                  this._bottomText.tint = getColorCached("#88ff88");
+               } else {
+                  this._bottomText.tint = getColorCached("#ffffff");
+               }
+            } catch (err) { }
+            return;
+         }
+      }
+   }
+
+   private bottomTextMakeWhite(): void {
+      try {
+         this._bottomText.tint = getColorCached("#ffffff");
+      } catch (err) { }
    }
 
    private fadeOutTopLeftIcon(): void {

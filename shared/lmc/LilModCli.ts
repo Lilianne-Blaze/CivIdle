@@ -72,6 +72,8 @@ export const lilModOption = {
    carasIOfferShowEverything: "carasIOfferShowEverything",
    exportDebugJsonsOnSave: "exportDebugJsonsOnSave",
 
+   storageNegativeOrOverflowDecay: "storageNegativeOrOverflowDecay",
+
 
 };
 
@@ -130,6 +132,8 @@ export const lilModOptionDefs = {
    // 2025-06-28
    carasIOfferShowEverything: false,
    exportDebugJsonsOnSave: false,
+
+   storageNegativeOrOverflowDecay: false,
 
 
 };
@@ -215,6 +219,7 @@ export const lilModCli = {
       cityMapShowCoords: true,
       cityMapShowBothEvAndPct: true,
       worldMapShowCoords: true,
+
 
       test: "Test.",
    },

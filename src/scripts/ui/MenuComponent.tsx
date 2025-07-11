@@ -342,23 +342,45 @@ export function MenuComponent(): React.ReactNode {
                      <MenuItem check={false}>{t(L.EmailDeveloper)}</MenuItem>
                   </div>
                   {isSteam() ? (
-                     <div
-                        className="menu-popover-item"
-                        onPointerDown={() => {
-                           console.debug("SaveAndExit menu item clicked.");
-                           saveGame()
-                              .then(() => {
-                                 SteamClient.quit()
-                                 lmcMqtt.disconnectNowForce();
-                              })
-                              .catch((e) => {
-                                 playError();
-                                 showToast(String(e));
-                              });
-                        }}
-                     >
-                        <MenuItem check={false}>{t(L.SaveAndExit)}</MenuItem>
-                     </div>
+                     <>
+                        <div
+                           className="menu-popover-item"
+                           onPointerDown={() => {
+                              console.debug("SaveAndExit menu item clicked.");
+                              saveGame()
+                                 .then(() => {
+                                    SteamClient.quit();
+                                    lmcMqtt.disconnectNowForce();
+                                    console.debug("SaveAndExit: steam and mqtt should be disconnected now.");
+                                    process.exit(0);
+                                 })
+                                 .catch((e) => {
+                                    playError();
+                                    showToast(String(e));
+                                 });
+                           }}
+                        >
+                           <MenuItem check={false}>{t(L.SaveAndExit)}</MenuItem>
+                        </div>
+                        <div
+                           className="menu-popover-item"
+                           onPointerDown={() => {
+                              console.debug("SaveAndExitForced menu item clicked.");
+                              saveGame()
+                                 .then(() => {
+                                    lmcMqtt.disconnectNowForce();
+                                    console.debug("SaveAndExitForced: steam and mqtt should be disconnected now.");
+                                    SteamClient.quitForced();
+                                 })
+                                 .catch((e) => {
+                                    playError();
+                                    showToast(String(e));
+                                 });
+                           }}
+                        >
+                           <MenuItem check={false}>{"Save And Exit (forced)"}</MenuItem>
+                        </div>
+                     </>
                   ) : null}
                   {isSteam() &&
                      user &&

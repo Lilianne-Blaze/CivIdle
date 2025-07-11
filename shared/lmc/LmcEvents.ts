@@ -5,6 +5,7 @@
 import type { GameState } from "../logic/GameState";
 import { ChatChannel, IUser } from "../utilities/Database";
 import { TypedEvent } from "../utilities/TypedEvent";
+import { CheckMarketTradeEvent } from "./LmcMarkets";
 
 const gt = globalThis as any;
 
@@ -74,6 +75,9 @@ gt.OnUserIdChanged = OnUserIdChanged;
 
 export const OnAtEndOfClearIntraTickCache = new TypedEvent();
 gt.OnAtEndOfClearIntraTickCache = OnAtEndOfClearIntraTickCache;
+
+export const OnCheckMarketTrade = new TypedEvent<CheckMarketTradeEvent>();
+gt.OnCheckMarketTrade = OnCheckMarketTrade;
 
 // -----
 

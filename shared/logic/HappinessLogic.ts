@@ -1,3 +1,4 @@
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
 import { clamp, isEmpty, mFilterOf, mReduceOf, reduceOf, sizeOf, sum } from "../utilities/Helper";
 import type { PartialTabulate } from "../utilities/TypeDefinitions";
 import { L, t } from "../utilities/i18n";
@@ -15,12 +16,6 @@ import { getCurrentAge } from "./TechLogic";
 import { Tick } from "./TickLogic";
 
 const gt = globalThis as any;
-
-export const HAPPINESS_PARAMS = {
-   minCap: -50,
-   maxCap: 50,
-};
-gt.HAPPINESS_PARAMS = HAPPINESS_PARAMS;
 
 export const HappinessNames = {
    fromUnlockedTech: () => t(L.HappinessFromUnlockedTech),
@@ -106,7 +101,10 @@ export function calculateHappiness(gs: GameState) {
       sum(Tick.current.globalMultipliers.happiness, "value") -
       reduceOf(negative, (prev, _, value) => prev + value, 0);
    //const value = clamp(uncapped, -50, 50);
-   const value = clamp(uncapped, HAPPINESS_PARAMS.minCap, HAPPINESS_PARAMS.maxCap);
+   const value = clamp(uncapped,
+      GLOBAL_PARAMS.HAPPINESS_MIN_CAP,
+      GLOBAL_PARAMS.HAPPINESS_MAX_CAP);
+
    const workerPercentage = (100 + value * HAPPINESS_MULTIPLIER) / 100;
    const normalized = (value + 50) / 100;
    return {

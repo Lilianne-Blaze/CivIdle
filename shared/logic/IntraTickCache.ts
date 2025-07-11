@@ -1,8 +1,8 @@
 import type { Building, IBuildingDefinition } from "../definitions/BuildingDefinitions";
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
-import { OnAtEndOfClearIntraTickCache } from "../lmc/LmcEvents";
-import { checkMarketTrade } from "../lmc/LmcMarkets";
+import { OnAtEndOfClearIntraTickCache, OnCheckMarketTrade } from "../lmc/LmcEvents";
+import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { Grid } from "../utilities/Grid";
 import { clamp, forEach, mapSafeAdd, reduceOf, safeAdd, tileToHash, type Tile } from "../utilities/Helper";
 import type { PartialSet, PartialTabulate } from "../utilities/TypeDefinitions";
@@ -105,6 +105,7 @@ export function getBuildingIO(
                      return;
                   }
                   const buyAmount = getMarketBuyAmount(sellResource, maybeSellAmount, buyResource, xy, gs);
+                  const storeAmount = b.resources[sellResource] ?? 0;
 
                   if (used - maybeSellAmount + buyAmount > total) {
                      // is it needed? needs more testing
@@ -119,11 +120,12 @@ export function getBuildingIO(
                   }
                   const tradeValue = buyValue / sellValue;
                   const amountRatio = buyAmount / maybeSellAmount;
-                  const params = {
+                  const checkTradeParams: CheckMarketTradeParams = {
                      sellResource,
                      buyResource,
                      sellAmount: maybeSellAmount,
                      buyAmount,
+                     storeAmount,
                      sellValue,
                      buyValue,
                      tradeValue,
@@ -132,8 +134,10 @@ export function getBuildingIO(
                      gs,
                      checkType: "import",
                   };
-                  const allowTrade = checkMarketTrade(params);
-                  if (allowTrade) {
+                  const checkTradeEvent = new CheckMarketTradeEvent(checkTradeParams);
+                  OnCheckMarketTrade.emit(checkTradeEvent);
+
+                  if (checkTradeEvent.isAllowed()) {
                      resources[sellResource] = getMarketBaseSellAmount(sellResource, buyResource);
                   }
 

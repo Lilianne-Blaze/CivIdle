@@ -66,19 +66,10 @@ import {
    type IResourceImportBuildingData,
    type ITileData,
 } from "./Tile";
-
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
-import { get } from "http";
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
 
 const gt = globalThis as any;
-
-export const BUILDING_LOGIC_PARAMS = {
-   marketStorageMulti: 1,
-   caravansaryStorageMulti: 1,
-   warehouseStorageMulti: 1,
-   marketBaseSellAmountMulti: 1,
-};
-gt.BUILDING_LOGIC_PARAMS = BUILDING_LOGIC_PARAMS;
 
 export function totalMultiplierFor(
    xy: Tile,
@@ -281,14 +272,15 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
 
    switch (building?.type) {
       case "Market": {
-         base = building.level * STORAGE_TO_PRODUCTION * 10 * BUILDING_LOGIC_PARAMS.marketStorageMulti;
+         base = building.level * STORAGE_TO_PRODUCTION * 10 *
+            GLOBAL_PARAMS.MARKETS_STORAGE_MULTI;
          break;
       }
       case "Caravansary": {
          base =
             getResourceImportCapacity(building, 1) *
             STORAGE_TO_PRODUCTION *
-            BUILDING_LOGIC_PARAMS.caravansaryStorageMulti;
+            GLOBAL_PARAMS.CARAVANSARIES_STORAGE_MULTI;
          break;
       }
       case "Warehouse": {
@@ -296,7 +288,7 @@ export function getStorageFor(xy: Tile, gs: GameState): IStorageResult {
             getResourceImportCapacity(building, 1) *
             STORAGE_TO_PRODUCTION *
             10 *
-            BUILDING_LOGIC_PARAMS.warehouseStorageMulti;
+            GLOBAL_PARAMS.WAREHOUSES_STORAGE_MULTI
          break;
       }
       case "Petra": {
@@ -838,7 +830,7 @@ export function getMarketBaseSellAmount(sellResource: Resource, buyResource: Res
    return (
       (Math.sqrt((Config.ResourcePrice[sellResource] ?? 0) * (Config.ResourcePrice[buyResource] ?? 0)) /
          (Config.ResourcePrice[sellResource] ?? 1)) *
-      BUILDING_LOGIC_PARAMS.marketBaseSellAmountMulti
+      GLOBAL_PARAMS.MARKETS_BASE_SELL_AMOUNT_MULTI
    );
 }
 gt.getMarketBaseSellAmount = getMarketBaseSellAmount;
