@@ -389,7 +389,7 @@ export class TileVisual extends Container {
             this._upgrade.visible = true;
             this.toggleUpgradeTween(true);
             this._spinner.visible = false;
-            const level = getBuildingLevelLabel(this._tile.building);
+            const level = getBuildingLevelLabel(this._tile.building, gameState);
             if (level.length > 0) {
                this._level.visible = true;
                this._level.text = level;
@@ -461,10 +461,10 @@ export class TileVisual extends Container {
             this.maybeColorBottomText();
 
 
-            const level = getBuildingLevelLabel(this._tile.building);
+            const level = getBuildingLevelLabel(this._tile.building, gameState);
             if (level.length > 0) {
                this._level.visible = true;
-               this._level.text = getBuildingLevelLabel(this._tile.building);
+               this._level.text = level;
             } else {
                this._level.visible = false;
             }

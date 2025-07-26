@@ -36,7 +36,7 @@ import { srand } from "../utilities/Random";
 import { TypedEvent } from "../utilities/TypedEvent";
 import { L, t } from "../utilities/i18n";
 import {
-   IOCalculation,
+   IOFlags,
    addTransportation,
    canBeElectrified,
    deductResources,
@@ -49,7 +49,7 @@ import {
    getBuildingCost,
    getBuildingValue,
    getCurrentPriority,
-   getElectrificationEfficiency,
+   getElectrificationBoost,
    getInputMode,
    getMarketBuyAmount,
    getMarketSellAmount,
@@ -272,7 +272,7 @@ export function transportAndConsumeResources(
    // Note that `resourcesByTile` includes buildings that are "building" and "upgrading".
    // This is for cache purpose. We will filter them out when actually transporting resources
    const { total, used } = getStorageFor(xy, gs);
-   const output = getBuildingIO(xy, "output", IOCalculation.Multiplier | IOCalculation.Capacity, gs);
+   const output = getBuildingIO(xy, "output", IOFlags.Multiplier | IOFlags.Capacity, gs);
 
    const isResourceImportBuilding = "resourceImports" in building;
 
@@ -454,9 +454,7 @@ export function transportAndConsumeResources(
             const b = getWorkingBuilding(nxy, gs);
             if (!b) continue;
             forEach(
-               filterTransportable(
-                  getBuildingIO(nxy, "output", IOCalculation.Capacity | IOCalculation.Multiplier, gs),
-               ),
+               filterTransportable(getBuildingIO(nxy, "output", IOFlags.Capacity | IOFlags.Multiplier, gs)),
                (res, value) => {
                   mapSafeAdd(result, res, value);
                   total += value;
@@ -496,11 +494,9 @@ export function transportAndConsumeResources(
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    // LMCBOOKMARK 2025-07-04 randomize inputs order
-   const input = shuffleObjectProps(
-      filterTransportable(
-         getBuildingIO(xy, "input", IOCalculation.Multiplier | IOCalculation.Capacity, gs),
-      )
-   );
+   const inputOrg = filterTransportable(getBuildingIO(xy, "input", IOFlags.Multiplier | IOFlags.Capacity, gs));
+   const input = shuffleObjectProps(inputOrg);
+
    const worker = getWorkersFor(xy, gs);
    const inputWorkerCapacity = totalMultiplierFor(xy, "worker", 1, false, gs);
 
@@ -727,25 +723,12 @@ export function transportAndConsumeResources(
    }
 
    ////////// Electrification
-   if (
-      hasFeature(GameFeature.Electricity, gs) &&
-      canBeElectrified(building.type) &&
-      building.electrification > 0
-   ) {
-      let electrification = clamp(building.electrification, 0, building.level);
-      if (gs.unlockedUpgrades.Liberalism5) {
-         electrification *= 2;
-      }
+   if (hasFeature(GameFeature.Electricity, gs) && canBeElectrified(building.type)) {
+      const electrification = getElectrificationBoost(building, gs);
       const requiredPower = getPowerRequired(building);
       if (getAvailableWorkers("Power") >= requiredPower) {
          useWorkers("Power", requiredPower, xy);
-         mapSafePush(Tick.next.tileMultipliers, xy, {
-            source: t(L.Electrification),
-            input: electrification * getElectrificationEfficiency(building.type),
-            output: electrification,
-            unstable: true,
-         });
-         Tick.next.electrified.add(xy);
+         Tick.next.electrified.set(xy, electrification);
       }
    }
 
@@ -825,7 +808,7 @@ function tickWarehouseAutopilot(
       if (!building || tile === xy) {
          continue;
       }
-      const output = getBuildingIO(tile, "output", IOCalculation.None, gs);
+      const output = getBuildingIO(tile, "output", IOFlags.None, gs);
       const candidates = keysOf(building.resources)
          .filter((r) => {
             if (hasFlag(warehouse.warehouseOptions, WarehouseOptions.AutopilotRespectCap)) {

@@ -181,6 +181,9 @@ export class IPCService {
       return this.getProcessEnvSync(envVarName);
    }
 
-
+   // added in b656
+   public setRichPresence(key: string, value?: string | undefined | null): void {
+      this._client.localplayer.setRichPresence(key, value);
+   }
 }
 gt.IPCService = IPCService;

@@ -24,9 +24,14 @@ if (process.env.STEAMWORKS_PATH) {
       path.join(rootPath, "build", "CivIdle-Linux.vdf"),
       path.join(process.env.STEAMWORKS_PATH, "cividle", "CivIdle-Linux.vdf"),
    );
+   fs.copyFileSync(
+      path.join(rootPath, "build", "CivIdle-macOS.vdf"),
+      path.join(process.env.STEAMWORKS_PATH, "cividle", "CivIdle-macOS.vdf"),
+   );
 
    replaceVersion(path.join(process.env.STEAMWORKS_PATH, "cividle", "CivIdle.vdf"));
    replaceVersion(path.join(process.env.STEAMWORKS_PATH, "cividle", "CivIdle-Linux.vdf"));
+   replaceVersion(path.join(process.env.STEAMWORKS_PATH, "cividle", "CivIdle-macOS.vdf"));
 
    function replaceVersion(path) {
       const content = fs.readFileSync(path, { encoding: "utf8" });
@@ -52,7 +57,24 @@ fs.copySync(path.join(rootPath, "dist"), path.join(rootPath, "electron", "dist")
 
 console.log("========== Build Electron ==========");
 
-cmd("npm run package -- --platform=win32,linux", path.join(rootPath, "electron"));
+cmd("npm run package -- --platform=win32,linux,darwin", path.join(rootPath, "electron"));
+cmd(`rcodesign sign --p12-file local/app-sign.p12 --p12-password-file local/p12-password`
+   + ` --code-signature-flags runtime`
+   + ` --entitlements-xml-file local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/cividle Helper.app":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/cividle Helper.app":local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/cividle Helper (Renderer).app":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/cividle Helper (Renderer).app":local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/cividle Helper (GPU).app":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/cividle Helper (GPU).app":local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/cividle Helper (Plugin).app":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/cividle Helper (Plugin).app":local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler":local/entitlements.plist`
+   + ` --code-signature-flags "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/ShipIt":runtime`
+   + ` --entitlements-xml-file "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/ShipIt":local/entitlements.plist`
+   + ` ./out/cividle-darwin-x64/cividle.app`, path.join(rootPath, "electron"));
+cmd(`rcodesign notary-submit --api-key-file local/app-store.json --staple out/cividle-darwin-x64/cividle.app`, path.join(rootPath, "electron"));
 
 console.log("========== Uploading to Steam ==========");
 
@@ -63,6 +85,7 @@ if (!process.env.STEAMWORKS_PATH) {
 
 fs.removeSync(path.join(process.env.STEAMWORKS_PATH, "cividle-win32-x64"));
 fs.removeSync(path.join(process.env.STEAMWORKS_PATH, "cividle-linux-x64"));
+fs.removeSync(path.join(process.env.STEAMWORKS_PATH, "cividle-darwin-x64"));
 
 fs.copySync(
    path.join(rootPath, "electron", "out", "cividle-win32-x64"),
@@ -72,6 +95,11 @@ fs.copySync(
 fs.copySync(
    path.join(rootPath, "electron", "out", "cividle-linux-x64"),
    path.join(process.env.STEAMWORKS_PATH, "cividle-linux-x64"),
+);
+
+fs.copySync(
+   path.join(rootPath, "electron", "out", "cividle-darwin-x64"),
+   path.join(process.env.STEAMWORKS_PATH, "cividle-darwin-x64"),
 );
 
 cmd(

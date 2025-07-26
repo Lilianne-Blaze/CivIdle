@@ -33,7 +33,7 @@ interface ITickData {
    happiness: ReturnType<typeof calculateHappiness> | null;
    workersUsed: Map<Resource, number>;
    workersAssignment: Map<Tile, number>;
-   electrified: Set<Tile>;
+   electrified: Map<Tile, number>;
    resourcesByTile: Map<Resource, IBuildingIndex[]>;
    storagePercentages: Map<Tile, number>;
    additionalProductions: { xy: Tile; res: Resource; amount: number }[];
@@ -60,7 +60,7 @@ interface ITickData {
 
 export function EmptyTickData(): ITickData {
    return {
-      electrified: new Set(),
+      electrified: new Map(),
       buildingMultipliers: new Map(),
       unlockedBuildings: new Set(),
       tileMultipliers: new Map(),
