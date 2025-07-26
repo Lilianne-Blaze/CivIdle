@@ -13,14 +13,14 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 127;
+export const LMC_MINOR_VER = 135; // 2025-07-26
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
 export const LMC_VER_NUMBER = LMC_MAJOR_VER * 1000 + LMC_MINOR_VER;
 gt.LMC_VER_NUMBER = LMC_VER_NUMBER;
 
-export const LMC_FOR_BUILD = 647;
+export const LMC_FOR_BUILD = 658; // 2025-07-26
 gt.LMC_FOR_BUILD = LMC_FOR_BUILD;
 
 export const LMC_VER_NOTE = "internal alpha";
