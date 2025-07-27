@@ -21,7 +21,6 @@ import { firstKeyOf, hasFlag, pointToTile } from "../../../shared/utilities/Help
 import { censor } from "../../../shared/utilities/ProfanityFilter";
 import { TypedEvent } from "../../../shared/utilities/TypedEvent";
 import { L, t } from "../../../shared/utilities/i18n";
-import AccountLevelMod from "../../images/AccountLevelMod.png";
 import chatActive from "../../images/chat_active.png";
 import chatInactive from "../../images/chat_inactive.png";
 import { ToggleChatWindow, useFloatingMode, useGameOptions, useGameState } from "../Global";
@@ -44,14 +43,14 @@ import { showToast } from "./GlobalModal";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { SelectChatChannelModal } from "./SelectChatChannelModal";
 import { ResourcesTab } from "./StatisticsBuildingBody";
-import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
+import { AccountLevelComponent, MiscTextureComponent, PlayerFlagComponent } from "./TextureSprites";
 import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 
 import CustomBlackCalculator_png from "../../images/custom-black-calculator.png";
-globalThis.CustomBlackCalculator_png = CustomBlackCalculator_png;
-
 import CustomNukeDove100_png from "../../images/custom-nukedove100.png";
-import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+
+globalThis.CustomBlackCalculator_png = CustomBlackCalculator_png;
 globalThis.CustomNukeDove100_png = CustomNukeDove100_png;
 
 const SetChatInput = new TypedEvent<{ channel: ChatChannel; getContent: (old: string) => string }>();
@@ -368,12 +367,12 @@ function ChatMessage({
                ) : null}
                {hasFlag(chat.attr, ChatAttributes.Supporter) ? (
                   <Tippy content={t(L.AccountSupporter)}>
-                     <SupporterComponent scale={0.15} />
+                     <MiscTextureComponent name="Supporter" scale={0.15} />
                   </Tippy>
                ) : null}
                {hasFlag(chat.attr, ChatAttributes.Mod) ? (
                   <Tippy content={t(L.AccountLevelMod)}>
-                     <img src={AccountLevelMod} className="player-flag" />
+                     <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
                   </Tippy>
                ) : null}
                {isBrokie ? (
@@ -405,12 +404,12 @@ function ChatMessage({
                ) : null}
                {hasFlag(chat.attr, ChatAttributes.Supporter) ? (
                   <Tippy content={t(L.AccountSupporter)}>
-                     <SupporterComponent scale={0.15} />
+                     <MiscTextureComponent name="Supporter" scale={0.15} />
                   </Tippy>
                ) : null}
                {hasFlag(chat.attr, ChatAttributes.Mod) ? (
                   <Tippy content={t(L.AccountLevelMod)}>
-                     <img src={AccountLevelMod} className="player-flag" />
+                     <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
                   </Tippy>
                ) : null}
                {isBrokie ? (

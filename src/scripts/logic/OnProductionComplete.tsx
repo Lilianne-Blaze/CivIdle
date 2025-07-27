@@ -1,7 +1,9 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
-import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
+
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
+
 import {
    forEachMultiplier,
    generateScienceFromFaith,

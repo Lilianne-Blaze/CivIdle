@@ -35,7 +35,7 @@ export const EN = {
    ActorsGuild: "Actor's Guild",
    AdaLovelace: "Ada Lovelace",
    AdamSmith: "Adam Smith",
-   AdjustBuildingCapacity: "Production Capacity",   
+   AdjustBuildingCapacity: "Production Capacity",
    AdvisorElectricityTitle: "Power and Electrification",
    AdvisorGreatPeopleContent:
       "Each time you enter a new age of technology, you will be able to select a Great Person from that age, and each previous age. These Great People give global bonuses that can increase production, science, happiness, and many other things.<br><br>These bonuses are permanent for the rest of the rebirth. When you rebirth, all of your Great People become permanent, and their bonus lasts forever.<br><br>Picking the same one in a later run will stack your permanent and in-run bonus, and when you rebirth with duplicates, the extras are stored and can be used to upgrade the permanent bonus. That is accessed in the <b>Manage Permanent Great People</b> menu in your Home Building.",
@@ -719,7 +719,7 @@ export const EN = {
    Level: "Level",
    LevelX: "Level %{level}",
    Liberalism: "Liberalism",
-   LiberalismLevel3DescHTML: "Free transport <b>from</b> and <b>to</b> warehouses",   
+   LiberalismLevel3DescHTML: "Free transport <b>from</b> and <b>to</b> warehouses",
    LiberalismLevelX: "Liberalism Level %{level}",
    Library: "Library",
    LighthouseOfAlexandria: "Lighthouse of Alexandria",
@@ -1611,5 +1611,7 @@ export const EN = {
    Carnival: "Carnival: Capybara, Giant Otter, Hoatzin and Royal Flycatcher's range is increased to 3 tile. Double the production multiplier from Cathedral of Brasília",
    CathedralOfBrasiliaWarningHTML: "To form production chains, <b>all but one</b> resource produced by a building needs to be consumed by another building",
    NotOnDeposit: "This building only works on %{deposit} deposit",
-   BuildingExtractDeposit: "This building extracts the deposit on this tile"
+   BuildingExtractDeposit: "This building extracts the deposit on this tile",
+   AccountLevelCaesar: "Caesar",
+   AccountLevelAugustus: "Augustus",
 };

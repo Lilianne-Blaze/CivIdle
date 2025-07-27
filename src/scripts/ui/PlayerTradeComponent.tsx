@@ -35,7 +35,7 @@ import { showModal, showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { TableView } from "./TableView";
-import { AccountLevelComponent, PlayerFlagComponent, SupporterComponent } from "./TextureSprites";
+import { AccountLevelComponent, MiscTextureComponent, PlayerFlagComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
 import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
 import { formatNumberTradeTable, playerNameMatchesAnyFragments } from "../../../shared/lmc/CiScripts";
@@ -345,7 +345,7 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
                            ) : null}
                            {hasFlag(trade.fromAttr, UserAttributes.DLC1) ? (
                               <Tippy content={t(L.AccountSupporter)}>
-                                 <SupporterComponent scale={0.17} />
+                                 <MiscTextureComponent name="Supporter" scale={0.17} />
                               </Tippy>
                            ) : null}
                         </div>
