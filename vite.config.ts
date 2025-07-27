@@ -63,7 +63,7 @@ function buildAtlas(folder: string, watch: boolean) {
          css: [[`./src/images/textures_${folder}.json`, { format: "json_texture" }]],
       },
       spritesmithOptions: {
-         padding: 1,
+         padding: 2,
       },
    });
 }
