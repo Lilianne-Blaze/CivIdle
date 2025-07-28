@@ -339,20 +339,28 @@ function ChatMessage({
    onImageLoaded: () => void;
 }): React.ReactNode {
    const isBrokie = !hasFlag(chat.attr, ChatAttributes.Supporter) && chat.level > 2;
+   const isMe = user ? chat.name === user.handle : false;
+   const mentionsMe = user ? chat.message.toLowerCase().includes(`@${user.handle.toLowerCase()} `)
+      || hasFlag(chat.attr, ChatAttributes.Announce)
+      : false;
+   const timeStr = new Date(chat.time ?? 0).toLocaleTimeString();
+   const dateTimeStr = new Date(chat.time ?? 0).toLocaleString();
+
    return (
       <div
          className={classNames({
             "chat-message-item": true,
             "is-even": chat.id % 2 === 0,
-            "mentions-me": user
-               ? chat.message.toLowerCase().includes(`@${user.handle.toLowerCase()} `) ||
-               hasFlag(chat.attr, ChatAttributes.Announce)
-               : false,
+            "mentions-me": mentionsMe,
          })}
       >
-         {chat.name === user?.handle ? (
+         {isMe ? (
             <div className="row text-small text-desc">
-               <div>{new Date(chat.time ?? 0).toLocaleTimeString()}</div>
+
+               <Tippy content={dateTimeStr}>
+                  <div>{timeStr}</div>
+               </Tippy>
+
                <div className="f1"></div>
                <div style={{ color: UserColorsMapping[chat.color] }} className="text-strong">
                   {chat.name}
@@ -418,7 +426,11 @@ function ChatMessage({
                   </Tippy>
                ) : null}
                <div className="f1"></div>
-               <div>{new Date(chat.time ?? 0).toLocaleTimeString()}</div>
+
+               <Tippy content={dateTimeStr}>
+                  <div>{timeStr}</div>
+               </Tippy>
+
             </div>
          )}
          <div className="chat-message-content">

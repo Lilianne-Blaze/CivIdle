@@ -6,6 +6,8 @@ import { getGameOptions } from "../logic/GameStateLogic";
 import { getAppDataRoaming } from "./CiScripts";
 //import { lmcEnsureMapsReady } from "./LmcMaps";
 
+const gt = globalThis as any;
+
 export const lilModOption = {
 
    // before v22
@@ -74,8 +76,11 @@ export const lilModOption = {
 
    storageNegativeOrOverflowDecay: "storageNegativeOrOverflowDecay",
 
+   optoutCompetitive: "optoutCompetitive",
+
 
 };
+gt.lilModOption = lilModOption;
 
 export const lilModOptionDefs = {
 
@@ -135,8 +140,11 @@ export const lilModOptionDefs = {
 
    storageNegativeOrOverflowDecay: false,
 
+   optoutCompetitive: false,
+
 
 };
+gt.lilModOptionDefs = lilModOptionDefs;
 
 export const lilModCli = {
    getVersionDesc() {
@@ -260,4 +268,4 @@ export const lilModCli = {
       return this.setOption(optName, togVal);
    },
 };
-globalThis.lilModCli = lilModCli;
+gt.lilModCli = lilModCli;
