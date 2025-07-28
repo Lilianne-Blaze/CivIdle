@@ -3,7 +3,7 @@ import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
 import { Tick } from "../logic/TickLogic";
 import { UserAttributes } from "../utilities/Database";
-import { hasFlag, humanFormat, NUMBER_SUFFIX_1 } from "../utilities/Helper";
+import { hasFlag, humanFormat, NUMBER_SUFFIX_1, WEEK } from "../utilities/Helper";
 import { fs, isFsLoaded, os, path } from "./LmcConstsEarly";
 import { isTruthyStringSafe } from "./MiscFuncs";
 
@@ -220,3 +220,18 @@ export function playerNameMatchesAnyFragments(playerName: string, playerFragment
 gt.playerNameMatchesAnyFragments = playerNameMatchesAnyFragments;
 
 // =====
+
+
+export function getCurrentGameWeekNumber(): number {
+   return Math.floor(Date.now() / WEEK);
+}
+gt.getCurrentGameWeekNumber = getCurrentGameWeekNumber;
+
+export function getStartOfGameWeek(offset: number): number {
+   const weekNumber = getCurrentGameWeekNumber() + offset;
+   return weekNumber * WEEK;
+}
+gt.getStartOfGameWeek = getStartOfGameWeek;
+
+
+

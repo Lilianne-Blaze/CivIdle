@@ -263,14 +263,14 @@ export function sortGreatPeople(a: GreatPerson, b: GreatPerson): number {
 }
 gt.sortGreatPeople = sortGreatPeople;
 
-export function getFreeCityThisWeek(): City {
+export function getFreeCityThisWeek(offset: number = 0): City {
    const candidates: City[] = [];
    forEach(Config.City, (city, def) => {
       if (def.requireSupporterPack) {
          candidates.push(city);
       }
    });
-   const week = Math.floor(Date.now() / WEEK);
+   const week = Math.floor(Date.now() / WEEK) + offset;
    return candidates[week % candidates.length];
 }
 gt.getFreeCityThisWeek = getFreeCityThisWeek;

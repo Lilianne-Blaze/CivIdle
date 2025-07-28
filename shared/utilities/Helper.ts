@@ -30,6 +30,12 @@ export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 export const WEEK = 7 * DAY;
 
+gt.SECOND = SECOND;
+gt.MINUTE = MINUTE;
+gt.HOUR = HOUR;
+gt.DAY = DAY;
+gt.WEEK = WEEK;
+
 export function escapeHtml(unsafe: string): string {
    return unsafe
       .replace(/&/g, "&amp;")

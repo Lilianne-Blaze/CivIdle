@@ -4,6 +4,7 @@
 
 import type { GameState } from "../logic/GameState";
 import { ChatChannel, IUser } from "../utilities/Database";
+import { Tile } from "../utilities/Helper";
 import { TypedEvent } from "../utilities/TypedEvent";
 import { CheckMarketTradeEvent } from "./LmcMarkets";
 
@@ -23,11 +24,13 @@ gt.OnSoonAfterGameStartedOrLoaded = OnSoonAfterGameStartedOrLoaded;
 export type TileSelectedEvent = {
    tileX: number;
    tileY: number;
+   tileNum?: Tile;
    isLeftClick: boolean;
    isCity?: boolean;
    isWorld?: boolean;
    gs?: GameState | null | undefined;
    fpEvent?: MouseEvent | TouchEvent | null | undefined;
+   grid: { x: number; y: number }; // for backwards compatibility
 };
 
 // tileX, tileY, isLeftClick, grid.x,grid.y, gs, e

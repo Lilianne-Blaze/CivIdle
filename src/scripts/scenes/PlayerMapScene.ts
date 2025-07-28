@@ -243,7 +243,8 @@ export class PlayerMapScene extends Scene {
       const tileY = Math.floor(pos.y / GridSize);
 
       const event = {
-         tileX, tileY, isLeftClick: e.button === 0,
+         tileX, tileY,
+         isLeftClick: e.button === 0,
          fpEvent: e, isWorld: true, gs: getGameState()
       } as TileSelectedEvent;
       OnWorldTileSelected.emit(event);

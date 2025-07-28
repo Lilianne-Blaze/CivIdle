@@ -31,6 +31,7 @@ import {
    reduceOf,
    rejectIn,
    safeParseInt,
+   WEEK,
 } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
 import { resetToCity, saveGame, useGameState } from "../Global";
@@ -45,6 +46,7 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { TextWithHelp } from "./TextWithHelpComponent";
 import { BuildingSpriteComponent, DepositTextureComponent, MiscTextureComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
+import { getStartOfGameWeek } from "../../../shared/lmc/CiScripts";
 
 export function RebirthModal(): React.ReactNode {
    const trades = useTrades();
@@ -84,6 +86,9 @@ export function RebirthModal(): React.ReactNode {
    const showPompidouWarning =
       Tick.current.specialBuildings.has("CentrePompidou") &&
       (getCurrentAge(gs) !== "InformationAge" || gs.city === nextCity);
+
+   const pompiWarnAge = "To keep the Centre Pompidou, you must rebirth in the Information Age or later.";
+   const pompiWarnDiffCity = "To keep the Centre Pompidou, you must rebirth to a different city than your current one.";
 
    return (
       <div className="window" style={{ width: "700px" }}>
@@ -156,13 +161,31 @@ export function RebirthModal(): React.ReactNode {
                   </WarningComponent>
                )}
                {showPompidouWarning ? (
-                  <WarningComponent icon="info" className="text-small mb10">
-                     <RenderHTML
-                        html={t(L.CentrePompidouWarningHTML, {
-                           civ: Config.City[nextCity].name(),
-                        })}
-                     />
-                  </WarningComponent>
+                  <>
+                     {/* 
+                     <WarningComponent icon="info" className="text-small mb10">
+                        <RenderHTML
+                           html={t(L.CentrePompidouWarningHTML, {
+                              civ: Config.City[nextCity].name(),
+                           })}
+                        />
+                     </WarningComponent>
+                     */}
+                     {(getCurrentAge(gs) !== "InformationAge") ? (
+                        <WarningComponent icon="warning" className="text-small mb10">
+                           <RenderHTML
+                              html={pompiWarnAge}
+                           />
+                        </WarningComponent>
+                     ) : null}
+                     {(gs.city === nextCity) ? (
+                        <WarningComponent icon="warning" className="text-small mb10">
+                           <RenderHTML
+                              html={pompiWarnDiffCity}
+                           />
+                        </WarningComponent>
+                     ) : null}
+                  </>
                ) : null}
                <fieldset>
                   <div className="row">
@@ -243,6 +266,22 @@ export function RebirthModal(): React.ReactNode {
                      ) : null}
                   </div>
                </fieldset>
+
+               {/* Free cities (aligned with the first list item) */}
+               <div className="row mb5" style={{ alignItems: "baseline" }}>
+                  <div className="text-strong" style={{ marginRight: 10 }}>
+                     Free cities:
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                     {range(0, 4).map(offset => (
+                        <li key={offset}>
+                           {new Date(getStartOfGameWeek(offset)).toLocaleString()} – {getFreeCityThisWeek(offset)}
+                        </li>
+                     ))}
+                  </ul>
+               </div>
+               <div className="separator mb5" />
+
                <div className="row mb5">
                   <div className="text-strong">{t(L.Deposit)}</div>
                   <div className="text-desc ml5">
@@ -392,7 +431,7 @@ export function RebirthModal(): React.ReactNode {
                   onClick={async () => {
                      if (
                         getPermanentGreatPeopleLevel(getGameOptions()) <
-                           Config.City[nextCity].requireGreatPeopleLevel ||
+                        Config.City[nextCity].requireGreatPeopleLevel ||
                         !hasSupporterPack()
                      ) {
                         playError();
