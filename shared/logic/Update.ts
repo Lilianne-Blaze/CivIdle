@@ -967,6 +967,14 @@ export function transportResource(
       const fromBuildingType = gs.tiles.get(from)?.building?.type;
       const toBuildingType = gs.tiles.get(targetXy)?.building?.type;
 
+      // if (toBuildingType === "Caravansary") {
+      //    transportCapacity = transportCapacity * GLOBAL_PARAMS.CARAVANSARIES_TRANSPORT_CAPACITY_MULTI;
+      // } else if (toBuildingType === "Warehouse") {
+      //    transportCapacity = transportCapacity * GLOBAL_PARAMS.WAREHOUSES_TRANSPORT_CAPACITY_MULTI;
+      // } else if (toBuildingType === "Market") {
+      //    transportCapacity = transportCapacity * GLOBAL_PARAMS.MARKETS_TRANSPORT_CAPACITY_MULTI;
+      // }
+
       if (fromBuildingType === "Warehouse" || toBuildingType === "Warehouse") {
          if (gs.unlockedUpgrades.Liberalism3) {
             transportCapacity = Number.POSITIVE_INFINITY;

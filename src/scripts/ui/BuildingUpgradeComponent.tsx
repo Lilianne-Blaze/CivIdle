@@ -31,6 +31,8 @@ import { Singleton } from "../utilities/Singleton";
 import { playClick, playError, playSuccess } from "../visuals/Sound";
 import type { IBuildingComponentProps } from "./BuildingPage";
 import { hideToast, showToast } from "./GlobalModal";
+import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
+import { WarningComponent } from "./WarningComponent";
 
 //export type UpgradeState = "all" | "active" | "disabled";
 
@@ -102,7 +104,8 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
       selected.forEach((xy) => {
          const b = gameState.tiles.get(xy)?.building;
          if (!b) return;
-         mapOf(getTotalBuildingCost(b, b.level, level), (res, amount) => {
+         const newLevel = idx === 0 ? b.level + 1 : level;
+         mapOf(getTotalBuildingCost(b, b.level, newLevel), (res, amount) => {
             if (res in resCost) {
                resCost[res] = resCost[res]! + amount;
             } else {
@@ -203,6 +206,40 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
          case "8":
             selectRange(3, false);
             break;
+
+         case "9": { // custom: same type neighbors
+            const result = new Set<Tile>();
+
+            const allNeighbors = getAllNeighborTilesSameType(xy, gameState);
+            allNeighbors.forEach((neighborTile) => {
+               const tileObj = gameState.tiles.get(neighborTile);
+               const building = tileObj?.building;
+               if (building && stateCondition(building, neighborTile)) {
+                  result.add(neighborTile);
+               }
+            });
+
+            setSelected(result);
+            Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, Array.from(result));
+            break;
+         }
+         case "10": { // custom: all neighbors
+            const result = new Set<Tile>();
+
+            const allNeighbors = getAllNeighborTiles(xy, gameState);
+            allNeighbors.forEach((neighborTile) => {
+               const tileObj = gameState.tiles.get(neighborTile);
+               const building = tileObj?.building;
+               if (building && stateCondition(building, neighborTile)) {
+                  result.add(neighborTile);
+               }
+            });
+
+            setSelected(result);
+            Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, Array.from(result));
+
+            break;
+         }
       }
    };
 
@@ -266,8 +303,16 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   <option value={6}>{t(L.BatchSelectAnyType1Tile)}</option>
                   <option value={7}>{t(L.BatchSelectAnyType2Tile)}</option>
                   <option value={8}>{t(L.BatchSelectAnyType3Tile)}</option>
+                  <option value={9}>Same type connected</option>
+                  <option value={10}>All connected</option>
+
                </select>
             </div>
+
+            <WarningComponent icon="info" className="mb10 mt10 text-small">
+               Hint: Use "Same-type/all connected" to upgrade all buildings in a group (not separated by empty hexes).
+            </WarningComponent>
+
             <div className="separator" />
             <div className="row">
                {levels.map((level, idx) => (

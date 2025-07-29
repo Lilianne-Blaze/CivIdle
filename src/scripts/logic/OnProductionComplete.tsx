@@ -1551,7 +1551,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          break;
       }
       case "TowerBridge": {
-         safeAdd(building.resources, "Cycle", isFestival("TowerBridge", gs) ? 1.2 : 1);
+         safeAdd(building.resources, "Cycle", (isFestival("TowerBridge", gs) ? 1.2 : 1) * building.level);
          let hasGreatPeople = false;
          while ((building.resources.Cycle ?? 0) >= TOWER_BRIDGE_GP_PER_CYCLE) {
             safeAdd(building.resources, "Cycle", -TOWER_BRIDGE_GP_PER_CYCLE);

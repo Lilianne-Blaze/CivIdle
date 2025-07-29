@@ -329,14 +329,17 @@ export function pointToXy(point: IPointData): string {
    pointToXyCache.set(hash, xy);
    return xy;
 }
+gt.pointToXy = pointToXy;
 
 export function pointToTile(point: IPointData): Tile {
    return (point.x << 16) + point.y;
 }
+gt.pointToTile = pointToTile;
 
 export function tileToPoint(tile: Tile): IPointData {
    return { x: (tile >> 16) & 0xffff, y: tile & 0xffff };
 }
+gt.tileToPoint = tileToPoint;
 
 export function sizeOf(obj: any): number {
    if (typeof obj !== "object") {
@@ -353,6 +356,7 @@ export function sizeOf(obj: any): number {
    }
    return Object.keys(obj).length;
 }
+gt.sizeOf = sizeOf;
 
 export function mapCount<K, V>(map: Map<K, V>, func: (value: V, key: K, map: Map<K, V>) => boolean): number {
    let result = 0;
@@ -363,6 +367,7 @@ export function mapCount<K, V>(map: Map<K, V>, func: (value: V, key: K, map: Map
    });
    return result;
 }
+gt.mapCount = mapCount;
 
 const xyToTileCache: Map<string, Tile> = new Map();
 export type Tile = number;
@@ -376,6 +381,7 @@ export function xyToTile(xy: string): Tile {
    xyToTileCache.set(xy, tile);
    return tile;
 }
+gt.xyToTile = xyToTile;
 
 const xyHash: Map<Tile, number> = new Map();
 let xyCounter = 0;
@@ -388,6 +394,7 @@ export function tileToHash(xy: Tile): number {
    }
    return cached;
 }
+gt.tileToHash = tileToHash;
 
 const xyToPointCache: Map<string, Readonly<IPointData>> = new Map();
 

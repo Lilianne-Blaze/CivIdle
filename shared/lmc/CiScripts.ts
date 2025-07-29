@@ -1,11 +1,12 @@
 import { getGameOptions, getGameState } from "../logic/GameStateLogic";
-import { getBuildingsByType, getXyBuildings } from "../logic/IntraTickCache";
+import { getBuildingsByType, getGrid, getXyBuildings } from "../logic/IntraTickCache";
 import { getPermanentGreatPeopleLevel } from "../logic/RebirthLogic";
 import { Tick } from "../logic/TickLogic";
 import { UserAttributes } from "../utilities/Database";
-import { hasFlag, humanFormat, NUMBER_SUFFIX_1, WEEK } from "../utilities/Helper";
+import { hasFlag, humanFormat, NUMBER_SUFFIX_1, pointToTile, Tile, tileToPoint, WEEK } from "../utilities/Helper";
 import { fs, isFsLoaded, os, path } from "./LmcConstsEarly";
 import { isTruthyStringSafe } from "./MiscFuncs";
+import { ITileData } from "../logic/Tile";
 
 
 const gt = globalThis as any;
@@ -221,7 +222,6 @@ gt.playerNameMatchesAnyFragments = playerNameMatchesAnyFragments;
 
 // =====
 
-
 export function getCurrentGameWeekNumber(): number {
    return Math.floor(Date.now() / WEEK);
 }
@@ -233,5 +233,77 @@ export function getStartOfGameWeek(offset: number): number {
 }
 gt.getStartOfGameWeek = getStartOfGameWeek;
 
+// =====
 
+type XyTileBoolFunc = (xy: Tile, tile: ITileData) => boolean;
 
+/**
+ * Get all neighboring tiles of the start tile.
+ * NEEDS TESTING.
+ * @param startTile The tileNum to find neighbors for.
+ * @param gs The game state, optional.
+ * @param incCond Optional condition to include a tile in the result, defaults to checking if the tile has a building.
+ * @param removeLaterFunc Optional condition to remove a tile from the result after initial inclusion.
+ * @returns A set of neighboring tileNums of the same building type.
+ */
+export function getAllNeighborTiles(startTile: Tile, gs = getGameState(),
+   incCond?: XyTileBoolFunc,
+   removeLaterFunc?: XyTileBoolFunc): Set<Tile> {
+   const grid = getGrid(gs);
+   const preresult = new Set<Tile>();
+   const result = new Set<Tile>();
+   if (incCond == null) {
+      incCond = (xy, tile) => tile && tile.building && tile.building != null || false;
+   }
+   if (removeLaterFunc == null) {
+      removeLaterFunc = (xy, tile) => false;
+   }
+   preresult.add(startTile);
+
+   let lastSize = 0;
+   do {
+      lastSize = preresult.size;
+      preresult.forEach((tile1num) => {
+         for (const tile2point of grid.getNeighbors(tileToPoint(tile1num))) {
+            const tile2num = pointToTile(tile2point);
+            const tile2obj = gs.tiles.get(tile2num);
+            if (tile2obj && incCond(tile2num, tile2obj)) {
+               preresult.add(tile2num);
+            }
+         }
+      });
+   } while (lastSize !== preresult.size);
+
+   preresult.forEach((tile1) => {
+      const tile1obj = gs.tiles.get(tile1);
+      if (tile1obj && !removeLaterFunc(tile1, tile1obj)) {
+         result.add(tile1);
+      }
+   });
+
+   return result
+}
+gt.getAllNeighborTiles = getAllNeighborTiles;
+
+/**
+ * Get all neighboring tiles of the same building type as the start tile.
+ * NEEDS TESTING.
+ * @param startTile The tileNum to find neighbors for.
+ * @param gs The game state, optional.
+ * @returns A set of neighboring tileNums of the same type.
+ */
+export function getAllNeighborTilesSameType(startTile: Tile, gs = getGameState()): Set<Tile> {
+   const startTileObj = gs.tiles.get(startTile);
+   const sameType: XyTileBoolFunc = (xy, tile) => {
+      if (tile.building && startTileObj && startTileObj.building) {
+         return startTileObj.building.type === tile.building.type;
+      }
+      return false;
+   };
+   const diffType: XyTileBoolFunc = (xy, tile) => {
+      return !sameType(xy, tile);
+
+   };
+   return getAllNeighborTiles(startTile, gs, undefined, diffType);
+}
+gt.getAllNeighborTilesSameType = getAllNeighborTilesSameType;
