@@ -25,9 +25,10 @@ import type { GameState } from "../logic/GameState";
 import type { Tech } from "../definitions/TechDefinitions";
 import { getTotalTechUnlockCost } from "../logic/TechLogic";
 import { type GameStateAndOfflineFlagEvent, OnAtBottomOfTickEverySecond } from "./LmcEvents";
-import { BuildingIsPowerPlant, BuildingIsPureProducer, BuildingIsStorage, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path } from "./LmcConstsEarly";
+import { BuildingIsPowerPlant, BuildingIsPureProducer, BuildingIsStorage, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path, PrimaryWonders, SecondaryWonders } from "./LmcConstsEarly";
 import { getRebirthGreatPeopleCount } from "../logic/RebirthLogic";
 import { IUser } from '../utilities/Database';
+import { isSpecialBuilding, isWorldOrNaturalWonder } from '../logic/BuildingLogic';
 
 const gt = globalThis as any;
 
@@ -115,6 +116,9 @@ export function keepUpgradingBuildings(e: GameStateAndOfflineFlagEvent): void {
    const aubStorages = lilModCli.isOption(lilModOption.autoUpgradeBuildingsStorages);
    const aubPausedBuildings = lilModCli.isOption("autoUpgradeBuildingsPausedBuildings");
    const aubMinesNoMaxLevel = lilModCli.isOption("autoUpgradeBuildingsMinesNoMaxLevel");
+   const aubPrimaryWonders = lilModCli.isOption(lilModOption.autoUpgradeBuildingsPrimaryWonders);
+   const aubSecondaryWonders = lilModCli.isOption(lilModOption.autoUpgradeBuildingsSecondaryWonders);
+   const aubSpecialWonders = lilModCli.isOption(lilModOption.autoUpgradeBuildingsSpecialWonders);
 
    //    addSystemMessage(`aubMinCount=${aubMinCount}, aubOnePerX=${aubOnePerX}`);
 
@@ -133,14 +137,20 @@ export function keepUpgradingBuildings(e: GameStateAndOfflineFlagEvent): void {
    const mapBuildingTypeMinLevel = new Map();
    const mapBuildingTypeUpgrading = new Map();
    for (const [xy, building] of mapXyBuilding) {
-      //addSystemMessage(`Building1: ${building.type} ${building.level} ${building.desiredLevel} ${building.id} ${xy}`);
+
+      // ignore special buildings and world/natural wonders
+      if (isSpecialBuilding(building.type) || isWorldOrNaturalWonder(building.type)) {
+         continue;
+      }
+
+      // addSystemMessage(`Building1: ${building.type} ${building.level} ${building.desiredLevel} ${building.id} ${xy}`);
       mapBuildingTypeCount.set(building.type, (mapBuildingTypeCount.get(building.type) || 0) + 1);
       mapBuildingTypeMinLevel.set(
          building.type,
          Math.min(mapBuildingTypeMinLevel.get(building.type) || 1000, building.level),
       );
 
-      //        if (building.level >= 1 && building.desiredLevel !== building.level) {
+      // if (building.level >= 1 && building.desiredLevel !== building.level) {
       if (building.desiredLevel !== building.level) {
          mapBuildingTypeUpgrading.set(building.type, (mapBuildingTypeUpgrading.get(building.type) || 0) + 1);
       }
@@ -230,6 +240,27 @@ export function keepUpgradingBuildings(e: GameStateAndOfflineFlagEvent): void {
          cStartedUpgrading++;
       }
    }
+
+   // process Wonders
+
+   for (const [xy, building] of mapXyBuilding) {
+      if (!isWorldOrNaturalWonder(building.type)) {
+         continue;
+      } else if (building.level != building.desiredLevel) {
+         // already building or upgrading
+         continue;
+      }
+
+      if ((aubPrimaryWonders && (building.type in PrimaryWonders)) ||
+         (aubSecondaryWonders && (building.type in SecondaryWonders))) {
+
+         const newDesiredLevel = building.level + 1;
+         building.desiredLevel = newDesiredLevel;
+         building.status = "upgrading";
+      }
+
+   }
+
 }
 //globalThis.keepUpgradingBuildings = keepUpgradingBuildings;
 

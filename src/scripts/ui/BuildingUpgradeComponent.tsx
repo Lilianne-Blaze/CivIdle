@@ -2,12 +2,13 @@ import Tippy from "@tippyjs/react";
 import { Fragment, useEffect, useState } from "react";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
 import {
+   getStorageFor,
    getTotalBuildingCost,
    getUpgradeTargetLevels,
    isSpecialBuilding,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
-import { notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
+import { getGameState, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
 import { clearIntraTickCache, getGrid } from "../../../shared/logic/IntraTickCache";
 import { RequestResetTile } from "../../../shared/logic/TechLogic";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
@@ -145,6 +146,21 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
             return b.capacity === 0;
          case "3": // Buildings that have full storage
             return Tick.current.notProducingReasons.get(xy) === NotProducingReason.StorageFull;
+
+         case "4": {
+            const { total, used } = getStorageFor(xy, getGameState());
+            const fullPercent = used / total;
+            return fullPercent >= 0.85;
+         }
+         case "5": {
+            const { total, used } = getStorageFor(xy, getGameState());
+            const fullPercent = used / total;
+            return fullPercent <= 0.15;
+         }
+         case "6": {
+            return Math.random() < 0.50;
+         }
+
       }
    };
 
@@ -285,6 +301,9 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   <option value={1}>{t(L.BatchStateSelectActive)}</option>
                   <option value={2}>{t(L.BatchStateSelectTurnedOff)}</option>
                   <option value={3}>{t(L.BatchStateSelectTurnedFullStorage)}</option>
+                  <option value={4}>85+% full</option>
+                  <option value={5}>&lt;15% full</option>
+                  <option value={6}>Half at random</option>
                </select>
                <select
                   style={{ margin: "-10px 0" }}

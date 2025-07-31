@@ -779,7 +779,7 @@ gt.getNextLevel = getNextLevel;
 
 export function getUpgradeTargetLevels(b: IBuildingData): number[] {
    const next5 = getNextLevel(b.level, 5);
-   return [b.level + 1, next5, next5 + 5, next5 + 10, next5 + 15];
+   return [b.level + 1, next5, next5 + 5, next5 + 10, next5 + 15, next5 + 25, next5 + 35];
 }
 gt.getUpgradeTargetLevels = getUpgradeTargetLevels;
 

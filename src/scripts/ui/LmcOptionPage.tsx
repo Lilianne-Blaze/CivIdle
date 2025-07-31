@@ -203,6 +203,33 @@ export function LmcOptionPage(): React.ReactNode {
                      notifyGameOptionsUpdate(options);
                   }}
                />
+
+               <div className="sep5" />
+               <div className="separator"></div>
+               <div className="sep5" />
+
+               <ToggleComponent
+                  title="Autoupgrade primary Wonders"
+                  contentHTML="Keep upgrading DS, LHC, AD, ISS with no max level."
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsPrimaryWonders)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsPrimaryWonders);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+               <ToggleComponent
+                  title="Autoupgrade secondary Wonders"
+                  contentHTML="Keep upgrading other Wonders with no max level."
+                  value={lilModCli.isOption(lilModOption.autoUpgradeBuildingsSecondaryWonders)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.autoUpgradeBuildingsSecondaryWonders);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
             </fieldset>
 
             <WarningComponent icon="info" className="mb10 text-small">

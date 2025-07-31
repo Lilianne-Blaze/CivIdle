@@ -13,7 +13,7 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 181; // 2025-07-30
+export const LMC_MINOR_VER = 191; // 2025-07-30
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
@@ -197,7 +197,32 @@ export const BuildingIsPureProducer = {
    AluminumSmelter: true,
    HydroDam: true,
    CottonPlantation: true,
-}
+};
+
+export const PrimaryWonders = {
+   DysonSphere: true,
+   LargeHadronCollider: true,
+   InternationalSpaceStation: true,
+   AldersonDisk: true,
+};
+
+export const SecondaryWonders = {
+   MarinaBaySands: true,
+   PalmJumeirah: true,
+   MatrioshkaBrain: true,
+};
+
+// TODO
+export const SpecialWonders = {
+   SantaClausVillage: true,
+   YearOfTheSnake: true,
+   EastIndiaCompany: true,
+   MontSaintMichel: true,
+   EasterBunny: true,
+   SwissBank: true,
+   ItaipuDam: true,
+};
+
 
 // LmcConstsEarly.ts
 // ===== ===== =====

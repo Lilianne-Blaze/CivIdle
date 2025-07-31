@@ -47,6 +47,9 @@ export const lilModOption = {
    autoUpgradeBuildingsStorages: "autoUpgradeBuildingsStorages",
    autoUpgradeBuildingsPausedBuildings: "autoUpgradeBuildingsPausedBuildings",
    autoUpgradeBuildingsMinesNoMaxLevel: "autoUpgradeBuildingsMinesNoMaxLevel",
+   autoUpgradeBuildingsPrimaryWonders: "autoUpgradeBuildingsPrimaryWonders",
+   autoUpgradeBuildingsSecondaryWonders: "autoUpgradeBuildingsSecondaryWonders",
+   autoUpgradeBuildingsSpecialWonders: "autoUpgradeBuildingsSpecialWonders",
 
    // v21
    disableSpinners: "disableSpinners",
@@ -217,6 +220,9 @@ export const lilModCli = {
       autoUpgradeBuildingsMaxLevel: 42,
       autoUpgradeBuildingsPowerPlants: false,
       autoUpgradeBuildingsPausedBuildings: false,
+      autoUpgradeBuildingsPrimaryWonders: false,
+      autoUpgradeBuildingsSecondaryWonders: false,
+      autoUpgradeBuildingsSpecialWonders: false,
 
       resPanelDeltaDisplayPeriod: 1,
 
