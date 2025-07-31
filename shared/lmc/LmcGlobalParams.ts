@@ -5,6 +5,8 @@ export const GLOBAL_PARAMS = {
 
     GRAND_BAZAAR_RANGE: 1,
 
+    BUILDINGS_HIGH_LEVEL: 32, // buildings with high level are treated as they are always working
+
     MARKETS_REFRESH_PERIOD_MULTI: 1,
     MARKETS_ALWAYS_DIFFERENT_TRADES: false,
     MARKETS_STORAGE_MULTI: 1,
@@ -24,6 +26,14 @@ export const GLOBAL_PARAMS = {
     SWISS_BANK_USES_CARAVANS: false,
 
     FIXES_DECAY_BUILDING_PERCENTAGE: 0.99,
+
+    WS_LOG_WELCOME_MESSAGES: true,
+    WS_LOG_CHAT_MESSAGES: true,
+    WS_LOG_TRADE_MESSAGES: false, // generates lots of data
+    WS_LOG_MAP_MESSAGES: false, // generates lots of data
+    WS_LOG_PENDING_CLAIM_MESSAGES: false, // generates lots of data
+    WS_LOG_RPC_MESSAGES: true,
+    WS_LOG_RPC_REQUESTS: false, // generates lots of data
 
 
 };

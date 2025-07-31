@@ -45,6 +45,7 @@ import { makeObservableHook } from "../utilities/Hook";
 import { playBubble, playKaching } from "../visuals/Sound";
 import { SteamClient, isSteam } from "./SteamClient";
 import { OnAfterWelcomeMessageProcessed } from "../../../shared/lmc/LmcEvents";
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
 
 let gt = globalThis as any;
 
@@ -130,6 +131,9 @@ export const client = rpcClient<ServerImpl>({
             method,
             params: removeTrailingUndefs(params),
          };
+         if (GLOBAL_PARAMS.WS_LOG_RPC_REQUESTS) {
+            console.log("[SendingRPCRequest]", JSON.stringify(request));
+         }
          ws.send(encode(request));
          rpcRequests[id] = { resolve, reject, time: Date.now() };
       });
@@ -290,7 +294,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          `gameId=${getGameState().id}`,
          `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
+      const wsTarget = `${getServerAddress()}/?${params.join("&")}`;
+      console.log("[ConnectWebSocket1]", wsTarget);
+      ws = new WebSocket(wsTarget);
    } else if (platform === "android") {
       const token = await PlayGames.requestServerSideAccess({
          clientId: GOOGLE_PLAY_GAMES_CLIENT_ID,
@@ -338,7 +344,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          `gameId=${getGameState().id}`,
          `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
+      const wsTarget = `${getServerAddress()}/?${params.join("&")}`;
+      console.log("[ConnectWebSocket2]", wsTarget);
+      ws = new WebSocket(wsTarget);
    }
 
    if (!ws) {
@@ -359,6 +367,7 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
       switch (type) {
          case MessageType.Chat: {
             const c = message as IChatMessage;
+            console.log("[ChatMessageAsJson]", JSON.stringify(c));
             if (c.flush) {
                chatMessages = c.chat.map((c) => ({ ...c, id: ++chatId }));
             } else {
@@ -379,6 +388,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.Welcome: {
             const w = message as IWelcomeMessage;
+            if (GLOBAL_PARAMS.WS_LOG_WELCOME_MESSAGES) {
+               console.log("[WelcomeMessageAsJson]", JSON.stringify(w));
+            }
             user = w.user;
             const options = getGameOptions();
             if (!options.userId) {
@@ -409,6 +421,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.Trade: {
             const tm = message as ITradeMessage;
+            if (GLOBAL_PARAMS.WS_LOG_TRADE_MESSAGES) {
+               console.log("[TradeMessageAsJson]", JSON.stringify(tm));
+            }
             if (tm.upsert) {
                tm.upsert.forEach((trade) => {
                   trades.set(trade.id, trade);
@@ -424,6 +439,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.Map: {
             const m = message as IMapMessage;
+            if (GLOBAL_PARAMS.WS_LOG_MAP_MESSAGES) {
+               console.log("[MapMessageAsJson]", JSON.stringify(m));
+            }
             OnPlayerMapMessage.emit(m);
             if (m.upsert) {
                forEach(m.upsert, (xy, entry) => {
@@ -440,6 +458,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.PendingClaim: {
             const r = message as IPendingClaimMessage;
+            if (GLOBAL_PARAMS.WS_LOG_PENDING_CLAIM_MESSAGES) {
+               console.log("[PendingClaimMessageAsJson]", JSON.stringify(r));
+            }
             if (user && r.claims[user.userId]) {
                if (getGameOptions().tradeFilledSound) {
                   playKaching();
@@ -451,6 +472,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.RPC: {
             const r = message as IRPCMessage;
+            if (GLOBAL_PARAMS.WS_LOG_RPC_MESSAGES) {
+               console.log("[RPCMessageAsJson]", JSON.stringify(r));
+            }
             handleRpcResponse(r.data);
             break;
          }

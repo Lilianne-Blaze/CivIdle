@@ -343,7 +343,8 @@ export function transportAndConsumeResources(
       // make buildings 30+ level pass power
       if (building.status === "upgrading") {
          const requiresPower = Config.Building[building.type].power;
-         if (requiresPower && building.level >= 30) {
+         const highLevel = building.level >= GLOBAL_PARAMS.BUILDINGS_HIGH_LEVEL;
+         if (requiresPower && highLevel) {
             Tick.next.powerBuildings.add(xy);
          }
       }

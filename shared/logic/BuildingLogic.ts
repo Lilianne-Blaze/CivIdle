@@ -1396,11 +1396,14 @@ export function getCathedralOfBrasiliaResources(
    for (const point of grid.getRange(tileToPoint(xy), 2)) {
       const t = pointToTile(point);
       const building = gs.tiles.get(t)?.building;
+
+      // LMCBOOKMARK 2025-07-31 use buildings that are either working now or high level
+      const highLevel = building && building.level >= GLOBAL_PARAMS.BUILDINGS_HIGH_LEVEL && building.status === "upgrading";
+      const workingNow = building && building.status === "completed" && !Tick.current.notProducingReasons.has(t);
       if (
          building &&
          t !== xy &&
-         building.status === "completed" &&
-         !Tick.current.notProducingReasons.has(t) &&
+         (highLevel || workingNow) &&
          (sizeOf(Config.Building[building.type].input) > 0 ||
             sizeOf(Config.Building[building.type].output) > 0)
       ) {
