@@ -26,6 +26,7 @@
       "@types/node": "^18.19.121",
       "fs-extra": "^11.1.0",
       "libsodium-sumo": "^0.7.15",
+      "memoizee": "^0.4.17",
       "mime": "^3.0.0",
       "mqtt": "^5.13.1",
       "mqtt-packet": "^9.0.2"

@@ -46,6 +46,7 @@
       "install": "^0.13.0",
       "libsodium-sumo": "^0.7.15",
       "lodash": "^4.17.21",
+      "memoizee": "^0.4.17",
       "mqtt": "^5.13.1",
       "mqtt-packet": "^9.0.2",
       "npm": "^10.9.0",
