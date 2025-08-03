@@ -5,7 +5,9 @@ import {
    getStorageFor,
    getTotalBuildingCost,
    getUpgradeTargetLevels,
+   isHeadquarter,
    isSpecialBuilding,
+   isWorldOrNaturalWonder,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { getGameState, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
@@ -34,6 +36,7 @@ import type { IBuildingComponentProps } from "./BuildingPage";
 import { hideToast, showToast } from "./GlobalModal";
 import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
 import { WarningComponent } from "./WarningComponent";
+import { getBuildingStatsByType } from "../../../shared/lmc/LmcScriptsShared";
 
 //export type UpgradeState = "all" | "active" | "disabled";
 
@@ -230,7 +233,8 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
             allNeighbors.forEach((neighborTile) => {
                const tileObj = gameState.tiles.get(neighborTile);
                const building = tileObj?.building;
-               if (building && stateCondition(building, neighborTile)) {
+               const isSpecial = building && isSpecialBuilding(building?.type);
+               if (building && !isSpecial && stateCondition(building, neighborTile)) {
                   result.add(neighborTile);
                }
             });
@@ -246,7 +250,8 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
             allNeighbors.forEach((neighborTile) => {
                const tileObj = gameState.tiles.get(neighborTile);
                const building = tileObj?.building;
-               if (building && stateCondition(building, neighborTile)) {
+               const isSpecial = building && isSpecialBuilding(building?.type);
+               if (building && !isSpecial && stateCondition(building, neighborTile)) {
                   result.add(neighborTile);
                }
             });
@@ -258,6 +263,8 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
          }
       }
    };
+
+   const buildingStats = getBuildingStatsByType(building.type, gameState);
 
    return (
       <>
@@ -282,6 +289,17 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   </div>
                </Tippy>
             </div>
+
+            {isSpecialBuilding(building.type) ? null : (
+               <div className="f1 mt10">
+                  <div className="">Min/max/avg level: {buildingStats.levelMin} / {buildingStats.levelMax}, {buildingStats.levelAvg.toFixed(2)}</div>
+                  <div className="">Working / all levels: {buildingStats.levelsWorking} ({buildingStats.countWorking})
+                     / {buildingStats.levelSum} ({buildingStats.count})</div>
+                  <div className="">Upgrading / paused levels: {buildingStats.levelsUpgrading} ({buildingStats.countUpgrading})
+                     / {buildingStats.levelsPaused} ({buildingStats.countPaused})</div>
+               </div>
+            )}
+
             <div className="separator" />
             <div className="row text-small text-strong">
                <Tippy content={t(L.BatchModeTooltip, { count: selected.size })}>

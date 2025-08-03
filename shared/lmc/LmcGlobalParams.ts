@@ -35,6 +35,8 @@ export const GLOBAL_PARAMS = {
     WS_LOG_RPC_MESSAGES: true,
     WS_LOG_RPC_REQUESTS: false, // generates lots of data
 
+    FIX_STARTER_BUILDINGS_FREE: false,
+
 
 };
 gt.GLOBAL_PARAMS = GLOBAL_PARAMS;

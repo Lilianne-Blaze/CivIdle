@@ -68,6 +68,8 @@ import {
 } from "./Tile";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
+import { StarterBuildings } from "../lmc/LmcConstsEarly";
+import { addSystemMessageSafe, countBuildingByType, countBuildingLevelsByType, getBuildingStatsByType } from "../lmc/LmcScriptsShared";
 
 const gt = globalThis as any;
 
@@ -543,6 +545,20 @@ type BuildingCostInput = Pick<IBuildingData, "type" | "level"> & {
 export function getBuildingCost(building: BuildingCostInput): PartialTabulate<Resource> {
    const type = building.type;
    const level = building.level;
+
+   // LMCBOOKMARK disabled in v23.199
+   if (GLOBAL_PARAMS.FIX_STARTER_BUILDINGS_FREE) {
+      if (level === 0 && (StarterBuildings as Record<string, boolean>)[type]) {
+         const buStats = getBuildingStatsByType(type);
+
+         //addSystemMessageSafe(`type=${type} level=${level} count=${count} levels=${levels}`);
+
+         if (buStats.levelSum === 0) {
+            return {};
+         }
+      }
+   }
+
    let cost = { ...Config.Building[type].construction };
    if (isEmpty(cost)) {
       cost = { ...Config.Building[type].input };
@@ -783,6 +799,10 @@ export function getUpgradeTargetLevels(b: IBuildingData): number[] {
 }
 gt.getUpgradeTargetLevels = getUpgradeTargetLevels;
 
+/**
+ *  Checks if a building is special, ie HQ, Natural Wonder, City Wonder.
+ * (2025-08-03)
+ */
 export function isSpecialBuilding(building?: Building): boolean {
    if (!building) {
       return false;

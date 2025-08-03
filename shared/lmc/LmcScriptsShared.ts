@@ -756,3 +756,104 @@ export function hasCompletedOrUpgradingSwissBank(): boolean {
 gt.hasCompletedOrUpgradingSwissBank = hasCompletedOrUpgradingSwissBank;
 
 // =====
+
+export function countBuildingByType(type: keyof typeof Config.Building, gs = getGameState()): number {
+   const mapXyBuilding = getXyBuildings(gs);
+   let count = 0;
+   for (const building of mapXyBuilding.values()) {
+      if (building.type === type) {
+         count++;
+      }
+   }
+   return count;
+}
+gt.countBuildingByType = countBuildingByType;
+
+export function countBuildingLevelsByType(type: keyof typeof Config.Building, gs = getGameState()): number {
+   const mapXyBuilding = getXyBuildings(gs);
+   let count = 0;
+   for (const building of mapXyBuilding.values()) {
+      if (building.type === type) {
+         count += building.level;
+      }
+   }
+   return count;
+}
+gt.countBuildingLevelsByType = countBuildingLevelsByType;
+
+export type LmcBuildingStats = {
+   count: number;
+   countWorking: number;
+   countUpgrading: number;
+   countPaused: number;
+   levelSum: number;
+   levelAvg: number;
+   levelMin: number;
+   levelMax: number;
+   levelsWorking: number;
+   levelsUpgrading: number;
+   levelsPaused: number;
+}
+
+export function newEmptyLmcBuildingStats(): LmcBuildingStats {
+   return {
+      count: 0,
+      countWorking: 0,
+      countUpgrading: 0,
+      countPaused: 0,
+      levelSum: 0,
+      levelAvg: 0,
+      levelMin: 0,
+      levelMax: 0,
+      levelsWorking: 0,
+      levelsUpgrading: 0,
+      levelsPaused: 0,
+   };
+}
+gt.newEmptyLmcBuildingStats = newEmptyLmcBuildingStats;
+
+export function getBuildingStatsByType(
+   type: keyof typeof Config.Building,
+   gs = getGameState(),
+): LmcBuildingStats {
+   const retVal = newEmptyLmcBuildingStats();
+   try {
+      const mapXyBuilding = getXyBuildings(gs);
+      for (const building of mapXyBuilding.values()) {
+         if (building.type === type) {
+            retVal.count++;
+            retVal.levelSum += building.level;
+            if (building.capacity == 0) {
+               retVal.levelsPaused += building.level;
+               retVal.countPaused++;
+            } else if (building.status === "upgrading" || building.status === "building") {
+               retVal.levelsUpgrading += building.level;
+               retVal.countUpgrading++;
+            } else if (building.status === "completed") {
+               retVal.levelsWorking += building.level;
+               retVal.countWorking++;
+            }
+            if (retVal.levelMin === 0 || building.level < retVal.levelMin) {
+               retVal.levelMin = building.level;
+            }
+            if (building.level > retVal.levelMax) {
+               retVal.levelMax = building.level;
+            }
+         }
+      }
+      retVal.levelAvg = retVal.count > 0 ? retVal.levelSum / retVal.count : 0;
+   } catch (err) { }
+   return retVal;
+}
+gt.getBuildingStatsByType = getBuildingStatsByType;
+
+export function getBuildingStatsByTypeShortString(
+   type: keyof typeof Config.Building,
+   gs = getGameState(),
+): string {
+   const stats = getBuildingStatsByType(type, gs);
+   //return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelAvg.toFixed(2)} avg, ${stats.levelMin} min, ${stats.levelMax} max`;
+   // return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelMin}-${stats.levelMax} / ${stats.levelAvg.toFixed(2)} m-m/a`;
+   return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelMin} - ${stats.levelMax} / ${stats.levelAvg.toFixed(2)} m-m/a`;
+}
+gt.getBuildingStatsByTypeShortString = getBuildingStatsByTypeShortString;

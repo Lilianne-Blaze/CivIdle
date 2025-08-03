@@ -21,6 +21,8 @@ import { MenuComponent } from "./MenuComponent";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { TitleBarComponent } from "./TitleBarComponent";
 import { WarningComponent } from "./WarningComponent";
+import { countBuildingByType, countBuildingLevelsByType, getBuildingStatsByType, getBuildingStatsByTypeShortString } from "../../../shared/lmc/LmcScriptsShared";
+import { FormatNumber } from "./HelperComponents";
 
 export function ConstructionPage({ tile }: { tile: ITileData }): React.ReactNode {
    const building = tile.building;
@@ -53,9 +55,14 @@ export function ConstructionPage({ tile }: { tile: ITileData }): React.ReactNode
    useShortcut("UpgradePageIncreaseLevel", () => increaseDesiredLevel(), [tile]);
    useShortcut("UpgradePageDecreaseLevel", () => decreaseDesiredLevel(), [tile]);
 
+   let titleBarContent = null;
+   if (!isSpecialBuilding(building.type)) {
+      titleBarContent = <span>({getBuildingStatsByTypeShortString(building.type, gs)})</span>;
+   }
+
    return (
       <div className="window">
-         <TitleBarComponent>{definition.name()}</TitleBarComponent>
+         <TitleBarComponent>{definition.name()}  {titleBarContent}</TitleBarComponent>
          <MenuComponent />
          <div className="window-body">
             {isWorldWonder(building.type) ? (
