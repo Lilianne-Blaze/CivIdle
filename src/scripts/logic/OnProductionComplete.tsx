@@ -88,7 +88,6 @@ import {
    pointToTile,
    round,
    safeAdd,
-   sizeOf,
    tileToPoint,
    type Tile,
 } from "../../../shared/utilities/Helper";
@@ -1731,25 +1730,16 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const swissBank = building as ISwissBankBuildingData;
          const resource = swissBank.resource;
          const price = resource ? Config.ResourcePrice[resource] : undefined;
-         const multiplier = totalMultiplierFor(xy, "output", 1, false, gs);
-
-         const warehouses: Tile[] = [];
-         for (const point of grid.getRange(tileToPoint(xy), 1)) {
-            const tile = pointToTile(point);
-            const building = gs.tiles.get(tile)?.building;
-            if (building && building.type === "Warehouse") {
-               warehouses.push(tile);
-            }
-            if (GLOBAL_PARAMS.SWISS_BANK_USES_CARAVANS && building && building.type === "Caravansary") {
-               warehouses.push(tile);
-            }
-         }
          if (resource && price) {
+            const multiplier = totalMultiplierFor(xy, "output", 1, false, gs);
+            const levelBoost = Tick.current.levelBoost.get(xy)?.reduce((acc, lb) => acc + lb.value, 0) ?? 0;
             const { amount } = deductResourceFrom(
                resource,
-               (10_000_000 * multiplier * building.level *
-                  GLOBAL_PARAMS.SWISS_BANK_MULTI) / price,
-               warehouses,
+               (10_000_000 *
+                  multiplier *
+                  (building.level + getElectrificationBoost(building, gs) + levelBoost)) /
+                  price,
+               Array.from(Tick.current.playerTradeBuildings.keys()),
                gs,
             );
             if (amount > 0) {
