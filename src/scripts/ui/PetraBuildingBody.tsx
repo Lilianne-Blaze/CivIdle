@@ -45,7 +45,7 @@ export function PetraBuildingBody({ gameState, xy }: IBuildingComponentProps): R
                </div>
                <div className="f1 row text-strong">{t(L.Upgrade)}</div>
                <div className="text-desc">
-                  <FormatNumber value={baseStorage} /> {t(L.Warp)}
+                  <FormatNumber value={baseStorage / 3600} />h {t(L.Warp)}
                </div>
             </button>
          </fieldset>

@@ -304,12 +304,13 @@ export function makeBuilding(data: Pick<IBuildingData, "type"> & Partial<IBuildi
       }
    }
 
+   // LMCBOOKMARK double the limits so it doesn't get clamped if already set to max with "bigger stockpiles" on
    building.stockpileCapacity = clamp(
       building.stockpileCapacity,
       STOCKPILE_CAPACITY_MIN,
-      STOCKPILE_CAPACITY_MAX,
+      STOCKPILE_CAPACITY_MAX * 2,
    );
-   building.stockpileMax = clamp(building.stockpileMax, STOCKPILE_MAX_MIN, STOCKPILE_MAX_MAX);
+   building.stockpileMax = clamp(building.stockpileMax, STOCKPILE_MAX_MIN, STOCKPILE_MAX_MAX * 2);
    building.productionPriority = clamp(building.productionPriority, PRIORITY_MIN, PRIORITY_MAX);
    building.constructionPriority = clamp(building.constructionPriority, PRIORITY_MIN, PRIORITY_MAX);
    clearTransportSourceCache();

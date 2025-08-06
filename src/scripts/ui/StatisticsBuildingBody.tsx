@@ -49,6 +49,7 @@ import { FormatNumber } from "./HelperComponents";
 import { PlotComponent } from "./PlotComponent";
 import { TableView } from "./TableView";
 import { WorkerScienceComponent } from "./WorkerScienceComponent";
+import { getSeenResourcesTable } from "../../../shared/lmc/LmcScriptsShared";
 
 type Tab = "resources" | "buildings" | "empire";
 let savedStatisticsTab: Tab = "empire";
@@ -470,7 +471,8 @@ export function ResourcesTab({ gameState }: IBuildingComponentProps): React.Reac
    };
    const [search, setSearch] = useState<string>(savedResourceSearch);
    const [showTheoreticalValue, setShowTheoreticalValue] = useState(true);
-   const unlockedResourcesList: PartialSet<Resource> = unlockedResources(gameState, "Koti");
+   //const unlockedResourcesList: PartialSet<Resource> = unlockedResources(gameState);
+   const unlockedResourcesList: PartialSet<Resource> = getSeenResourcesTable();
    const io = getResourceIO(gameState);
    const inputs = showTheoreticalValue ? io.theoreticalInput : io.actualInput;
    const outputs = showTheoreticalValue ? io.theoreticalOutput : io.actualOutput;

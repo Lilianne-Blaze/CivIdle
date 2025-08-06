@@ -15,7 +15,7 @@ export function HagiaSophiaBuildingBody({ gameState, xy }: IBuildingComponentPro
    }
    const [supporters, setSupporters] = useState<string[]>([]);
    useEffect(() => {
-      client.getSupporters(3).then((s) => {
+      client.getSupporters(12).then((s) => {
          setSupporters(s);
       });
    }, []);

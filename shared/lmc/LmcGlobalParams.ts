@@ -1,0 +1,42 @@
+
+const gt = globalThis as any;
+
+export const GLOBAL_PARAMS = {
+
+    GRAND_BAZAAR_RANGE: 1,
+
+    BUILDINGS_HIGH_LEVEL: 32, // buildings with high level are treated as they are always working
+
+    MARKETS_REFRESH_PERIOD_MULTI: 1,
+    MARKETS_ALWAYS_DIFFERENT_TRADES: false,
+    MARKETS_STORAGE_MULTI: 1,
+    MARKETS_BASE_SELL_AMOUNT_MULTI: 1,
+    MARKETS_TRANSPORT_CAPACITY_MULTI: 1,
+
+    CARAVANSARIES_STORAGE_MULTI: 1,
+    CARAVANSARIES_TRANSPORT_CAPACITY_MULTI: 1,
+
+    WAREHOUSES_STORAGE_MULTI: 1,
+    WAREHOUSES_TRANSPORT_CAPACITY_MULTI: 1,
+
+    HAPPINESS_MIN_CAP: -50,
+    HAPPINESS_MAX_CAP: 50,
+
+    SWISS_BANK_MULTI: 1,
+    SWISS_BANK_USES_CARAVANS: false,
+
+    FIXES_DECAY_BUILDING_PERCENTAGE: 0.99,
+
+    WS_LOG_WELCOME_MESSAGES: true,
+    WS_LOG_CHAT_MESSAGES: true,
+    WS_LOG_TRADE_MESSAGES: false, // generates lots of data
+    WS_LOG_MAP_MESSAGES: false, // generates lots of data
+    WS_LOG_PENDING_CLAIM_MESSAGES: false, // generates lots of data
+    WS_LOG_RPC_MESSAGES: true,
+    WS_LOG_RPC_REQUESTS: false, // generates lots of data
+
+    FIX_STARTER_BUILDINGS_FREE: false,
+
+
+};
+gt.GLOBAL_PARAMS = GLOBAL_PARAMS;

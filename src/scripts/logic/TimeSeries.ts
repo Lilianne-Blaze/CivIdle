@@ -41,3 +41,4 @@ class TimeSeriesDefinition {
 }
 
 export const TimeSeries = new TimeSeriesDefinition();
+globalThis.TimeSeries = TimeSeries;

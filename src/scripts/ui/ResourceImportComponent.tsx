@@ -38,6 +38,7 @@ import { FormatNumber } from "./HelperComponents";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { TableView } from "./TableView";
 import { WarningComponent } from "./WarningComponent";
+import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
 
 const resourceImportSortingState = { column: 1, asc: true };
 
@@ -57,7 +58,7 @@ export function ResourceImportComponent({ gameState, xy }: IBuildingComponentPro
    const storage = getStorageFor(xy, gameState);
    const baseCapacity = getResourceImportCapacity(building, 1);
    const capacityMultiplier = totalMultiplierFor(xy, "output", 1, false, gameState);
-   const resources = keysOf(unlockedResources(gameState, "Koti")).filter((r) => !NoStorage[r] && !NoPrice[r]);
+   const resources = getSeenResourceKeys(); // LMCBOOKMARK allow importing all 'seen' resources
    const idleCapacity = getResourceImportIdleCapacity(xy, gameState);
 
    return (
@@ -129,7 +130,7 @@ export function ResourceImportComponent({ gameState, xy }: IBuildingComponentPro
                      <td className="text-right">
                         <FormatNumber value={building.resources[res] ?? 0} />
                      </td>
-                     <td className="text-right" onWheel={(e) => {}}>
+                     <td className="text-right" onWheel={(e) => { }}>
                         <FormatNumber value={ri?.perCycle ?? 0} />
                      </td>
                      <td className="text-right">
@@ -223,6 +224,22 @@ export function ResourceImportComponent({ gameState, xy }: IBuildingComponentPro
             >
                {t(L.RedistributeAmongSelectedCap)}
             </div>
+            <div
+               className="text-link ml10"
+               onClick={() => {
+                  const amount = 1e15; // 1 Qa
+                  selected.forEach((res) => {
+                     if (building.resourceImports[res]) {
+                        building.resourceImports[res]!.cap = amount;
+                     } else {
+                        building.resourceImports[res] = { perCycle: 0, cap: amount };
+                     }
+                  });
+                  notifyGameStateUpdate();
+               }}
+            >
+               {"MaxCap"}
+            </div>{" "}
          </div>
          <div className="sep5"></div>
          <div className="row text-small">

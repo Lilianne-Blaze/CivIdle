@@ -6,7 +6,7 @@ import { getBuildingLevelLabel, getBuildingPercentage } from "../../../shared/lo
 import { DarkTileTextures, type GameOptions, type GameState } from "../../../shared/logic/GameState";
 import { getGameOptions, getGameState } from "../../../shared/logic/GameStateLogic";
 import { getGrid } from "../../../shared/logic/IntraTickCache";
-import { Tick } from "../../../shared/logic/TickLogic";
+import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
 import type { ITileData } from "../../../shared/logic/Tile";
 import {
    clamp,
@@ -18,6 +18,7 @@ import {
    pointToTile,
    pointToXy,
    sizeOf,
+   xyToPoint,
    type Tile,
 } from "../../../shared/utilities/Helper";
 import { v2 } from "../../../shared/utilities/Vector2";
@@ -28,6 +29,36 @@ import { Actions } from "../utilities/pixi-actions/Actions";
 import { Easing } from "../utilities/pixi-actions/Easing";
 import { Fonts } from "../visuals/Fonts";
 import type { WorldScene } from "./WorldScene";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+import { zeroAllButThreeHighestDigits } from "../../../shared/lmc/MiscFuncs";
+
+const statusBuildingColor = 0x00ff88;
+const statusUpgradingColor = 0x88ff00;
+const statusIconMoveLeft = 10;
+const statusIconMoveUp = 10;
+
+// if mod is unavailable just assume all options are turned off
+function isMapBetterStatusIcons(): boolean {
+   try {
+      return lilModCli.isOption(lilModOption.mapBetterStatusIcons);
+   } catch (err) { return false; }
+}
+function isDisableSpinners(): boolean {
+   try {
+      return lilModCli.isOption(lilModOption.disableSpinners);
+   } catch (err) { return false; }
+}
+function isCityMapShowBothEvAndPct(): boolean {
+   try {
+      return lilModCli.isOption(lilModOption.cityMapShowBothEvAndPct);
+   } catch (err) { return false; }
+}
+function isCityMapShowCoords(): boolean {
+   try {
+      return lilModCli.isOption(lilModOption.cityMapShowCoords);
+   } catch (err) { return false; }
+}
+
 
 export class TileVisual extends Container {
    private readonly _world: WorldScene;
@@ -137,7 +168,7 @@ export class TileVisual extends Container {
       this._level.cullable = true;
 
       this._bottomText = this.addChild(
-         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: this.getTextColor() }),
+         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: this.getTextColor(), align: "center" }),
       );
       this._bottomText.anchor.set(0.5, 0.5);
       this._bottomText.position.set(0, 35);
@@ -257,18 +288,36 @@ export class TileVisual extends Container {
       }
 
       if (!this._tile || !this._tile.building) {
+         const xyCoords = this._grid;
+         this._bottomText.text = isCityMapShowCoords() ? `${xyCoords.x}, ${xyCoords.y}` : "";
          return;
       }
+
+
+      // LMCBOOKMARK switching vanilla/better status icons
+      const mapBetterStatusIcons = isMapBetterStatusIcons();
+      this._construction.position.set(
+         mapBetterStatusIcons ? -25 - statusIconMoveLeft : -25,
+         mapBetterStatusIcons ? -5 - statusIconMoveUp : -5);
+      this._construction.tint = mapBetterStatusIcons ? statusBuildingColor : 0xffffff;
+      this._notProducing.position.set(
+         mapBetterStatusIcons ? -20 - statusIconMoveLeft / 2 : -20,
+         mapBetterStatusIcons ? -20 - statusIconMoveUp / 2 : -20);
+      this._upgrade.position.set(
+         mapBetterStatusIcons ? -25 - statusIconMoveLeft : -25,
+         mapBetterStatusIcons ? 10 - statusIconMoveUp : 10);
+      this._upgrade.tint = mapBetterStatusIcons ? statusUpgradingColor : 0xffffff;
+
 
       const color = getGameOptions().buildingColors[this._tile.building.type];
       if (color) {
          const c = getColorCached(color);
          this._building.tint = c;
-         this._notProducing.tint = c;
+         if (!mapBetterStatusIcons) { this._notProducing.tint = c; }
          this._spinner.tint = c;
       } else {
          this._building.tint = 0xffffff;
-         this._notProducing.tint = 0xffffff;
+         if (!mapBetterStatusIcons) { this._notProducing.tint = 0xffffff; }
          this._spinner.tint = 0xffffff;
       }
       if (this._tile.building.status !== "completed") {
@@ -318,6 +367,8 @@ export class TileVisual extends Container {
          this._building.texture = getBuildingTexture(this._tile.building.type, textures, gameState.city);
       }
 
+      const mapBetterStatusIcons = isMapBetterStatusIcons();
+
       switch (this._tile.building.status) {
          case "building": {
             this._construction.visible = true;
@@ -328,6 +379,8 @@ export class TileVisual extends Container {
             this._building.alpha = 0.5;
             this.toggleConstructionTween(true);
             this.showTimeLeft(tileData, gameState);
+            this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
             return;
          }
          case "upgrading": {
@@ -344,6 +397,8 @@ export class TileVisual extends Container {
                this._level.visible = false;
             }
             this.showTimeLeft(tileData, gameState);
+            this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
             return;
          }
          case "completed": {
@@ -352,33 +407,59 @@ export class TileVisual extends Container {
             this._upgrade.visible = false;
             this.toggleUpgradeTween(false);
 
-            switch (getGameOptions().extraTileInfoType) {
-               case "None": {
-                  this._bottomText.visible = false;
-                  break;
-               }
-               case "EmpireValue": {
-                  const ev =
-                     (Tick.current.buildingValueByTile.get(tileData.tile) ?? 0) +
-                     (Tick.current.resourceValueByTile.get(tileData.tile) ?? 0);
-                  if (ev > 0) {
-                     this._bottomText.visible = true;
-                     this._bottomText.text = formatNumber(ev);
-                  } else {
+
+            if (!isCityMapShowBothEvAndPct()) {
+               switch (getGameOptions().extraTileInfoType) {
+                  case "None": {
                      this._bottomText.visible = false;
+                     break;
                   }
-                  break;
-               }
-               case "StoragePercentage": {
-                  const pct = Tick.current.storagePercentages.get(tileData.tile);
-                  if (pct) {
-                     this._bottomText.visible = true;
-                     this._bottomText.text = formatPercent(pct);
-                  } else {
-                     this._bottomText.visible = false;
+                  case "EmpireValue": {
+                     const ev =
+                        (Tick.current.buildingValueByTile.get(tileData.tile) ?? 0) +
+                        (Tick.current.resourceValueByTile.get(tileData.tile) ?? 0);
+                     if (ev > 0) {
+                        this._bottomText.visible = true;
+                        this._bottomText.text = formatNumber(ev);
+                     } else {
+                        this._bottomText.visible = false;
+                     }
+                     break;
+                  }
+                  case "StoragePercentage": {
+                     const pct = Tick.current.storagePercentages.get(tileData.tile);
+                     if (pct) {
+                        this._bottomText.visible = true;
+                        this._bottomText.text = formatPercent(pct);
+                     } else {
+                        this._bottomText.text = "";
+                        this._bottomText.visible = false;
+                     }
                   }
                }
             }
+            if (isCityMapShowBothEvAndPct()) {
+               try {
+                  const evBuilding = Tick.current.buildingValueByTile.get(tileData.tile) ?? 0;
+                  const evResources = Tick.current.resourceValueByTile.get(tileData.tile) ?? 0;
+                  const ev = evBuilding + evResources;
+
+                  const pct = Tick.current.storagePercentages.get(tileData.tile);
+                  const ev2 = zeroAllButThreeHighestDigits(ev, true);
+                  const pct2 = zeroAllButThreeHighestDigits(pct, true);
+                  // biome-ignore lint/style/useTemplate: <explanation>
+                  const line1 = formatNumber(ev2) + " / " + formatPercent(pct2);
+                  this._bottomText.text = line1;
+                  this._bottomText.visible = true;
+               }
+               catch (err) {
+                  // in case of div by zero or other surprises
+               }
+
+            }
+            this.maybeAddCoordsToBottomText();
+            this.maybeColorBottomText();
+
 
             const level = getBuildingLevelLabel(this._tile.tile, gameState);
             if (level.length > 0) {
@@ -392,17 +473,89 @@ export class TileVisual extends Container {
             const electrification = Tick.current.electrified.get(tileData.tile) ?? 0;
             if (reason) {
                this._notProducing.texture = getNotProducingTexture(reason, textures);
+
+               if (mapBetterStatusIcons) {
+                  if (reason === NotProducingReason.NoPower) {
+                     this._notProducing.tint = 0xffbb00; //red-yellow
+                  } else if (reason === NotProducingReason.NotEnoughWorkers) {
+                     this._notProducing.tint = 0xff0000; //red 
+                  } else if (reason === NotProducingReason.NotEnoughResources) {
+                     this._notProducing.tint = 0xff0000; // red
+                  } else if (reason === NotProducingReason.StorageFull) {
+                     this._notProducing.tint = 0xbb4400;
+                  } else if (reason === NotProducingReason.TurnedOff) {
+                     this._notProducing.tint = 0x888888; // gray
+                  } else {
+                     this._notProducing.tint = 0xff0000; // red
+                  }
+               }
+
                this.fadeInTopLeftIcon();
             } else if (electrification > 0) {
                this._notProducing.texture = getTexture("Misc_Bolt", textures);
+               this._notProducing.tint = 0xffbb00; // red-yellow
                this.fadeInTopLeftIcon();
             } else {
                this.fadeOutTopLeftIcon();
             }
 
-            this._spinner.visible = true;
+            if (!isDisableSpinners()) {
+               this._spinner.visible = true;
+            }
          }
       }
+   }
+
+   private maybeAddCoordsToBottomText(): void {
+      if (!isCityMapShowCoords()) {
+         return;
+      }
+      const bt: BitmapText = this._bottomText;
+      if (bt) {
+         const xyCoords = this._grid;
+         if (bt.text === "") {
+            bt.text = `${xyCoords.x}, ${xyCoords.y}`;
+         } else {
+            bt.text += `\n${xyCoords.x}, ${xyCoords.y}`;
+         }
+         bt.visible = true;
+      }
+   }
+
+   private maybeColorBottomText(): void {
+      switch (this._tile?.building?.status) {
+         case "building": {
+            this._bottomText.tint = getColorCached("#ffffff");
+            return;
+         }
+         case "upgrading": {
+            this._bottomText.tint = getColorCached("#ffffff");
+            return;
+         }
+         case "completed": {
+            try {
+               const tileData = this._tile;
+               const evResources = Tick.current.resourceValueByTile.get(tileData.tile) ?? 0;
+               const storPercent = Tick.current.storagePercentages.get(tileData.tile);
+               if (storPercent && storPercent < (-1 / 1_000_000)) {
+                  this._bottomText.tint = getColorCached("#ff0000");
+               } else if ((storPercent && storPercent < 0.05) || storPercent == 0) {
+                  this._bottomText.tint = getColorCached("#ffff88");
+               } else if (storPercent && storPercent > 0.95) {
+                  this._bottomText.tint = getColorCached("#88ff88");
+               } else {
+                  this._bottomText.tint = getColorCached("#ffffff");
+               }
+            } catch (err) { }
+            return;
+         }
+      }
+   }
+
+   private bottomTextMakeWhite(): void {
+      try {
+         this._bottomText.tint = getColorCached("#ffffff");
+      } catch (err) { }
    }
 
    private fadeOutTopLeftIcon(): void {

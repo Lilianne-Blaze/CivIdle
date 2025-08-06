@@ -1,4 +1,5 @@
 import type { GreatPerson } from "../../shared/definitions/GreatPersonDefinitions";
+import { lmcMigrateSavedGameAtEnd, lmcMigrateSavedGameAtStart } from "../../shared/lmc/LmcSavedGame";
 import { findSpecialBuilding } from "../../shared/logic/BuildingLogic";
 import { Config } from "../../shared/logic/Config";
 import { ThemeColorNames, type SavedGame } from "../../shared/logic/GameState";
@@ -9,6 +10,8 @@ import { forEach, isNullOrUndefined, pointToTile, safeAdd, tileToPoint } from ".
 import { getConstructionPriority, getProductionPriority } from "./Global";
 
 export function migrateSavedGame(save: SavedGame) {
+   lmcMigrateSavedGameAtStart(save);
+
    const grid = getGrid(save.current);
    grid.forEach((point) => {
       const xy = pointToTile(point);
@@ -218,4 +221,6 @@ export function migrateSavedGame(save: SavedGame) {
       });
       delete save.current.greatPeopleChoices;
    }
+
+   lmcMigrateSavedGameAtEnd(save);
 }

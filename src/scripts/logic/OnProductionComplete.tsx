@@ -1,6 +1,9 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
+
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
+
 import {
    forEachMultiplier,
    generateScienceFromFaith,
@@ -96,6 +99,8 @@ import { ChooseGreatPersonModal } from "../ui/ChooseGreatPersonModal";
 import { hasOpenModal, showModal } from "../ui/GlobalModal";
 import { Singleton } from "../utilities/Singleton";
 import { playAgeUp } from "../visuals/Sound";
+
+const gt = globalThis as any;
 
 let votedBoost: IGetVotedBoostResponse | null = null;
 let lastVotedBoostUpdatedAt = 0;
@@ -881,7 +886,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             if (!building || isSpecialBuilding(building.type)) continue;
             let count = Math.abs(
                Config.TechAge[getCurrentAge(gs)].idx -
-                  Config.TechAge[getBuildingUnlockAge(building.type)].idx,
+               Config.TechAge[getBuildingUnlockAge(building.type)].idx,
             );
             if (isFestival("GreatWall", gs)) {
                count *= 2;
@@ -1548,7 +1553,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          break;
       }
       case "TowerBridge": {
-         safeAdd(building.resources, "Cycle", isFestival("TowerBridge", gs) ? 1.2 : 1);
+         safeAdd(building.resources, "Cycle", (isFestival("TowerBridge", gs) ? 1.2 : 1) * building.level);
          let hasGreatPeople = false;
          while ((building.resources.Cycle ?? 0) >= TOWER_BRIDGE_GP_PER_CYCLE) {
             safeAdd(building.resources, "Cycle", -TOWER_BRIDGE_GP_PER_CYCLE);
@@ -1734,11 +1739,15 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             if (building && building.type === "Warehouse") {
                warehouses.push(tile);
             }
+            if (GLOBAL_PARAMS.SWISS_BANK_USES_CARAVANS && building && building.type === "Caravansary") {
+               warehouses.push(tile);
+            }
          }
          if (resource && price) {
             const { amount } = deductResourceFrom(
                resource,
-               (10_000_000 * multiplier * building.level) / price,
+               (10_000_000 * multiplier * building.level *
+                  GLOBAL_PARAMS.SWISS_BANK_MULTI) / price,
                warehouses,
                gs,
             );

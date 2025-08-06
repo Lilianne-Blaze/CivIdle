@@ -19,10 +19,22 @@ export default defineConfig(({ command }) => {
       server: {
          port: 3000,
          host: true,
+         allowedHosts: true,
       },
       build: {
-         sourcemap: true,
+         rollupOptions: {
+            // 2025-06-09 don't add hashes
+            output: {
+               entryFileNames: `assets/[name].js`,
+               chunkFileNames: `assets/[name].js`,
+               assetFileNames: `assets/[name][extname]`,
+            },
+         },
+         // not needed with minify=false
+         //sourcemap: true,
          target: "es2015",
+         // 2025-06-09 don't. just don't.
+         minify: false,
       },
       test: {
          browser: {

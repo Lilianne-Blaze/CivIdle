@@ -26,6 +26,12 @@ import { ShortcutPage } from "./ShortcutPage";
 import { ThemePage } from "./ThemePage";
 import { TutorialPage } from "./TutorialPage";
 
+import { LmcOptionPage } from "./LmcOptionPage";
+import { LmcTradeOptionPage } from "./LmcTradeOptionPage";
+import { LmcDebugOptionPage } from "./LmcDebugOptionPage";
+import { LmcMultiplayerOptionPage } from "./LmcMultiplayerOptionPage";
+import { lmcMqtt } from "../../../shared/lmc/LmcMqtt";
+
 type MenuItemOptions = "view" | "options" | "help" | null;
 
 function MenuButton({ name }: { name: string }): React.ReactNode {
@@ -197,6 +203,44 @@ export function MenuComponent(): React.ReactNode {
                   >
                      <MenuItem check={false}>{t(L.Gameplay)}</MenuItem>
                   </div>
+                  { /* ===== */}
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcTradeOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, trade/storage</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcMultiplayerOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, multiplayer</MenuItem>
+                  </div>
+
+                  <div
+                     className="menu-popover-item"
+                     onPointerDown={() => {
+                        Singleton().routeTo(LmcDebugOptionPage, {});
+                     }}
+                  >
+                     <MenuItem check={false}>Modded client, debug</MenuItem>
+                  </div>
+                  { /* ===== */}
+
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
@@ -205,6 +249,7 @@ export function MenuComponent(): React.ReactNode {
                   >
                      <MenuItem check={false}>{t(L.Theme)}</MenuItem>
                   </div>
+
                   <div
                      className="menu-popover-item"
                      onPointerDown={() => {
@@ -297,24 +342,50 @@ export function MenuComponent(): React.ReactNode {
                      <MenuItem check={false}>{t(L.EmailDeveloper)}</MenuItem>
                   </div>
                   {isSteam() ? (
-                     <div
-                        className="menu-popover-item"
-                        onPointerDown={() => {
-                           saveGame()
-                              .then(() => SteamClient.quit())
-                              .catch((e) => {
-                                 playError();
-                                 showToast(String(e));
-                              });
-                        }}
-                     >
-                        <MenuItem check={false}>{t(L.SaveAndExit)}</MenuItem>
-                     </div>
+                     <>
+                        <div
+                           className="menu-popover-item"
+                           onPointerDown={() => {
+                              console.debug("SaveAndExit menu item clicked.");
+                              saveGame()
+                                 .then(() => {
+                                    SteamClient.quit();
+                                    lmcMqtt.disconnectNowForce();
+                                    console.debug("SaveAndExit: steam and mqtt should be disconnected now.");
+                                    process.exit(0);
+                                 })
+                                 .catch((e) => {
+                                    playError();
+                                    showToast(String(e));
+                                 });
+                           }}
+                        >
+                           <MenuItem check={false}>{t(L.SaveAndExit)}</MenuItem>
+                        </div>
+                        <div
+                           className="menu-popover-item"
+                           onPointerDown={() => {
+                              console.debug("SaveAndExitForced menu item clicked.");
+                              saveGame()
+                                 .then(() => {
+                                    lmcMqtt.disconnectNowForce();
+                                    console.debug("SaveAndExitForced: steam and mqtt should be disconnected now.");
+                                    SteamClient.quitForced();
+                                 })
+                                 .catch((e) => {
+                                    playError();
+                                    showToast(String(e));
+                                 });
+                           }}
+                        >
+                           <MenuItem check={false}>{"Save And Exit (forced)"}</MenuItem>
+                        </div>
+                     </>
                   ) : null}
                   {isSteam() &&
-                  user &&
-                  !isNullOrUndefined(platformInfo?.connectedUserId) &&
-                  isSaveOwner(platformInfo, user) ? (
+                     user &&
+                     !isNullOrUndefined(platformInfo?.connectedUserId) &&
+                     isSaveOwner(platformInfo, user) ? (
                      <div
                         className="menu-popover-item"
                         onPointerDown={async () => {

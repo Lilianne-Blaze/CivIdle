@@ -11,6 +11,8 @@ import type { calculateHappiness } from "./HappinessLogic";
 import type { IBuildingData, IResourceImportBuildingData, ITileData } from "./Tile";
 import type { TileAndRes } from "./Update";
 
+const gt = globalThis as any;
+
 export interface IBuildingIndex {
    tile: Tile;
    amount: number;
@@ -37,7 +39,7 @@ interface ITickData {
    storagePercentages: Map<Tile, number>;
    additionalProductions: { xy: Tile; res: Resource; amount: number }[];
    additionalConsumptions: { xy: Tile; res: Resource; amount: number }[];
-   playerTradeBuildings: Map<Tile, IBuildingData>;
+   playerTradeBuildings: Map<Tile, IBuildingData>; // all Caravansaries plus adjacent Warehouses
    resourceImportBuildings: Map<Tile, IResourceImportBuildingIndex>;
    globalMultipliers: GlobalMultipliers;
    notProducingReasons: Map<Tile, NotProducingReason>;
@@ -92,6 +94,7 @@ export function EmptyTickData(): ITickData {
       tick: 0,
    };
 }
+gt.EmptyTickData = EmptyTickData;
 
 export enum NotProducingReason {
    None = 0,
@@ -115,6 +118,7 @@ export class GlobalMultipliers {
    worker: IValueWithSource[] = [];
    storage: IValueWithSource[] = [];
 }
+gt.GlobalMultipliers = GlobalMultipliers;
 
 export const GlobalMultiplierNames: Record<keyof GlobalMultipliers, () => string> = {
    sciencePerBusyWorker: () => t(L.ScienceFromBusyWorkers),
@@ -127,6 +131,7 @@ export const GlobalMultiplierNames: Record<keyof GlobalMultipliers, () => string
    worker: () => t(L.WorkerCapacityMultiplier),
    storage: () => t(L.StorageMultiplier),
 };
+gt.GlobalMultiplierNames = GlobalMultiplierNames;
 
 export function freezeTickData(t: ITickData): ITickData {
    let key: keyof ITickData;
@@ -141,11 +146,13 @@ export function freezeTickData(t: ITickData): ITickData {
    }
    return Object.freeze(t);
 }
+gt.freezeTickData = freezeTickData;
 
 export const Tick = {
    current: freezeTickData(EmptyTickData()),
    next: EmptyTickData(),
 };
+gt.Tick = Tick;
 
 interface IMultiplier {
    input: number;
@@ -176,6 +183,7 @@ export interface IValueWithSource {
 }
 
 export const CurrentTickChanged = new TypedEvent<ITickData>();
+gt.CurrentTickChanged = CurrentTickChanged;
 
 export function totalEmpireValue(gs: GameState): number {
    let value = 0;
@@ -191,3 +199,4 @@ export function totalEmpireValue(gs: GameState): number {
    });
    return value;
 }
+gt.totalEmpireValue = totalEmpireValue;

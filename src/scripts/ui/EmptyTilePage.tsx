@@ -42,6 +42,7 @@ import { TableView } from "./TableView";
 import { TextWithHelp } from "./TextWithHelpComponent";
 import { BuildingSpriteComponent } from "./TextureSprites";
 import { TitleBarComponent } from "./TitleBarComponent";
+import { StarterBuildings } from "../../../shared/lmc/LmcConstsEarly";
 
 let lastBuild: Building | null = null;
 let savedFilter = BuildingFilter.None;
@@ -265,7 +266,7 @@ export function EmptyTilePage({ tile }: { tile: ITileData }): React.ReactNode {
                         </div>
                         <div>
                            <div className="row text-small text-desc">
-                              {isEmpty(buildCost) ? null : <div className="m-icon small mr2 fs">build</div>}
+                              {(isEmpty(buildCost) && !StarterBuildings[k]) ? null : <div className="m-icon small mr2 fs">build</div>}
                               <div>
                                  {jsxMapOf(buildCost, (res, amount) => (
                                     <ResourceAmountComponent

@@ -4,13 +4,23 @@ import { existsSync, renameSync } from "node:fs";
 import path from "node:path";
 import { IPCService } from "./IPCService";
 
+const gt = globalThis as any;
+gt.electronApp = app;
+
 export type SteamClient = Omit<Client, "init" | "runCallbacks">;
+
+//app.disableHardwareAcceleration();
 
 app.commandLine.appendSwitch("enable-logging", "file");
 
 const logPath = path.join(getLocalGameSavePath(), "CivIdle.log");
 if (existsSync(logPath)) {
-   renameSync(logPath, path.join(getLocalGameSavePath(), "CivIdle-prev.log"));
+   //renameSync(logPath, path.join(getLocalGameSavePath(), "CivIdle-prev.log"));
+
+   // LMCBOOKMARK
+   const cem = getCurrentEpochMillis();
+   const fs = epochToFilestamp(cem);
+   renameSync(logPath, path.join(getLocalGameSavePath(), `CivIdle-${fs}.log`));
 }
 
 app.commandLine.appendSwitch("log-file", logPath);
@@ -24,8 +34,10 @@ export function getLocalGameSavePath(): string {
    return path.join(app.getPath("appData"), "CivIdleLocal");
 }
 
-export const MIN_WIDTH = 1136;
-export const MIN_HEIGHT = 640;
+// export const MIN_WIDTH = 1136;
+// export const MIN_HEIGHT = 640;
+export const MIN_WIDTH = 640;
+export const MIN_HEIGHT = 480;
 
 const disableFloatingMode = !app.isPackaged || process.argv.includes("--disable-floating-mode");
 // const enableDevTools = process.argv.includes("--enable-dev-tools");
@@ -38,6 +50,11 @@ const createWindow = async () => {
             preload: path.join(__dirname, "preload.js"),
             devTools: !app.isPackaged,
             backgroundThrottling: false,
+
+            // LBCBOOKMARK
+            nodeIntegration: true,
+            contextIsolation: false,
+
          },
          minHeight: MIN_HEIGHT,
          minWidth: MIN_WIDTH,
@@ -104,6 +121,40 @@ app.on("window-all-closed", () => {
    quit();
 });
 
+app.on('before-quit', () => {
+   console.log("Before quit event triggered");
+   setTimeout(() => {
+      console.warn('Forced exit due to timeout (127)');
+      //app.exit(0);
+      process.abort();
+   }, 20000);
+});
+app.on('window-all-closed', () => {
+   console.log("Window all closed event triggered");
+   setTimeout(() => {
+      console.warn('Forced exit due to timeout (135)');
+      //app.exit(0);
+      process.abort();
+   }, 20000);
+});
+
 function quit() {
+   setTimeout(() => {
+      console.warn('Forced exit due to timeout (143)');
+      //app.exit(0);
+      process.abort();
+   }, 20000);
    app.quit();
 }
+
+// LMCBOOKMARK
+function getCurrentEpochMillis(): number {
+   return Date.now();
+}
+
+function epochToFilestamp(epochMillis: number): string {
+   const date = new Date(epochMillis);
+   return date.toISOString().replace(/[-:.]/g, '').slice(0, -4) + 'Z';
+}
+
+

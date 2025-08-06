@@ -49,10 +49,26 @@ import { onBuildingOrUpgradeComplete } from "./OnBuildingOrUpgradeComplete";
 import { onProductionComplete } from "./OnProductionComplete";
 import { onTileExplored } from "./OnTileExplored";
 import { TimeSeries } from "./TimeSeries";
+import {
+   atMostOncePerRebirthPerSession,
+   withInitialDelay,
+} from "../../../shared/lmc/LmcScriptsShared";
+import { atMostOncePerXSecs } from "../../../shared/lmc/MiscFuncs";
+import {
+   OnAtBottomOfTickEverySecond,
+   OnEveryFiveMins,
+   OnEveryFiveSecs,
+   OnEveryHour,
+   OnEveryMinute,
+   OnSoonAfterGameStartedOrLoaded,
+} from "../../../shared/lmc/LmcEvents";
+
+const gt = globalThis as any;
 
 export function shouldTick(): boolean {
    return isSteam() || !document.hidden;
 }
+gt.shouldTick = shouldTick;
 
 App.addListener("appStateChange", ({ isActive }) => {
    if (isSteam() || import.meta.env.DEV) {
@@ -85,6 +101,7 @@ export function tickEveryFrame(gs: GameState, dt: number) {
       .splice(0, toProcess)
       .forEach((tile) => transportAndConsumeResources(tile, resourceProduced, gs, false));
 }
+gt.tickEveryFrame = tickEveryFrame;
 
 const heartbeatFreq = import.meta.env.DEV ? 10 : 60;
 const saveFreq = isSteam() ? 60 : 10;
@@ -163,6 +180,30 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
       tickTileQueueSize = tickTileQueue.length;
       checkForAdvisors(gs);
    }
+
+   OnAtBottomOfTickEverySecond.emit({ gs, offline });
+
+   if (withInitialDelay(5)) {
+      if (atMostOncePerRebirthPerSession("tickEverySecond.OnSoonAfterGameStartedOrLoaded")) {
+         console.log("[Events]", "Calling OnSoonAfterGameStartedOrLoaded.");
+         OnSoonAfterGameStartedOrLoaded.emit({ gs, offline });
+      }
+   }
+
+   if (withInitialDelay(6)) {
+      if (atMostOncePerXSecs("tickEverySecond.OnEveryFiveSecs", 5)) {
+         OnEveryFiveSecs.emit({ gs, offline });
+      }
+      if (atMostOncePerXSecs("tickEverySecond.OnEveryMinute", 60)) {
+         OnEveryMinute.emit({ gs, offline });
+      }
+      if (atMostOncePerXSecs("tickEverySecond.OnEveryFiveMins", 60 * 5)) {
+         OnEveryFiveMins.emit({ gs, offline });
+      }
+      if (atMostOncePerXSecs("tickEverySecond.OnEveryHour", 60 * 60)) {
+         OnEveryHour.emit({ gs, offline });
+      }
+   }
 }
 
 function checkForAdvisors(gs: GameState) {
@@ -182,6 +223,7 @@ function checkForAdvisors(gs: GameState) {
       }
    });
 }
+gt.tickEverySecond = tickEverySecond;
 
 let lastTickTime = Date.now();
 let hasShownAccountRankUpModal = false;
@@ -281,7 +323,10 @@ RequestChooseGreatPerson.on(({ permanent }) => {
 });
 
 export const useCurrentTick = makeObservableHook(CurrentTickChanged, () => Tick.current);
+gt.useCurrentTick = useCurrentTick;
+
 export const useEligibleAccountRank = makeObservableHook(OnEligibleAccountRankUpdated, () => eligibleRank);
+gt.useEligibleAccountRank = useEligibleAccountRank;
 
 function produceResources(gs: GameState) {
    for (const a of resourceProduced) {

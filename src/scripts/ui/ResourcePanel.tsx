@@ -16,16 +16,20 @@ import { getResourceIO } from "../../../shared/logic/IntraTickCache";
 import {
    getProgressTowardsNextGreatPerson,
    getRebirthGreatPeopleCount,
+   getValueRequiredForGreatPeople,
 } from "../../../shared/logic/RebirthLogic";
 import { getResourceAmount } from "../../../shared/logic/ResourceLogic";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
 import {
+   HOUR,
    Rounding,
    clamp,
+   forEach,
    formatHMS,
    formatNumber,
    formatPercent,
    mapCount,
+   mapOf,
    mathSign,
    range,
    round,
@@ -47,6 +51,13 @@ import { showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { LoadingPage, LoadingPageStage } from "./LoadingPage";
 import { TilePage } from "./TilePage";
+import { getEmpireValueDeltaSmoothed, getNextGpMilestones, getScienceDeltaSmoothed, getTechsOfInterestTable } from "../../../shared/lmc/LmcScriptsShared";
+import { getScienceAmount, getTotalTechUnlockCost } from "../../../shared/logic/TechLogic";
+import { formatMillisToYMDHM, zeroAllButXHighestDigits } from "../../../shared/lmc/MiscFuncs";
+import { formatFestivalPoints } from "../../../shared/lmc/LmcFormattersParsers";
+import { getFestivalPoints } from "../../../shared/lmc/CiScripts";
+
+const gt = globalThis as any;
 
 export function ResourcePanel(): React.ReactNode {
    const tick = useCurrentTick();
@@ -73,16 +84,13 @@ export function ResourcePanel(): React.ReactNode {
       Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, buildingTiles);
    };
 
-   let evDelta = 0;
-   let scienceDelta = 0;
-   if (TimeSeries.science.length > 1) {
-      evDelta =
-         TimeSeries.empireValue[TimeSeries.empireValue.length - 1] -
-         TimeSeries.empireValue[TimeSeries.empireValue.length - 2];
-      scienceDelta =
-         TimeSeries.science[TimeSeries.science.length - 1] -
-         TimeSeries.science[TimeSeries.science.length - 2];
-   }
+   const preciseDeltas = false;
+   const evDelta = getEmpireValueDeltaSmoothed(preciseDeltas) ?? 0;
+   const currentEv = Tick.current.totalValue;
+   const scienceDelta = getScienceDeltaSmoothed(preciseDeltas) ?? 0;
+   const scienceAvailable = getScienceAmount(gs);
+
+   const festivalTxt = formatFestivalPoints(getFestivalPoints());
 
    const [favoriteActive, setFavoriteActive] = useState(false);
    useEffect(() => {
@@ -252,6 +260,11 @@ export function ResourcePanel(): React.ReactNode {
             </div>
          ) : null}
          <div className="separator-vertical" />
+
+         {
+            // ===== ===== =====
+            // ===== festival
+         }
          <Tippy disabled={isFloating} content={Config.City[gs.city].festivalDesc()}>
             <div
                className={classNames({
@@ -267,16 +280,14 @@ export function ResourcePanel(): React.ReactNode {
                }}
             >
                <div className={classNames({ "m-icon": true })}>celebration</div>
-               <div style={{ width: "5rem" }}>
-                  <FormatNumber
-                     value={Math.floor(
-                        (Tick.current.specialBuildings.get("Headquarter")?.building.resources.Festival ?? 0) /
-                           FESTIVAL_CONVERSION_RATE,
-                     )}
-                  />
-               </div>
+               <div style={{ width: "5rem" }}>{festivalTxt}</div>
             </div>
          </Tippy>
+         {
+            // ===== festival
+            // ===== ===== =====
+         }
+
          <div className="separator-vertical" />
          <div className="section">
             <div
@@ -317,9 +328,62 @@ export function ResourcePanel(): React.ReactNode {
                <div className="separator-vertical" />
             </>
          ) : null}
-         <div className="section pointer" onClick={() => Singleton().sceneManager.loadScene(TechTreeScene)}>
-            <div className={classNames({ "m-icon": true })}>science</div>
-            <Tippy content={t(L.Science)} placement="bottom">
+
+         {
+            // ===== ===== =====
+            // ===== science
+         }
+         <Tippy
+            placement="bottom"
+            content={
+               <div style={{ minWidth: 180 }}>
+                  <div>
+                     <b>{t(L.Science)}</b>
+                  </div>
+                  <div className="row text-small">
+                     <FormatNumber value={scienceDelta} />
+                     &nbsp;sci/sec
+                  </div>
+                  <div className="row text-small">
+                     <FormatNumber value={scienceDelta * 3600} />
+                     &nbsp;sci/hour
+                  </div>
+                  <div className="row text-small">
+                     <FormatNumber value={scienceDelta * 3600 * 24} />
+                     &nbsp;sci/day
+                  </div>
+
+                  <div>&nbsp;</div>
+                  <div>Time remaining:</div>
+                  {Object.entries(getTechsOfInterestTable(gs)).map(([k, v]) => {
+
+
+                     const techName = k;
+                     const unlockCost = getTotalTechUnlockCost(k, gs).totalScience;
+                     const hasEnoughScience = scienceAvailable >= unlockCost;
+                     const remainingUnlockCost = unlockCost - scienceAvailable;
+                     const remainingUnlockCostMillis = remainingUnlockCost / scienceDelta * 1000;
+                     const unlockCostFormatted = (scienceDelta <= 0) ? "unknown" : hasEnoughScience ? "available" : formatMillisToYMDHM(remainingUnlockCostMillis);
+
+                     return (
+                        <div className="row text-small">
+                           {techName} - {unlockCostFormatted}
+                        </div>
+                     );
+                  })}
+
+               </div>
+            }
+            interactive={true} // if you want to allow selection/copying
+         >
+            <div
+               className="section pointer"
+               onClick={() => Singleton().sceneManager.loadScene(TechTreeScene)}
+               style={{ display: "flex", alignItems: "center" }}
+            >
+               <div className="m-icon" style={{ marginRight: "0.5rem" }}>
+                  science
+               </div>
                <div style={{ width: "12rem" }}>
                   <FormatNumber value={TimeSeries.science[TimeSeries.science.length - 1]} />
                   <span
@@ -333,9 +397,14 @@ export function ResourcePanel(): React.ReactNode {
                      <FormatNumber value={Math.abs(scienceDelta)} />
                   </span>
                </div>
-            </Tippy>
-         </div>
+            </div>
+         </Tippy>
          <div className="separator-vertical" />
+         {
+            // ===== science
+            // ===== ===== =====
+         }
+
          <div className="section pointer" onClick={() => highlightNotProducingReasons()}>
             <div className={classNames({ "m-icon": true })}>domain_disabled</div>
             <Tippy content={t(L.NotProducingBuildings)} placement="bottom">
@@ -358,42 +427,93 @@ export function ResourcePanel(): React.ReactNode {
             </Tippy>
          </div>
          <div className="separator-vertical" />
+
          <DeficitResources />
+
+         {
+            // ===== ===== =====
+            // ===== empire value
+         }
          <div className="section">
-            <div
-               className={classNames({
-                  "m-icon": true,
-               })}
+            <Tippy placement="bottom"
+               content={
+                  <div>
+                     <div>{t(L.TotalEmpireValue)}</div>
+                     <div className="row text-small">
+                        <FormatNumber value={evDelta} />
+                        &nbsp;ev/sec
+                     </div>
+                     <div className="row text-small">
+                        <FormatNumber value={evDelta * 3600} />
+                        &nbsp;ev/hour
+                     </div>
+                     <div className="row text-small">
+                        <FormatNumber value={evDelta * 3600 * 24} />
+                        &nbsp;ev/day
+                     </div>
+                  </div>
+               }
             >
-               account_balance
-            </div>
-            <Tippy content={t(L.TotalEmpireValue)} placement="bottom">
-               <div style={{ width: "12rem" }}>
-                  <FormatNumber value={tick.totalValue} />
-                  <span
-                     className={classNames({ "text-red": evDelta < 0, "text-green": evDelta > 0 })}
-                     style={{ fontWeight: "normal", textAlign: "left" }}
+               <div>
+                  <div
+                     className={classNames({
+                        "m-icon": true,
+                     })}
                   >
-                     {mathSign(evDelta)}
-                     <FormatNumber value={Math.abs(evDelta)} />
-                  </span>
+                     account_balance
+                  </div>
+                  <div style={{ width: "12rem" }}>
+                     <FormatNumber value={tick.totalValue} />
+                     <span
+                        className={classNames({ "text-red": evDelta < 0, "text-green": evDelta > 0 })}
+                        style={{ fontWeight: "normal", textAlign: "left" }}
+                     >
+                        {mathSign(evDelta)}
+                        <FormatNumber value={Math.abs(evDelta)} />
+                     </span>
+                  </div>
                </div>
             </Tippy>
          </div>
+         {
+            // ===== empire value
+            // ===== ===== =====
+         }
          <div className="separator-vertical" />
+         {
+            // ===== ===== =====
+            // ===== extra great people
+         }
          <div className="section">
-            <div className="m-icon small">person_celebrate</div>
-            <div style={{ width: "8rem" }}>
-               <Tippy content={t(L.ExtraGreatPeopleAtReborn)}>
-                  <span>{getRebirthGreatPeopleCount()}</span>
-               </Tippy>
-               <Tippy content={t(L.ProgressTowardsNextGreatPerson)}>
-                  <span className="text-desc" style={{ fontWeight: "normal", marginLeft: 5 }}>
-                     ({formatPercent(clamp(getProgressTowardsNextGreatPerson(), 0, 1), 0, Rounding.Floor)})
-                  </span>
-               </Tippy>
-            </div>
+            <Tippy content={
+               <div>
+                  <div>Extra GP at RB</div>
+                  {getNextGpMilestones().map((gp) => {
+                     const milestoneCost = getValueRequiredForGreatPeople(gp);
+                     const remainingCost = milestoneCost - currentEv;
+                     //const remainingSeconds = Math.max(remainingCost / evDelta, 0);
+                     const remainingSeconds = remainingCost / evDelta;
+                     const remainingTimeStr = remainingSeconds > 0 ? formatMillisToYMDHM(remainingSeconds * 1000) : "unknown";
+                     return (<div>{gp} - {remainingTimeStr}</div>)
+                  })}
+               </div>
+            }>
+               <div>
+                  <div className="m-icon small">person_celebrate</div>
+                  <div style={{ width: "8rem" }}>
+                     <span>{getRebirthGreatPeopleCount()}</span>
+                     <span className="text-desc" style={{ fontWeight: "normal", marginLeft: 5 }}>
+                        ({formatPercent(clamp(getProgressTowardsNextGreatPerson(), 0, 1), 0, Rounding.Floor)})
+                     </span>
+                  </div>
+               </div>
+            </Tippy>
          </div>
+         {
+            // ===== extra great people
+            // ===== ===== =====
+         }
+
          <div className="separator-vertical" />
          <div className="section app-region-none" style={{ padding: "0 0.5rem" }}>
             <select
@@ -414,6 +534,7 @@ export function ResourcePanel(): React.ReactNode {
       </div>
    );
 }
+gt.ResourcePanel = ResourcePanel;
 
 function DeficitResources(): React.ReactNode {
    const gs = useGameState();
@@ -442,7 +563,6 @@ function DeficitResources(): React.ReactNode {
                }
             }}
          >
-            <div className={classNames({ "m-icon": true })}>do_not_disturb_on</div>
             <Tippy
                content={
                   <div>
@@ -466,6 +586,7 @@ function DeficitResources(): React.ReactNode {
                placement="bottom"
             >
                <div style={{ width: "5rem" }}>
+                  <div className={classNames({ "m-icon": true })}>do_not_disturb_on</div>
                   <FormatNumber value={deficit.size} />
                </div>
             </Tippy>

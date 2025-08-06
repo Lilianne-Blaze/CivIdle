@@ -37,6 +37,8 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { TableView } from "./TableView";
 import { AccountLevelComponent, MiscTextureComponent, PlayerFlagComponent } from "./TextureSprites";
 import { WarningComponent } from "./WarningComponent";
+import { getSeenResourceKeys } from "../../../shared/lmc/LmcScriptsShared";
+import { formatNumberTradeTable, playerNameMatchesAnyFragments } from "../../../shared/lmc/CiScripts";
 
 const savedResourceWantFilters: Set<Resource> = new Set();
 const savedResourceOfferFilters: Set<Resource> = new Set();
@@ -86,7 +88,7 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
       setShowFilters(false);
    };
 
-   const resources = keysOf(unlockedResources(gameState, "Koti")).filter((r) => !NoStorage[r] && !NoPrice[r]);
+   const resources = getSeenResourceKeys();
    return (
       <article role="tabpanel" style={{ padding: "8px" }}>
          <div className="sep5" />
@@ -243,20 +245,18 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
             ]}
             sortingState={playerTradesSortingState}
             data={trades.filter((trade) => {
-               const resourceFilter =
+
+               let resourceFilter =
                   (resourceWantFilters.size === 0 && resourceOfferFilters.size === 0) ||
                   resourceWantFilters.has(trade.buyResource) ||
                   resourceOfferFilters.has(trade.sellResource);
+               if (resourceOfferFilters.size !== 0 && resourceWantFilters.size !== 0) {
+                  resourceFilter =
+                     resourceWantFilters.has(trade.buyResource) && resourceOfferFilters.has(trade.sellResource);
+               }
 
-               const filterNames = playerNameFilter
-                  .toLowerCase()
-                  .split(" ")
-                  .map((name) => name.trim())
-                  .filter((name) => name.length > 0);
-
-               const nameFilter =
-                  filterNames.length === 0 ||
-                  filterNames.some((name) => trade.from.toLowerCase().includes(name));
+               const nameFilter = playerNameFilter.trim().length === 0 ||
+                  playerNameMatchesAnyFragments(trade.from.toLowerCase(), playerNameFilter.toLowerCase());
 
                const amountFilter =
                   tradeAmountFilter === 0 || (tradeAmountFilter > 0 && trade.buyAmount <= tradeAmountFilter);
@@ -303,13 +303,19 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
                            {Config.Resource[trade.buyResource].name()}
                         </div>
                         <div className="text-small text-strong text-desc">
-                           <FormatNumber value={trade.buyAmount} />
+                           {"Want: " + formatNumberTradeTable(trade.buyAmount)}
+                        </div>
+                        <div className="text-small text-strong text-desc">
+                           {"You: " + formatNumberTradeTable(Tick.current.resourceAmount.get(trade.buyResource))}
                         </div>
                      </td>
                      <td>
                         <div>{Config.Resource[trade.sellResource].name()}</div>
                         <div className="text-small text-strong text-desc">
-                           <FormatNumber value={trade.sellAmount} />
+                           {"Offer: " + formatNumberTradeTable(trade.sellAmount)}
+                        </div>
+                        <div className="text-small text-strong text-desc">
+                           {"You: " + formatNumberTradeTable(Tick.current.resourceAmount.get(trade.sellResource))}
                         </div>
                      </td>
                      <td
@@ -396,20 +402,36 @@ export function PlayerTradeComponent({ gameState, xy }: IBuildingComponentProps)
                               delete
                            </div>
                         ) : (
-                           <div
-                              className={classNames({
-                                 "text-link": !disableFill,
-                                 "text-strong": true,
-                                 "text-desc": disableFill,
-                              })}
-                              onClick={() => {
-                                 if (!disableFill) {
-                                    showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} />);
-                                 }
-                              }}
-                           >
-                              {t(L.PlayerTradeFill)}
-                           </div>
+                           <>
+                              <div
+                                 className={classNames({
+                                    "text-link": !disableFill,
+                                    "text-strong": true,
+                                    "text-desc": disableFill,
+                                 })}
+                                 onClick={() => {
+                                    if (!disableFill) {
+                                       showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} />);
+                                    }
+                                 }}
+                              >
+                                 {"Trade..."}
+                              </div>
+                              <div
+                                 className={classNames({
+                                    "text-link": !disableFill,
+                                    "text-strong": true,
+                                    "text-desc": disableFill,
+                                 })}
+                                 onClick={() => {
+                                    if (!disableFill) {
+                                       showModal(<FillPlayerTradeModal tradeId={trade.id} xy={xy} execNow={true} percent={1} />);
+                                    }
+                                 }}
+                              >
+                                 {"TrdMax"}
+                              </div>
+                           </>
                         )}
                      </td>
                   </tr>

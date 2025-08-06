@@ -53,6 +53,7 @@ import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { Fonts } from "../visuals/Fonts";
 import { playError } from "../visuals/Sound";
 import { TileVisual } from "./TileVisual";
+import { OnCityTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
 
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
@@ -202,6 +203,7 @@ export class WorldScene extends Scene {
          this._hijackSelectGridResolve = null;
          return;
       }
+
       switch (e.button) {
          case 0: {
             this.selectGrid(grid);
@@ -215,6 +217,20 @@ export class WorldScene extends Scene {
             break;
          }
       }
+
+      const tse: TileSelectedEvent = {
+         tileX: grid ? grid.x : -1,
+         tileY: grid ? grid.y : -1,
+         tileNum: grid ? pointToTile(grid) : -1,
+         isLeftClick: e.button === 0,
+         isCity: true,
+         isWorld: false,
+         gs: gs,
+         fpEvent: e,
+         grid: grid, // left for backwards compatibility
+      };
+      OnCityTileSelected.emit(tse);
+
    }
 
    copyBuilding(grid: IPointData, gs: GameState): void {

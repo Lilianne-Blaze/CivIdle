@@ -2,12 +2,15 @@ import Tippy from "@tippyjs/react";
 import { Fragment, useEffect, useState } from "react";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
 import {
+   getStorageFor,
    getTotalBuildingCost,
    getUpgradeTargetLevels,
+   isHeadquarter,
    isSpecialBuilding,
+   isWorldOrNaturalWonder,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
-import { notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
+import { getGameState, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
 import { clearIntraTickCache, getGrid } from "../../../shared/logic/IntraTickCache";
 import { RequestResetTile } from "../../../shared/logic/TechLogic";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
@@ -31,6 +34,9 @@ import { Singleton } from "../utilities/Singleton";
 import { playClick, playError, playSuccess } from "../visuals/Sound";
 import type { IBuildingComponentProps } from "./BuildingPage";
 import { hideToast, showToast } from "./GlobalModal";
+import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
+import { WarningComponent } from "./WarningComponent";
+import { getBuildingStatsByType } from "../../../shared/lmc/LmcScriptsShared";
 
 //export type UpgradeState = "all" | "active" | "disabled";
 
@@ -102,7 +108,8 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
       selected.forEach((xy) => {
          const b = gameState.tiles.get(xy)?.building;
          if (!b) return;
-         mapOf(getTotalBuildingCost(b, b.level, idx === 0 ? b.level + 1 : level), (res, amount) => {
+         const newLevel = idx === 0 ? b.level + 1 : level;
+         mapOf(getTotalBuildingCost(b, b.level, newLevel), (res, amount) => {
             if (res in resCost) {
                resCost[res] = resCost[res]! + amount;
             } else {
@@ -142,6 +149,21 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
             return b.capacity === 0;
          case "3": // Buildings that have full storage
             return Tick.current.notProducingReasons.get(xy) === NotProducingReason.StorageFull;
+
+         case "4": {
+            const { total, used } = getStorageFor(xy, getGameState());
+            const fullPercent = used / total;
+            return fullPercent >= 0.85;
+         }
+         case "5": {
+            const { total, used } = getStorageFor(xy, getGameState());
+            const fullPercent = used / total;
+            return fullPercent <= 0.15;
+         }
+         case "6": {
+            return Math.random() < 0.50;
+         }
+
       }
    };
 
@@ -203,8 +225,46 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
          case "8":
             selectRange(3, false);
             break;
+
+         case "9": { // custom: same type neighbors
+            const result = new Set<Tile>();
+
+            const allNeighbors = getAllNeighborTilesSameType(xy, gameState);
+            allNeighbors.forEach((neighborTile) => {
+               const tileObj = gameState.tiles.get(neighborTile);
+               const building = tileObj?.building;
+               const isSpecial = building && isSpecialBuilding(building?.type);
+               if (building && !isSpecial && stateCondition(building, neighborTile)) {
+                  result.add(neighborTile);
+               }
+            });
+
+            setSelected(result);
+            Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, Array.from(result));
+            break;
+         }
+         case "10": { // custom: all neighbors
+            const result = new Set<Tile>();
+
+            const allNeighbors = getAllNeighborTiles(xy, gameState);
+            allNeighbors.forEach((neighborTile) => {
+               const tileObj = gameState.tiles.get(neighborTile);
+               const building = tileObj?.building;
+               const isSpecial = building && isSpecialBuilding(building?.type);
+               if (building && !isSpecial && stateCondition(building, neighborTile)) {
+                  result.add(neighborTile);
+               }
+            });
+
+            setSelected(result);
+            Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, Array.from(result));
+
+            break;
+         }
       }
    };
+
+   const buildingStats = getBuildingStatsByType(building.type, gameState);
 
    return (
       <>
@@ -229,6 +289,17 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   </div>
                </Tippy>
             </div>
+
+            {isSpecialBuilding(building.type) ? null : (
+               <div className="f1 mt10">
+                  <div className="">Min/max/avg level: {buildingStats.levelMin} / {buildingStats.levelMax}, {buildingStats.levelAvg.toFixed(2)}</div>
+                  <div className="">Working / all levels: {buildingStats.levelsWorking} ({buildingStats.countWorking})
+                     / {buildingStats.levelSum} ({buildingStats.count})</div>
+                  <div className="">Upgrading / paused levels: {buildingStats.levelsUpgrading} ({buildingStats.countUpgrading})
+                     / {buildingStats.levelsPaused} ({buildingStats.countPaused})</div>
+               </div>
+            )}
+
             <div className="separator" />
             <div className="row text-small text-strong">
                <Tippy content={t(L.BatchModeTooltip, { count: selected.size })}>
@@ -248,6 +319,9 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   <option value={1}>{t(L.BatchStateSelectActive)}</option>
                   <option value={2}>{t(L.BatchStateSelectTurnedOff)}</option>
                   <option value={3}>{t(L.BatchStateSelectTurnedFullStorage)}</option>
+                  <option value={4}>85+% full</option>
+                  <option value={5}>&lt;15% full</option>
+                  <option value={6}>Half at random</option>
                </select>
                <select
                   style={{ margin: "-10px 0" }}
@@ -266,8 +340,16 @@ export function BuildingUpgradeComponent({ gameState, xy }: IBuildingComponentPr
                   <option value={6}>{t(L.BatchSelectAnyType1Tile)}</option>
                   <option value={7}>{t(L.BatchSelectAnyType2Tile)}</option>
                   <option value={8}>{t(L.BatchSelectAnyType3Tile)}</option>
+                  <option value={9}>Same type connected</option>
+                  <option value={10}>All connected</option>
+
                </select>
             </div>
+
+            <WarningComponent icon="info" className="mb10 mt10 text-small">
+               Hint: Use "Same-type/all connected" to upgrade all buildings in a group (not separated by empty hexes).
+            </WarningComponent>
+
             <div className="separator" />
             <div className="row">
                {levels.map((level, idx) => (

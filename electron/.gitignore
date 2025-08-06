@@ -93,3 +93,6 @@ out/
 save/
 
 local/
+
+# added 2025-07-30
+/server

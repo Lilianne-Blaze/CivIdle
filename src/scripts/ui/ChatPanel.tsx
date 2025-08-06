@@ -44,6 +44,14 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { SelectChatChannelModal } from "./SelectChatChannelModal";
 import { ResourcesTab } from "./StatisticsBuildingBody";
 import { AccountLevelComponent, MiscTextureComponent, PlayerFlagComponent } from "./TextureSprites";
+import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+
+import CustomBlackCalculator_png from "../../images/custom-black-calculator.png";
+import CustomNukeDove100_png from "../../images/custom-nukedove100.png";
+
+globalThis.CustomBlackCalculator_png = CustomBlackCalculator_png;
+globalThis.CustomNukeDove100_png = CustomNukeDove100_png;
 
 const SetChatInput = new TypedEvent<{ channel: ChatChannel; getContent: (old: string) => string }>();
 
@@ -206,13 +214,14 @@ function _ChatWindow({
             <div className="title-bar-text">{ChatChannels[channel]}</div>
             <div className="title-bar-controls">
                <button aria-label="Minimize" onClick={onMinimize}></button>
-               <button aria-label="Close" onClick={() => onClose(channel)}></button>
+               {/* <button aria-label="Close" onClick={() => onClose(channel)}></button> */}
             </div>
          </div>
          <div
             ref={scrollAreaRef}
             onMouseEnter={() => {
-               shouldScroll.current = false;
+               //shouldScroll.current = false;
+               shouldScroll.current = lilModCli.isOption(lilModOption.chatAlwaysScroll);
             }}
             onMouseLeave={() => {
                shouldScroll.current = true;
@@ -251,7 +260,17 @@ function ChatInput({
    const [chat, setChat] = useState("");
    const chatInput = useRef<HTMLInputElement>(null);
    const sendChat = () => {
-      if (!chat) return;
+      if (!chat) return; ``
+
+      // LMCBOOKMARK here we intercept and potentially redirect outgoing chat messages
+      const beforeChatSendEvent = new BeforeChatMessageSendEvent(user!, channel, chat);
+      OnBeforeChatMessageSend.emit(beforeChatSendEvent);
+      if (beforeChatSendEvent.blockSending) {
+         //console.debug("Chat message sending blocked by event handler");
+         setChat("");
+         return;
+      }
+
       if (chat.startsWith("/")) {
          const command = chat.substring(1);
          addSystemMessage(`$ ${command}`);
@@ -319,20 +338,29 @@ function ChatMessage({
    chat: IClientChat;
    onImageLoaded: () => void;
 }): React.ReactNode {
+   const isBrokie = !hasFlag(chat.attr, ChatAttributes.Supporter) && chat.level > 2;
+   const isMe = user ? chat.name === user.handle : false;
+   const mentionsMe = user ? chat.message.toLowerCase().includes(`@${user.handle.toLowerCase()} `)
+      || hasFlag(chat.attr, ChatAttributes.Announce)
+      : false;
+   const timeStr = new Date(chat.time ?? 0).toLocaleTimeString();
+   const dateTimeStr = new Date(chat.time ?? 0).toLocaleString();
+
    return (
       <div
          className={classNames({
             "chat-message-item": true,
             "is-even": chat.id % 2 === 0,
-            "mentions-me": user
-               ? chat.message.toLowerCase().includes(`@${user.handle.toLowerCase()} `) ||
-                 hasFlag(chat.attr, ChatAttributes.Announce)
-               : false,
+            "mentions-me": mentionsMe,
          })}
       >
-         {chat.name === user?.handle ? (
+         {isMe ? (
             <div className="row text-small text-desc">
-               <div>{new Date(chat.time ?? 0).toLocaleTimeString()}</div>
+
+               <Tippy content={dateTimeStr}>
+                  <div>{timeStr}</div>
+               </Tippy>
+
                <div className="f1"></div>
                <div style={{ color: UserColorsMapping[chat.color] }} className="text-strong">
                   {chat.name}
@@ -353,6 +381,11 @@ function ChatMessage({
                {hasFlag(chat.attr, ChatAttributes.Mod) ? (
                   <Tippy content={t(L.AccountLevelMod)}>
                      <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
+                  </Tippy>
+               ) : null}
+               {isBrokie ? (
+                  <Tippy content={"Makes server hamster cry"}>
+                     <img src={CustomBlackCalculator_png} className="player-flag" />
                   </Tippy>
                ) : null}
             </div>
@@ -387,8 +420,17 @@ function ChatMessage({
                      <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
                   </Tippy>
                ) : null}
+               {isBrokie ? (
+                  <Tippy content={"Makes server hamster cry"}>
+                     <img src={CustomBlackCalculator_png} className="player-flag" />
+                  </Tippy>
+               ) : null}
                <div className="f1"></div>
-               <div>{new Date(chat.time ?? 0).toLocaleTimeString()}</div>
+
+               <Tippy content={dateTimeStr}>
+                  <div>{timeStr}</div>
+               </Tippy>
+
             </div>
          )}
          <div className="chat-message-content">

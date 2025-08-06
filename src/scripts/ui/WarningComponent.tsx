@@ -4,6 +4,9 @@ import error from "../../images/error.png";
 import info from "../../images/info.png";
 import question from "../../images/question.png";
 import warning from "../../images/warning.png";
+import { getTechUnlockCost } from "../../../shared/logic/TechLogic";
+
+const gt = globalThis as any;
 
 const ICONS = {
    warning,
@@ -33,3 +36,4 @@ export function WarningComponent({
       </div>
    );
 }
+gt.WarningComponent = WarningComponent

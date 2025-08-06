@@ -1,5 +1,8 @@
 import type { Building, IBuildingDefinition } from "../definitions/BuildingDefinitions";
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
+import { lilModCli, lilModOption } from "../lmc/LilModCli";
+import { OnAtEndOfClearIntraTickCache, OnCheckMarketTrade } from "../lmc/LmcEvents";
+import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { Grid } from "../utilities/Grid";
 import {
    clamp,
@@ -17,7 +20,9 @@ import {
    getElectrificationBoost,
    getMarketBaseSellAmount,
    getMarketBuyAmount,
+   getMarketSellAmount,
    getResourceImportCapacity,
+   getStorageFor,
    totalMultiplierFor,
 } from "./BuildingLogic";
 import { Config } from "./Config";
@@ -32,6 +37,8 @@ import type {
    IResourceImportBuildingData,
    ITileData,
 } from "./Tile";
+
+const gt = globalThis as any;
 
 class IntraTickCache {
    revealedDeposits: PartialSet<Deposit> | undefined;
@@ -62,11 +69,14 @@ let _cache = new IntraTickCache();
 
 export function clearIntraTickCache(): void {
    _cache = new IntraTickCache();
+   OnAtEndOfClearIntraTickCache.emit({});
 }
+gt.clearIntraTickCache = clearIntraTickCache;
 
 export function getFuelByTarget(): Map<Tile, number> {
    return _cache.fuelByTarget;
 }
+gt.getFuelByTarget = getFuelByTarget;
 
 export function getBuildingIO(
    xy: Tile,
@@ -74,6 +84,8 @@ export function getBuildingIO(
    options: IOFlags,
    gs: GameState,
 ): Readonly<PartialTabulate<Resource>> {
+   //const enableLogging = Math.random() < 0.0001;
+
    const key = (tileToHash(xy) << (IOFlags.TotalUsedBits + 1)) | (options << 1) | (type === "input" ? 1 : 0);
    const cached = _cache.buildingIO.get(key);
    if (cached) {
@@ -86,10 +98,58 @@ export function getBuildingIO(
       if ("sellResources" in b) {
          const market = b as IMarketBuildingData;
          if (type === "input") {
+            const { total, used } = getStorageFor(xy, gs);
+            const freeStorage = total - used;
+
             forEach(market.sellResources, (sellResource) => {
                const buyResource = market.availableResources[sellResource];
+
                if (buyResource) {
-                  resources[sellResource] = getMarketBaseSellAmount(sellResource, buyResource);
+                  const maybeSellAmount = clamp(
+                     b.capacity * getMarketSellAmount(sellResource, xy, gs),
+                     0,
+                     freeStorage,
+                  );
+                  if (maybeSellAmount <= 0) {
+                     return;
+                  }
+                  const buyAmount = getMarketBuyAmount(sellResource, maybeSellAmount, buyResource, xy, gs);
+                  const storeAmount = b.resources[sellResource] ?? 0;
+
+                  if (used - maybeSellAmount + buyAmount > total) {
+                     // is it needed? needs more testing
+                     //Tick.next.notProducingReasons.set(xy, NotProducingReason.StorageFull);
+                     return;
+                  }
+
+                  const sellValue = (Config.ResourcePrice[sellResource] ?? 0) * maybeSellAmount;
+                  const buyValue = (Config.ResourcePrice[buyResource] ?? 0) * buyAmount;
+                  if (sellValue <= 0 || buyValue <= 0) {
+                     return;
+                  }
+                  const tradeValue = buyValue / sellValue;
+                  const amountRatio = buyAmount / maybeSellAmount;
+                  const checkTradeParams: CheckMarketTradeParams = {
+                     sellResource,
+                     buyResource,
+                     sellAmount: maybeSellAmount,
+                     buyAmount,
+                     storeAmount,
+                     sellValue,
+                     buyValue,
+                     tradeValue,
+                     amountRatio,
+                     xy,
+                     gs,
+                     checkType: "import",
+                  };
+                  const checkTradeEvent = new CheckMarketTradeEvent(checkTradeParams);
+                  OnCheckMarketTrade.emit(checkTradeEvent);
+
+                  if (checkTradeEvent.isAllowed()) {
+                     resources[sellResource] = getMarketBaseSellAmount(sellResource, buyResource);
+                  }
+
                }
             });
          }
@@ -105,12 +165,20 @@ export function getBuildingIO(
                );
             });
          }
-      }
+      } // if ("sellResources" in b) {
+
       if ("resourceImports" in b && type === "input") {
          const totalCapacity = getResourceImportCapacity(b, totalMultiplierFor(xy, "output", 1, false, gs));
          const rib = b as IResourceImportBuildingData;
          const totalSetCapacity = reduceOf(rib.resourceImports, (prev, k, v) => prev + v.perCycle, 0);
-         const scaleFactor = clamp(totalSetCapacity > 0 ? totalCapacity / totalSetCapacity : 0, 0, 1);
+
+         // LMCBOOKMARK always use full import capacity
+         const allowScaleUp = lilModCli.isOption(lilModOption.alwaysUseFullImportCapacity);
+         const scaleFactor = clamp(
+            totalSetCapacity > 0 ? totalCapacity / totalSetCapacity : 0,
+            0,
+            allowScaleUp ? Number.MAX_SAFE_INTEGER : 1,
+         );
          forEach(rib.resourceImports, (k, v) => {
             // This means the total capacity < total set capacity. It happens when the multiplier reduces.
             // In this case, we scale down all values equally
@@ -122,7 +190,8 @@ export function getBuildingIO(
          _cache.buildingIO.set(key, Object.freeze(result));
          // Resource imports is not affected by multipliers
          return result;
-      }
+      } // if ("resourceImports" in b && type === "input") {
+
       if ("inputResource" in b) {
          const s = b as ICloneBuildingData;
          if (NoStorage[s.inputResource] || NoPrice[s.inputResource] || s.inputResource === "Koti") {
@@ -141,7 +210,7 @@ export function getBuildingIO(
                   break;
             }
          }
-      }
+      } // if ("inputResource" in b) {
 
       if (
          hasFlag(options, IOFlags.TheoreticalElectrification) &&
@@ -186,6 +255,7 @@ export function getBuildingIO(
    _cache.buildingIO.set(key, Object.freeze(result));
    return result;
 }
+gt.getBuildingIO = getBuildingIO;
 
 export function revealedDeposits(gs: GameState): PartialSet<Deposit> {
    if (_cache.revealedDeposits) {
@@ -199,6 +269,7 @@ export function revealedDeposits(gs: GameState): PartialSet<Deposit> {
    });
    return _cache.revealedDeposits;
 }
+gt.revealedDeposits = revealedDeposits;
 
 export function getStorageFullBuildings(): Tile[] {
    if (_cache.storageFullBuildings) {
@@ -213,6 +284,7 @@ export function getStorageFullBuildings(): Tile[] {
    _cache.storageFullBuildings = result;
    return result;
 }
+gt.getStorageFullBuildings = getStorageFullBuildings;
 
 export interface ITransportStat {
    totalFuel: number;
@@ -238,6 +310,7 @@ export function getTransportStat(gs: GameState): ITransportStat {
    _cache.transportStat = result;
    return result;
 }
+gt.getTransportStat = getTransportStat;
 
 export function getTypeBuildings(gs: GameState): Map<Building, Map<Tile, Required<ITileData>>> {
    if (_cache.buildingsByType) {
@@ -257,6 +330,7 @@ export function getTypeBuildings(gs: GameState): Map<Building, Map<Tile, Require
    _cache.buildingsByType = result;
    return result;
 }
+gt.getTypeBuildings = getTypeBuildings;
 
 export function getBuildingsByType(
    building: Building,
@@ -264,6 +338,7 @@ export function getBuildingsByType(
 ): Map<Tile, Required<ITileData>> | undefined {
    return getTypeBuildings(gs).get(building);
 }
+gt.getBuildingsByType = getBuildingsByType;
 
 export function getResourceIO(gameState: GameState): IResourceIO {
    if (_cache.resourceIO) return _cache.resourceIO;
@@ -317,6 +392,7 @@ export function getResourceIO(gameState: GameState): IResourceIO {
 
    return result;
 }
+gt.getResourceIO = getResourceIO;
 
 export function getXyBuildings(gs: GameState): Map<Tile, IBuildingData> {
    if (_cache.buildingsByXy) {
@@ -331,6 +407,7 @@ export function getXyBuildings(gs: GameState): Map<Tile, IBuildingData> {
    _cache.buildingsByXy = result;
    return result;
 }
+gt.getXyBuildings = getXyBuildings;
 
 export function unlockedBuildings(gs: GameState): PartialSet<Building> {
    if (_cache.unlockedBuildings) {
@@ -349,6 +426,7 @@ export function unlockedBuildings(gs: GameState): PartialSet<Building> {
    });
    return _cache.unlockedBuildings;
 }
+gt.unlockedBuildings = unlockedBuildings;
 
 export function unlockedResources(gs: GameState, ...include: Resource[]): PartialSet<Resource> {
    if (_cache.unlockedResources) {
@@ -370,6 +448,7 @@ export function unlockedResources(gs: GameState, ...include: Resource[]): Partia
    });
    return result;
 }
+gt.unlockedResources = unlockedResources;
 
 let grid: Grid | null = null;
 
@@ -380,6 +459,7 @@ export function getGrid(gs: GameState): Grid {
    }
    return grid;
 }
+gt.getGrid = getGrid;
 
 export function getGlobalMultipliers(type: MultiplierType): MultiplierWithSource[] {
    const cached = _cache.globalMultipliers.get(type);
@@ -393,3 +473,5 @@ export function getGlobalMultipliers(type: MultiplierType): MultiplierWithSource
    _cache.globalMultipliers.set(type, result);
    return result;
 }
+gt.getGlobalMultipliers = getGlobalMultipliers;
+

@@ -42,6 +42,7 @@ import { ZugspitzeBuildingBody } from "./ZugspitzeBuildingBody";
 import { SwissBankBuildingBody } from "./SwissBankBuildingBody";
 import { ItaipuDamBuildingBody } from "./ItaipuDamBuildingBody";
 import { CathedralOfBrasiliaBuildingBody } from "./CathedralOfBrasiliaBuildingBody";
+import { countBuildingLevelsByType, getBuildingStatsByType, getBuildingStatsByTypeShortString } from "../../../shared/lmc/LmcScriptsShared";
 
 const BuildingBodyOverride: Partial<Record<Building, FunctionComponent<IBuildingComponentProps>>> = {
    Headquarter: HeadquarterBuildingBody,
@@ -98,12 +99,12 @@ export function BuildingPage(props: { tile: ITileData }): React.ReactNode {
    const gs = useGameState();
    const definition = Config.Building[building.type];
    const Body = BuildingBodyOverride[building.type] ?? DefaultBuildingBody;
+
    let titleBarContent = null;
    if (!isSpecialBuilding(building.type)) {
-      const buildingByType = getTypeBuildings(gs);
-      const buildingCount = buildingByType.get(building.type)?.size ?? 0;
-      titleBarContent = <span>({<FormatNumber value={buildingCount} />})</span>;
+      titleBarContent = <span>({getBuildingStatsByTypeShortString(building.type, gs)})</span>;
    }
+
    return (
       <div className="window">
          <TitleBarComponent>

@@ -61,11 +61,11 @@ export function PlayerTilePage({ xy }: { xy: string }): React.ReactNode {
                </div>
                <div className="row mv5">
                   <div className="f1">{t(L.PlayerMapEstablishedSince)}</div>
-                  <div className="text-strong">{new Date(tile.createdAt).toLocaleDateString()}</div>
+                  <div className="text-strong">{new Date(tile.createdAt).toLocaleString()}</div>
                </div>
                <div className="row mv5">
                   <div className="f1">{t(L.PlayerMapLastSeenAt)}</div>
-                  <div className="text-strong">{new Date(tile.lastSeenAt).toLocaleDateString()}</div>
+                  <div className="text-strong">{new Date(tile.lastSeenAt).toLocaleString()}</div>
                </div>
             </fieldset>
             <fieldset>

@@ -12,6 +12,7 @@ import { WorldScene } from "../scenes/WorldScene";
 import { Singleton } from "../utilities/Singleton";
 import { playSuccess } from "../visuals/Sound";
 import { showToast } from "./GlobalModal";
+import { getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
 
 export enum ApplyToAllFlag {
    None = 0,
@@ -91,6 +92,38 @@ export function ApplyToAllComponent<T extends IBuildingData>({
                </Tippy>
             );
          })}
+
+         <Tippy content={`Apply To All Connected ${building.type}`}>
+            <button
+               style={{ width: 27, padding: 0 }}
+               onMouseEnter={() => {
+                  const allNeighbors = getAllNeighborTilesSameType(xy, gameState);
+                  Singleton()
+                     .sceneManager.getCurrent(WorldScene)
+                     ?.drawSelection(null, Array.from(allNeighbors));
+               }}
+               onMouseLeave={() => {
+                  Singleton().sceneManager.getCurrent(WorldScene)?.drawSelection(null, []);
+               }}
+               onClick={() => {
+                  playSuccess();
+                  let count = 0;
+                  const allNeighborsSameType = getAllNeighborTilesSameType(xy, gameState);
+                  allNeighborsSameType.forEach((neighborTile) => {
+                     const neighborBuilding = gameState.tiles.get(neighborTile)?.building as T;
+                     if (!neighborBuilding) { return; }
+                     if (neighborBuilding.type === building.type) {
+                        ++count;
+                        Object.assign(neighborBuilding, getOptions(neighborBuilding));
+                     }
+                  });
+                  showToast(t(L.ApplyToBuildingsToastHTML, { count, building: def.name() }));
+               }}
+            >
+               AC
+            </button>
+         </Tippy>
+
          <div className="f1"></div>
          {hasFlag(flags, ApplyToAllFlag.NoDefault) ? null : (
             <Tippy

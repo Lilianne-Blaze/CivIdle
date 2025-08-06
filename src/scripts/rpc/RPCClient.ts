@@ -1,5 +1,6 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { decode, encode } from "@msgpack/msgpack";
+// @ts-expect-error
 import type { ServerImpl } from "../../../server/src/Server";
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import WorldMap from "../../../shared/definitions/WorldMap.json";
@@ -43,17 +44,34 @@ import { idbGet, idbSet } from "../utilities/BrowserStorage";
 import { makeObservableHook } from "../utilities/Hook";
 import { playBubble, playKaching } from "../visuals/Sound";
 import { SteamClient, isSteam } from "./SteamClient";
+import { OnAfterWelcomeMessageProcessed } from "../../../shared/lmc/LmcEvents";
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
+
+let gt = globalThis as any;
 
 let user: IUser | null = null;
 let platformInfo: IPlatformInfo | null = null;
 
 export const OnUserChanged = new TypedEvent<IUser | null>();
+gt.OnUserChanged = OnUserChanged;
+
 export const OnPlatformInfoChanged = new TypedEvent<IPlatformInfo | null>();
+gt.OnPlatformInfoChanged = OnPlatformInfoChanged;
+
 export const OnChatMessage = new TypedEvent<LocalChat[]>();
+gt.OnChatMessage = OnChatMessage;
+
 export const OnTradeChanged = new TypedEvent<IClientTrade[]>();
+gt.OnTradeChanged = OnTradeChanged;
+
 export const OnPlayerMapChanged = new TypedEvent<Map<string, IClientMapEntry>>();
+gt.OnPlayerMapChanged = OnPlayerMapChanged;
+
 export const OnPlayerMapMessage = new TypedEvent<IMapMessage>();
+gt.OnPlayerMapMessage = OnPlayerMapMessage;
+
 export const OnNewPendingClaims = new TypedEvent<void>();
+gt.OnNewPendingClaims = OnNewPendingClaims;
 
 export interface PlayGamesPlugin {
    requestServerSideAccess: (opt: { clientId: string }) => Promise<{ serverAuthToken: string }>;
@@ -84,8 +102,21 @@ const playerMap: Map<string, IClientMapEntry> = new Map();
 export function getPlayerMap() {
    return playerMap;
 }
+gt.getPlayerMap = getPlayerMap;
 
 let ws: WebSocket | null = null;
+
+// LMCBOOKMARK 2025-06-28 adding some exposers
+export function getChatMessages(): LocalChat[] {
+   return chatMessages;
+}
+gt.getChatMessages = getChatMessages;
+
+export function getWebSocket(): WebSocket | null {
+   return ws;
+}
+gt.getWebSocket = getWebSocket;
+
 
 export const client = rpcClient<ServerImpl>({
    request: (method: string, params: any[]) => {
@@ -100,19 +131,24 @@ export const client = rpcClient<ServerImpl>({
             method,
             params: removeTrailingUndefs(params),
          };
+         if (GLOBAL_PARAMS.WS_LOG_RPC_REQUESTS) {
+            console.log("[SendingRPCRequest]", JSON.stringify(request));
+         }
          ws.send(encode(request));
          rpcRequests[id] = { resolve, reject, time: Date.now() };
       });
    },
 });
+gt.client = client;
 
-function getServerAddress(): string {
+export function getServerAddress(): string {
    if (import.meta.env.DEV) {
       const url = new URLSearchParams(window.location.search);
       return url.get("server") ?? "ws://localhost:8000";
    }
    return "wss://de.cividle.com";
 }
+gt.getServerAddress = getServerAddress;
 
 export function getTrades(): IClientTrade[] {
    return Array.from(trades.values()).filter((trade) => {
@@ -122,6 +158,7 @@ export function getTrades(): IClientTrade[] {
       return false;
    });
 }
+gt.getTrades = getTrades;
 
 export const usePlayerMap = makeObservableHook(OnPlayerMapChanged, () => playerMap);
 export const useChatMessages = makeObservableHook(OnChatMessage, () => chatMessages);
@@ -132,10 +169,12 @@ export const usePlatformInfo = makeObservableHook(OnPlatformInfoChanged, getPlat
 export function getUser(): IUser | null {
    return user;
 }
+gt.getUser = getUser;
 
 export function getPlatformInfo(): IPlatformInfo | null {
    return platformInfo;
 }
+gt.getPlatformInfo = getPlatformInfo;
 
 export function isOnlineUser(): boolean {
    if (import.meta.env.DEV) {
@@ -143,10 +182,12 @@ export function isOnlineUser(): boolean {
    }
    return (user?.level ?? AccountLevel.Tribune) > AccountLevel.Tribune;
 }
+gt.isOnlineUser = isOnlineUser;
 
 export function getUserLevel(): AccountLevel {
    return user?.level ?? AccountLevel.Tribune;
 }
+gt.getUserLevel = getUserLevel;
 
 // TODO: Need to properly implement this after supporting offline run
 export function canEarnGreatPeopleFromReborn(): boolean {
@@ -157,18 +198,40 @@ export function canEarnGreatPeopleFromReborn(): boolean {
    }
    return true;
 }
+gt.canEarnGreatPeopleFromReborn = canEarnGreatPeopleFromReborn;
 
 let chatId = 0;
 
 export function addSystemMessage(message: string): void {
-   chatMessages.push({ id: ++chatId, message });
-   OnChatMessage.emit(chatMessages);
+   // make sure it never throws errors
+   try {
+      chatMessages.push({ id: ++chatId, message });
+      OnChatMessage.emit(chatMessages);
+   } catch (err) { }
 }
+gt.addSystemMessage = addSystemMessage;
 
 export function clearSystemMessages(): void {
-   chatMessages = chatMessages.filter((c) => "channel" in c);
+   // make sure it never throws errors
+   try {
+      chatMessages = chatMessages.filter((c) => "channel" in c);
+      OnChatMessage.emit(chatMessages);
+   } catch (err) { }
+}
+gt.clearSystemMessages = clearSystemMessages;
+
+export function pushChatMessage(chatMessage: IClientChat, vacuum = false): void {
+   // check if a message with same userHandle and time already exists
+   // @ts-expect-error
+   if (chatMessages.some((c) => c.userHandle === chatMessage.userHandle && c.time === chatMessage.time)) {
+      return;
+   }
+
+   chatMessages.push({ ...chatMessage, id: ++chatId });
+   if (vacuum) { chatMessages = vacuumChat(chatMessages); }
    OnChatMessage.emit(chatMessages);
 }
+gt.pushChatMessage = pushChatMessage;
 
 export const TileBuildings: Map<string, Building> = new Map();
 export const OnTileBuildingsChanged = new TypedEvent<void>();
@@ -199,6 +262,7 @@ export async function populateTileBuildings() {
 }
 
 export const CLIENT_ID = "CIVIDLE_CLIENT_ID";
+gt.CLIENT_ID = CLIENT_ID;
 
 let reconnect = 0;
 let requestId = 0;
@@ -230,7 +294,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          `gameId=${getGameState().id}`,
          `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
+      const wsTarget = `${getServerAddress()}/?${params.join("&")}`;
+      console.log("[ConnectWebSocket1]", wsTarget);
+      ws = new WebSocket(wsTarget);
    } else if (platform === "android") {
       const token = await PlayGames.requestServerSideAccess({
          clientId: GOOGLE_PLAY_GAMES_CLIENT_ID,
@@ -278,7 +344,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          `gameId=${getGameState().id}`,
          `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      ws = new WebSocket(`${getServerAddress()}/?${params.join("&")}`);
+      const wsTarget = `${getServerAddress()}/?${params.join("&")}`;
+      console.log("[ConnectWebSocket2]", wsTarget);
+      ws = new WebSocket(wsTarget);
    }
 
    if (!ws) {
@@ -299,6 +367,7 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
       switch (type) {
          case MessageType.Chat: {
             const c = message as IChatMessage;
+            console.log("[ChatMessageAsJson]", JSON.stringify(c));
             if (c.flush) {
                chatMessages = c.chat.map((c) => ({ ...c, id: ++chatId }));
             } else {
@@ -319,6 +388,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.Welcome: {
             const w = message as IWelcomeMessage;
+            if (GLOBAL_PARAMS.WS_LOG_WELCOME_MESSAGES) {
+               console.log("[WelcomeMessageAsJson]", JSON.stringify(w));
+            }
             user = w.user;
             const options = getGameOptions();
             if (!options.userId) {
@@ -344,10 +416,14 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
             setServerNow(w.now);
             w.offlineTime = Math.min(w.offlineTime, offlineTicks);
             resolve?.(w);
+            OnAfterWelcomeMessageProcessed.emit({});
             break;
          }
          case MessageType.Trade: {
             const tm = message as ITradeMessage;
+            if (GLOBAL_PARAMS.WS_LOG_TRADE_MESSAGES) {
+               console.log("[TradeMessageAsJson]", JSON.stringify(tm));
+            }
             if (tm.upsert) {
                tm.upsert.forEach((trade) => {
                   trades.set(trade.id, trade);
@@ -363,6 +439,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.Map: {
             const m = message as IMapMessage;
+            if (GLOBAL_PARAMS.WS_LOG_MAP_MESSAGES) {
+               console.log("[MapMessageAsJson]", JSON.stringify(m));
+            }
             OnPlayerMapMessage.emit(m);
             if (m.upsert) {
                forEach(m.upsert, (xy, entry) => {
@@ -379,6 +458,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.PendingClaim: {
             const r = message as IPendingClaimMessage;
+            if (GLOBAL_PARAMS.WS_LOG_PENDING_CLAIM_MESSAGES) {
+               console.log("[PendingClaimMessageAsJson]", JSON.stringify(r));
+            }
             if (user && r.claims[user.userId]) {
                if (getGameOptions().tradeFilledSound) {
                   playKaching();
@@ -390,6 +472,9 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
          }
          case MessageType.RPC: {
             const r = message as IRPCMessage;
+            if (GLOBAL_PARAMS.WS_LOG_RPC_MESSAGES) {
+               console.log("[RPCMessageAsJson]", JSON.stringify(r));
+            }
             handleRpcResponse(r.data);
             break;
          }
@@ -422,17 +507,20 @@ export async function connectWebSocket(): Promise<IWelcomeMessage> {
 
    return promise;
 }
+gt.connectWebSocket = connectWebSocket;
 
 export function disconnectWebSocket() {
    ws?.close(ServerWSErrorCode.Background);
    reconnect = 0;
 }
+gt.disconnectWebSocket = disconnectWebSocket;
 
 export function reconnectWebSocket() {
    if (!ws) {
       connectWebSocket().then(convertOfflineTimeToWarp);
    }
 }
+gt.reconnectWebSocket = reconnectWebSocket;
 
 function retryConnect() {
    setTimeout(reconnectWebSocket, Math.min(Math.pow(2, reconnect++) * SECOND, 16 * SECOND));

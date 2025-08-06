@@ -1,3 +1,4 @@
+import { lmcInitializeGameStateAtEnd, lmcInitializeGameStateAtStart } from "../lmc/LmcSavedGame";
 import { forEach, keysOf, pointToTile } from "../utilities/Helper";
 import { getServerNow } from "../utilities/ServerNow";
 import { applyBuildingDefaults, getRandomEmptyTiles } from "./BuildingLogic";
@@ -9,6 +10,8 @@ import { ensureTileFogOfWar, findNearest } from "./TerrainLogic";
 import { makeBuilding } from "./Tile";
 
 export function initializeGameState(gameState: GameState, options: GameOptions) {
+   lmcInitializeGameStateAtStart(gameState, options);
+
    const grid = getGrid(gameState);
    const center = grid.center();
    const centerXy = pointToTile(center);
@@ -109,4 +112,6 @@ export function initializeGameState(gameState: GameState, options: GameOptions) 
          });
       }
    });
+
+   lmcInitializeGameStateAtEnd(gameState, options);
 }

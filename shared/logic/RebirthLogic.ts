@@ -24,16 +24,20 @@ import type { GameOptions, GameState, GreatPeopleChoice, GreatPeopleChoiceV2 } f
 import { getGameOptions, getGameState } from "./GameStateLogic";
 import { Tick } from "./TickLogic";
 
+const gt = globalThis as any;
+
 ////////////////////////////////////////////////
 // These two functions needed to be kept in sync manually! If you modify any of them, please also change the
 // other one!
 export function getRebirthGreatPeopleCount(): number {
    return clamp(Math.floor(Math.cbrt(Tick.current.totalValue / 1e6) / 4), 0, Number.POSITIVE_INFINITY);
 }
+gt.getRebirthGreatPeopleCount = getRebirthGreatPeopleCount;
 
 export function getValueRequiredForGreatPeople(count: number): number {
    return Math.pow(4 * count, 3) * 1e6;
 }
+gt.getValueRequiredForGreatPeople = getValueRequiredForGreatPeople;
 ////////////////////////////////////////////////
 
 export function getGreatPersonThisRunLevel(amount: number): number {
@@ -43,6 +47,7 @@ export function getGreatPersonThisRunLevel(amount: number): number {
    }
    return Math.round(result * 100) / 100;
 }
+gt.getGreatPersonThisRunLevel = getGreatPersonThisRunLevel;
 
 export function getGreatPersonTotalEffect(
    gp: GreatPerson,
@@ -51,6 +56,7 @@ export function getGreatPersonTotalEffect(
 ): number {
    return getGreatPersonThisRunLevel(gs.greatPeople[gp] ?? 0) + (options.greatPeople[gp]?.level ?? 0);
 }
+gt.getGreatPersonTotalEffect = getGreatPersonTotalEffect;
 
 export function getProgressTowardsNextGreatPerson(): number {
    const greatPeopleCount = getRebirthGreatPeopleCount();
@@ -60,6 +66,7 @@ export function getProgressTowardsNextGreatPerson(): number {
       (getValueRequiredForGreatPeople(greatPeopleCount + 1) - previous);
    return progress;
 }
+gt.getProgressTowardsNextGreatPerson = getProgressTowardsNextGreatPerson;
 
 export function getGreatPersonUpgradeCost(gp: GreatPerson, targetLevel: number): number {
    if (gp === "Fibonacci") {
@@ -67,6 +74,7 @@ export function getGreatPersonUpgradeCost(gp: GreatPerson, targetLevel: number):
    }
    return Math.pow(2, targetLevel - 1);
 }
+gt.getGreatPersonUpgradeCost = getGreatPersonUpgradeCost;
 
 export function getTotalGreatPeopleUpgradeCost(gp: GreatPerson, targetLevel: number): number {
    let result = 0;
@@ -75,6 +83,7 @@ export function getTotalGreatPeopleUpgradeCost(gp: GreatPerson, targetLevel: num
    }
    return result;
 }
+gt.getTotalGreatPeopleUpgradeCost = getTotalGreatPeopleUpgradeCost;
 
 export function getUpgradeCostFib(n: number): number {
    let a = 0;
@@ -87,6 +96,7 @@ export function getUpgradeCostFib(n: number): number {
    }
    return a;
 }
+gt.getUpgradeCostFib = getUpgradeCostFib;
 
 export function getTribuneUpgradeMaxLevel(age: TechAge): number {
    switch (age) {
@@ -106,6 +116,7 @@ export function getTribuneUpgradeMaxLevel(age: TechAge): number {
          return 1;
    }
 }
+gt.getTribuneUpgradeMaxLevel = getTribuneUpgradeMaxLevel;
 
 export function makeGreatPeopleFromThisRunPermanent(): void {
    const gs = getGameState();
@@ -113,6 +124,7 @@ export function makeGreatPeopleFromThisRunPermanent(): void {
       addPermanentGreatPerson(k, v);
    });
 }
+gt.makeGreatPeopleFromThisRunPermanent = makeGreatPeopleFromThisRunPermanent;
 
 export function addPermanentGreatPerson(gp: GreatPerson, amount: number): void {
    const options = getGameOptions();
@@ -126,6 +138,7 @@ export function addPermanentGreatPerson(gp: GreatPerson, amount: number): void {
             : { level: 0, amount };
    }
 }
+gt.addPermanentGreatPerson = addPermanentGreatPerson;
 
 export function upgradeAllPermanentGreatPeople(options: GameOptions): void {
    forEach(options.greatPeople, (greatPerson, inventory) => {
@@ -136,6 +149,7 @@ export function upgradeAllPermanentGreatPeople(options: GameOptions): void {
       }
    });
 }
+gt.upgradeAllPermanentGreatPeople = upgradeAllPermanentGreatPeople;
 
 export function rollPermanentGreatPeople(
    totalAmount: number,
@@ -170,6 +184,7 @@ export function rollPermanentGreatPeople(
    }
    return result;
 }
+gt.rollPermanentGreatPeople = rollPermanentGreatPeople;
 
 export function rollGreatPeopleThisRun(
    ages: Set<TechAge>,
@@ -193,8 +208,10 @@ export function rollGreatPeopleThisRun(
    }
    return { choices, amount: 1 };
 }
+gt.rollGreatPeopleThisRun = rollGreatPeopleThisRun;
 
 export const DEFAULT_GREAT_PEOPLE_CHOICE_COUNT = 3;
+gt.DEFAULT_GREAT_PEOPLE_CHOICE_COUNT = DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
 
 export function getGreatPeopleChoiceCount(gs: GameState): number {
    const yct = Tick.current.specialBuildings.get("YellowCraneTower");
@@ -203,6 +220,7 @@ export function getGreatPeopleChoiceCount(gs: GameState): number {
    }
    return DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
 }
+gt.getGreatPeopleChoiceCount = getGreatPeopleChoiceCount;
 
 export function getPermanentGreatPeopleLevel(options: GameOptions): number {
    return reduceOf(
@@ -213,6 +231,7 @@ export function getPermanentGreatPeopleLevel(options: GameOptions): number {
       0,
    );
 }
+gt.getPermanentGreatPeopleLevel = getPermanentGreatPeopleLevel;
 
 export function getPermanentGreatPeopleCount(): number {
    return reduceOf(
@@ -227,10 +246,12 @@ export function getPermanentGreatPeopleCount(): number {
       0,
    );
 }
+gt.getPermanentGreatPeopleCount = getPermanentGreatPeopleCount;
 
 export function calculateEmpireValue(resource: Resource, amount: number): number {
    return NoPrice[resource] ? 0 : amount * (Config.ResourcePrice[resource] ?? 0);
 }
+gt.calculateEmpireValue = calculateEmpireValue;
 
 export function sortGreatPeople(a: GreatPerson, b: GreatPerson): number {
    const gpa = Config.GreatPerson[a];
@@ -241,17 +262,19 @@ export function sortGreatPeople(a: GreatPerson, b: GreatPerson): number {
    }
    return gpa.name().localeCompare(gpb.name());
 }
+gt.sortGreatPeople = sortGreatPeople;
 
-export function getFreeCityThisWeek(): City {
+export function getFreeCityThisWeek(offset: number = 0): City {
    const candidates: City[] = [];
    forEach(Config.City, (city, def) => {
       if (def.requireSupporterPack) {
          candidates.push(city);
       }
    });
-   const week = Math.floor(Date.now() / WEEK);
+   const week = Math.floor(Date.now() / WEEK) + offset;
    return candidates[week % candidates.length];
 }
+gt.getFreeCityThisWeek = getFreeCityThisWeek;
 
 export function isEligibleForWisdom(gp: GreatPerson): boolean {
    const def = Config.GreatPerson[gp];
@@ -260,6 +283,7 @@ export function isEligibleForWisdom(gp: GreatPerson): boolean {
    }
    return false;
 }
+gt.isEligibleForWisdom = isEligibleForWisdom;
 
 export function getGreatPeopleForWisdom(age: TechAge): GreatPerson[] {
    const result: GreatPerson[] = [];
@@ -270,6 +294,7 @@ export function getGreatPeopleForWisdom(age: TechAge): GreatPerson[] {
    });
    return result;
 }
+gt.getGreatPeopleForWisdom = getGreatPeopleForWisdom;
 
 export function getWisdomUpgradeCost(gp: GreatPerson): number {
    const def = Config.GreatPerson[gp];
@@ -277,6 +302,7 @@ export function getWisdomUpgradeCost(gp: GreatPerson): number {
    const targetLevel = 1 + (options.ageWisdom[def.age] ?? 0);
    return getTotalGreatPeopleUpgradeCost(gp, targetLevel);
 }
+gt.getWisdomUpgradeCost = getWisdomUpgradeCost;
 
 export function getTotalWisdomUpgradeCost(gp: GreatPerson): number {
    const def = Config.GreatPerson[gp];
@@ -290,6 +316,7 @@ export function getTotalWisdomUpgradeCost(gp: GreatPerson): number {
    }
    return result;
 }
+gt.getTotalWisdomUpgradeCost = getTotalWisdomUpgradeCost;
 
 export function getMissingGreatPeopleForWisdom(age: TechAge): Map<GreatPerson, number> {
    const options = getGameOptions();
@@ -304,6 +331,7 @@ export function getMissingGreatPeopleForWisdom(age: TechAge): Map<GreatPerson, n
    });
    return result;
 }
+gt.getMissingGreatPeopleForWisdom = getMissingGreatPeopleForWisdom;
 
 export function getEligibleRank(user: IUser): AccountLevel {
    if (user.level <= AccountLevel.Tribune) {
@@ -331,3 +359,4 @@ export function getEligibleRank(user: IUser): AccountLevel {
 
    return level;
 }
+gt.getEligibleRank = getEligibleRank;

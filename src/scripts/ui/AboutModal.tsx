@@ -1,3 +1,4 @@
+import { lilModCli } from "../../../shared/lmc/LilModCli";
 import { BACKUP_RECOVERY_URL } from "../../../shared/logic/Constants";
 import { L, t } from "../../../shared/utilities/i18n";
 import logo from "../../images/icon.png";
@@ -22,6 +23,7 @@ export function AboutModal(): React.ReactNode {
                <div className="f1">
                   <div className="text-strong">{t(L.CivIdle)}</div>
                   <div>{getFullVersion()}</div>
+                  <div>Lilianne's mod {lilModCli.getVersionDesc()}</div>
                   <div>{t(L.CivIdleInfo)}</div>
                   {L.CurrentLanguage === "English" ? null : (
                      <div>
