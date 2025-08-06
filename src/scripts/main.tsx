@@ -119,13 +119,13 @@ export async function loadBundle() {
             },
             f.family === Fonts.Cabin
                ? {
-                  dropShadow: true,
-                  dropShadowAlpha: 0.75,
-                  dropShadowColor: "#000000",
-                  dropShadowAngle: Math.PI / 6,
-                  dropShadowBlur: 0,
-                  dropShadowDistance: 3,
-               }
+                    dropShadow: true,
+                    dropShadowAlpha: 0.75,
+                    dropShadowColor: "#000000",
+                    dropShadowAngle: Math.PI / 6,
+                    dropShadowBlur: 0,
+                    dropShadowDistance: 3,
+                 }
                : {},
          ),
          { chars: BitmapFont.ASCII, resolution: 2, padding: 8 },

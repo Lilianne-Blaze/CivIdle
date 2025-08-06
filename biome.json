@@ -14,15 +14,14 @@
             "noDelete": "warn"
          },
          "suspicious": {
-            "noExplicitAny": "off",
+            "noExplicitAny": "warn",
             "noArrayIndexKey": "warn"
          },
          "style": {
             "useSelfClosingElements": "off",
             "noNonNullAssertion": "warn",
             "useExponentiationOperator": "warn",
-            "noParameterAssign": "warn",
-            "noUselessElse": "off"
+            "noParameterAssign": "warn"
          },
          "complexity": {
             "noForEach": "off"

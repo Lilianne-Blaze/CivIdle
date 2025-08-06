@@ -377,17 +377,18 @@ if (import.meta.env.DEV) {
    };
 
    // @ts-expect-error
-   window.heartbeat = () => {
-      Singleton().heartbeat.update(serializeSaveLite());
-   };
-
-   // @ts-expect-error
    window.tickGameState = (tick: number) => {
       const gs = getGameState();
       for (let i = 0; i < tick; i++) {
          tickEverySecond(gs, true);
       }
    };
+
+   // @ts-expect-error
+   window.clientHeartbeat = () => {
+      clientHeartbeat();
+   };
+
    // @ts-expect-error
    window.benchmarkTick = (tick: number) => {
       console.time(`TickGameState(${tick})`);

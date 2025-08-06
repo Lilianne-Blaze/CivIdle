@@ -21,7 +21,12 @@ import {
 } from "../../../shared/logic/BuildingLogic";
 import { MANAGED_IMPORT_RANGE } from "../../../shared/logic/Constants";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
-import { DarkTileTextures, type GameOptions, type GameState } from "../../../shared/logic/GameState";
+import {
+   DarkTileTextures,
+   getTextColor,
+   type GameOptions,
+   type GameState,
+} from "../../../shared/logic/GameState";
 import { getGameOptions, getGameState, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
 import { getGrid } from "../../../shared/logic/IntraTickCache";
 import {
@@ -116,7 +121,7 @@ export class WorldScene extends Scene {
                new BitmapText("", {
                   fontName: Fonts.Cabin,
                   fontSize: 14,
-                  tint: 0xffffff,
+                  tint: getTextColor(),
                }),
             );
             visual.anchor.set(0.5, 0.5);
