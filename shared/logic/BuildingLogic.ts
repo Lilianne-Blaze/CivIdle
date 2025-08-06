@@ -897,7 +897,7 @@ export function getPowerRequired(building: IBuildingData): number {
    if (building.electrification <= 0) {
       return 0;
    }
-   return Math.round(Math.pow(2, building.electrification - 1) * 100);
+   return Math.round(Math.pow(4, building.electrification));
 }
 
 export function getElectrificationBoost(building: IBuildingData, gs: GameState): number {
@@ -1279,16 +1279,20 @@ export function isFestival(building: Building, gs: GameState): boolean {
 export function getCathedralOfBrasiliaResources(
    xy: Tile,
    gs: GameState,
-): { input: Set<Resource>; output: Set<Resource>; unused: number } {
+): { buildings: Set<Building>; input: Set<Resource>; output: Set<Resource>; unused: number } {
    const buildings = new Set<Building>();
-   for (const point of getGrid(gs).getRange(tileToPoint(xy), 2)) {
+
+   const grid = getGrid(gs);
+   for (const point of grid.getRange(tileToPoint(xy), 2)) {
       const t = pointToTile(point);
       const building = gs.tiles.get(t)?.building;
       if (
          building &&
          t !== xy &&
          building.status === "completed" &&
-         !Tick.current.notProducingReasons.has(t)
+         !Tick.current.notProducingReasons.has(t) &&
+         (sizeOf(Config.Building[building.type].input) > 0 ||
+            sizeOf(Config.Building[building.type].output) > 0)
       ) {
          buildings.add(building.type);
       }
@@ -1315,5 +1319,5 @@ export function getCathedralOfBrasiliaResources(
       }
    }
 
-   return { input: inputResources, output: outputResources, unused: unusedResources };
+   return { buildings, input: inputResources, output: outputResources, unused: unusedResources };
 }
