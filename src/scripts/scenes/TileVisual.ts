@@ -3,7 +3,12 @@ import type { IDestroyOptions, IPointData } from "pixi.js";
 import { BitmapText, Container, Rectangle, Sprite } from "pixi.js";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
 import { getBuildingLevelLabel, getBuildingPercentage } from "../../../shared/logic/BuildingLogic";
-import { DarkTileTextures, type GameOptions, type GameState } from "../../../shared/logic/GameState";
+import {
+   DarkTileTextures,
+   getTextColor,
+   type GameOptions,
+   type GameState,
+} from "../../../shared/logic/GameState";
 import { getGameOptions, getGameState } from "../../../shared/logic/GameStateLogic";
 import { getGrid } from "../../../shared/logic/IntraTickCache";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
@@ -171,7 +176,7 @@ export class TileVisual extends Container {
       this._level.cullable = true;
 
       this._bottomText = this.addChild(
-         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: this.getTextColor(), align: "center" }),
+         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: getTextColor(), align: "center" }),
       );
       this._bottomText.anchor.set(0.5, 0.5);
       this._bottomText.position.set(0, 35);
@@ -204,10 +209,6 @@ export class TileVisual extends Container {
       return rect.intersects(this._aabb);
    }
 
-   public getTextColor(): number {
-      return DarkTileTextures[getGameOptions().tileTexture] ? 0xffffff : 0x666666;
-   }
-
    public getTextFont(): string {
       return DarkTileTextures[getGameOptions().tileTexture] ? Fonts.Cabin : `${Fonts.Cabin}NoShadow`;
    }
@@ -224,7 +225,8 @@ export class TileVisual extends Container {
 
    public updateDepositColor(options: GameOptions) {
       this._deposits.forEach((sprite, deposit) => {
-         sprite.tint = getColorCached(options.resourceColors[deposit] ?? "#ffffff");
+         const color = options.resourceColors[deposit];
+         sprite.tint = color ? getColorCached(color) : getTextColor();
       });
       const texture = getTexture(`Misc_${options.tileTexture}`, this._world.context.textures);
       if (this._bg.texture !== texture) {
@@ -319,9 +321,9 @@ export class TileVisual extends Container {
          if (!mapBetterStatusIcons) { this._notProducing.tint = c; }
          this._spinner.tint = c;
       } else {
-         this._building.tint = 0xffffff;
-         if (!mapBetterStatusIcons) { this._notProducing.tint = 0xffffff; }
-         this._spinner.tint = 0xffffff;
+         this._building.tint = getTextColor();
+         if (!mapBetterStatusIcons) { this._notProducing.tint = getTextColor(); }
+         this._spinner.tint = getTextColor();
       }
       if (this._tile.building.status !== "completed") {
          return;
