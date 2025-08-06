@@ -1,15 +1,7 @@
-import { BuildingDefinitions, type Building } from "../definitions/BuildingDefinitions";
+import type { Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
-import { lilModCli, lilModOption } from "../lmc/LilModCli";
-import { POTATO_TRANSPORTS1_DIVIDER } from "../lmc/LmcConstsEarly";
-import { OnCheckMarketTrade } from "../lmc/LmcEvents";
-import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
-import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
-import { getSeenResourcesTable } from "../lmc/LmcScriptsShared";
-import { decayBuildingResources } from "../lmc/LmcUpdateUtils";
-import { shuffleObjectProps } from "../lmc/MiscFuncs";
 import type { AccountLevel } from "../utilities/Database";
 import type { Grid } from "../utilities/Grid";
 import {
@@ -96,11 +88,13 @@ import {
    MarketOptions,
    ResourceImportOptions,
    SuspendedInput,
+   SwissBankFlags,
    WarehouseOptions,
    type IBuildingData,
    type ICloneBuildingData,
    type IMarketBuildingData,
    type IResourceImportBuildingData,
+   type ISwissBankBuildingData,
    type ITileData,
    type IWarehouseBuildingData,
 } from "./Tile";
@@ -949,6 +943,13 @@ export function transportResource(
          !Config.Building[sourceBuilding.type].output[res]
       ) {
          continue;
+      }
+
+      if (sourceBuilding.type === "SwissBank") {
+         const swissBank = sourceBuilding as ISwissBankBuildingData;
+         if (hasFlag(swissBank.flags, SwissBankFlags.NoExport)) {
+            continue;
+         }
       }
 
       const maxDistance = getMaxInputDistance(targetBuilding, gs);

@@ -14,7 +14,6 @@ import {
    getGameOptions,
    getGameState,
    notifyGameStateUpdate,
-   replacer,
    savedGame,
    serializeSave,
    serializeSaveLite,
@@ -52,6 +51,7 @@ import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShare
 import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
 
 const gt = globalThis as any;
+import { clientHeartbeat } from "./logic/Heartbeat";
 
 export async function resetToCity(city: City): Promise<void> {
    savedGame.current = new GameState();
@@ -95,14 +95,12 @@ export function syncUITheme(gameOptions: GameOptions): void {
    }
    OnUIThemeChanged.emit(getGameOptions().useModernUI);
 }
-gt.syncUITheme = syncUITheme;
 
 export function syncSidePanelWidth(app: Application, options: GameOptions): void {
    const width = isAndroid() || isIOS() ? options.sidePanelWidthMobile : options.sidePanelWidth;
    document.documentElement.style.setProperty("--game-ui-width", `${width / 10}rem`);
    app.resize();
 }
-gt.syncSidePanelWidth = syncSidePanelWidth;
 
 export function syncFontSizeScale(app: Application, options: GameOptions): void {
    if (!options.useModernUI) {
@@ -113,10 +111,8 @@ export function syncFontSizeScale(app: Application, options: GameOptions): void 
    document.documentElement.style.setProperty("--base-font-size", `${scale * 62.5}%`);
    app.resize();
 }
-gt.syncFontSizeScale = syncFontSizeScale;
 
 const SAVE_KEY = "CivIdle";
-gt.SAVE_KEY = SAVE_KEY;
 
 interface ISaveGameTask {
    resolve: () => void;
@@ -143,7 +139,6 @@ export async function saveGame(): Promise<void> {
 
    return promise;
 }
-gt.saveGame = saveGame;
 
 export async function doSaveGame(task: ISaveGameTask): Promise<void> {
    try {
@@ -188,7 +183,6 @@ export async function doSaveGame(task: ISaveGameTask): Promise<void> {
       }
    }
 }
-gt.doSaveGame = doSaveGame;
 
 export async function hardReset(): Promise<void> {
    if (isSteam()) {
@@ -203,12 +197,10 @@ export async function hardReset(): Promise<void> {
 export async function compressSave(gs: SavedGame = savedGame): Promise<Uint8Array> {
    return await compress(new TextEncoder().encode(serializeSave(gs)));
 }
-gt.compressSave = compressSave;
 
 export async function decompressSave(data: Uint8Array): Promise<SavedGame> {
    return deserializeSave(new TextDecoder().decode(await decompress(data)));
 }
-gt.decompressSave = decompressSave;
 
 export async function loadGame(): Promise<SavedGame | null> {
    try {
@@ -236,7 +228,6 @@ export async function loadGame(): Promise<SavedGame | null> {
       console.timeEnd("Loading Save file");
    }
 }
-gt.loadGame = loadGame;
 
 export function isGameDataCompatible(gs: SavedGame): boolean {
    if (savedGame.options.version !== gs.options.version) {
@@ -248,13 +239,11 @@ export function isGameDataCompatible(gs: SavedGame): boolean {
    Object.assign(savedGame.options, gs.options);
    return true;
 }
-gt.isGameDataCompatible = isGameDataCompatible;
 
 export const useGameState = makeObservableHook(GameStateChanged, getGameState);
 gt.useGameState = useGameState;
 
 export const useGameOptions = makeObservableHook(GameOptionsChanged, getGameOptions);
-gt.useGameOptions = useGameOptions;
 
 let floatingMode = false;
 export const FloatingModeChanged = new TypedEvent<boolean>();
@@ -264,37 +253,30 @@ FloatingModeChanged.on((mode) => {
 gt.FloatingModeChanged = FloatingModeChanged;
 
 export const useFloatingMode = makeObservableHook(FloatingModeChanged, () => floatingMode);
-gt.useFloatingMode = useFloatingMode;
 
 export function getProductionPriority(v: number): number {
    return v & 0x0000ff;
 }
-gt.getProductionPriority = getProductionPriority;
 
 function setProductionPriority(priority: number, v: number): number {
    return (priority & 0xffff00) | (v & 0xff);
 }
-gt.setProductionPriority = setProductionPriority;
 
 export function getConstructionPriority(v: number): number {
    return (v & 0x00ff00) >> 8;
 }
-gt.getConstructionPriority = getConstructionPriority;
 
 function setConstructionPriority(priority: number, v: number): number {
    return (priority & 0xff00ff) | ((v & 0xff) << 8);
 }
-gt.setConstructionPriority = setConstructionPriority;
 
 function getUpgradePriority(v: number): number {
    return (v & 0xff0000) >> 16;
 }
-gt.getUpgradePriority = getUpgradePriority;
 
 function setUpgradePriority(priority: number, v: number): number {
    return (priority & 0x00ffff) | ((v & 0xff) << 16);
 }
-gt.setUpgradePriority = setUpgradePriority;
 
 if (import.meta.env.DEV) {
    // @ts-expect-error

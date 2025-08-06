@@ -28,8 +28,11 @@ import { getColorCached } from "../utilities/CachedColor";
 import { Scene, destroyAllChildren, type ISceneContext } from "../utilities/SceneManager";
 import { Singleton } from "../utilities/Singleton";
 import { Fonts } from "../visuals/Fonts";
+import { Easing } from "../utilities/pixi-actions/Easing";
+import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { findPath, getOwnedTradeTile } from "./PathFinder";
-import { OnWorldTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
+import { PlayerTile } from "./PlayerTile";
+import { type TileSelectedEvent, OnWorldTileSelected } from "../../../shared/lmc/LmcEvents";
 import { getGameState } from "../../../shared/logic/GameStateLogic";
 import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
@@ -45,7 +48,7 @@ export class PlayerMapScene extends Scene {
    private _width: number;
    private _height: number;
    private _selectedGraphics: SmoothGraphics;
-   private _tiles = new Map<string, Container>();
+   private _tiles = new Map<string, PlayerTile>();
    private _listeners: Disposable[] = [];
    private _path: Container;
    private _idToTradeCount = new Map<string, number>();
@@ -189,7 +192,7 @@ export class PlayerMapScene extends Scene {
             building.tint = 0xffffff;
 
             // LMCBOOKMARK work in progress
-            building.alpha = 0.4;
+            building.alpha = 0.2;
             if (b == "Condo" || b == "Apartment" || b == "Pizzeria") {
                building.tint = 0xffff00; // yellow
                building.alpha = 0.8;
@@ -206,8 +209,9 @@ export class PlayerMapScene extends Scene {
 
          }
       });
-      getPlayerMap().forEach((entry, xy) => {
-         this.addOrReplaceTile(xy, entry);
+      this._tiles.forEach((tile, xy) => {
+         const b = TileBuildings.get(xy);
+         tile.setBuildingTexture(b ? getTexture(`Building_${b}`, this.context.textures) : Texture.EMPTY);
       });
    }
 

@@ -122,12 +122,14 @@ export class TileVisual extends Container {
       this._construction.position.set(-25, -5);
       this._construction.anchor.set(0, 1);
       this._construction.scale.set(0.5);
+      this._construction.tint = getTextColor();
       this._construction.visible = false;
 
       this._notProducing = this.addChild(new Sprite());
       this._notProducing.position.set(-20, -20);
       this._notProducing.anchor.set(0.5, 0.5);
       this._notProducing.scale.set(0.5);
+      this._notProducing.tint = getTextColor();
       this._notProducing.visible = false;
 
       this._constructionAnimation = Actions.repeat(
@@ -142,6 +144,7 @@ export class TileVisual extends Container {
       this._upgrade.anchor.set(0, 1);
       this._upgrade.scale.set(0.5);
       this._upgrade.alpha = 0;
+      this._upgrade.tint = getTextColor();
       this._upgrade.visible = false;
 
       this._upgradeAnimation = Actions.repeat(
@@ -159,7 +162,7 @@ export class TileVisual extends Container {
          new BitmapText("", {
             fontName: this.getTextFont(),
             fontSize: 16,
-            tint: this.getTextColor(),
+            tint: getTextColor(),
          }),
       );
       this._level.anchor.set(0.5, 0.5);
@@ -228,7 +231,7 @@ export class TileVisual extends Container {
          this._bg.texture = texture;
       }
       const font = this.getTextFont();
-      const color = this.getTextColor();
+      const color = getTextColor();
 
       if (this._level.fontName !== font) {
          this._level.fontName = font;
@@ -261,7 +264,7 @@ export class TileVisual extends Container {
    public flushFloater(speed: number): void {
       if (this._floaterValue <= 0 || !this.isInViewport()) return;
       const t = this._world.tooltipPool.allocate();
-      t.tint = this.getTextColor();
+      t.tint = getTextColor();
       t.fontName = this.getTextFont();
       t.text = `+${formatNumber(this._floaterValue)}`;
       this._floaterValue = 0;

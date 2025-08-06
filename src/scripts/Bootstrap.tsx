@@ -11,7 +11,6 @@ import {
    getGameState,
    notifyGameOptionsUpdate,
    notifyGameStateUpdate,
-   serializeSaveLite,
 } from "../../shared/logic/GameStateLogic";
 import { initializeGameState } from "../../shared/logic/InitializeGameState";
 import type { IWelcomeMessage } from "../../shared/utilities/Database";
@@ -122,7 +121,6 @@ export async function startGame(
       sceneManager: new SceneManager(context),
       routeTo,
       ticker: new GameTicker(app.ticker, gameState),
-      heartbeat: new Heartbeat(serializeSaveLite()),
       textures,
    });
    setCityOverride(gameState);
@@ -190,8 +188,6 @@ export async function startGame(
       showModal(<ChooseGreatPersonModal permanent={true} />);
    }
 
-   Singleton().heartbeat.init();
-
    // We tick first before loading scene, making sure city-specific overrides are applied!
    tickEverySecond(gameState, false);
 
@@ -224,6 +220,7 @@ export async function startGame(
    notifyGameStateUpdate();
    notifyGameOptionsUpdate();
    Singleton().ticker.start();
+   clientHeartbeat();
 }
 
 // This method is called after server time is synced!

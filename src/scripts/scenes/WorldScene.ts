@@ -499,8 +499,9 @@ export class WorldScene extends Scene {
             return;
          }
          lines[key] = true;
+         const color = getGameOptions().resourceColors[t.resource];
          this._transportLines.lineStyle({
-            color: getColorCached(getGameOptions().resourceColors[t.resource] ?? "#ffffff"),
+            color: color ? getColorCached(color) : getTextColor(),
             width: 2,
             cap: LINE_CAP.ROUND,
             join: LINE_JOIN.ROUND,
@@ -568,7 +569,8 @@ export class WorldScene extends Scene {
          if (!visual) {
             visual = this._transportPool.allocate();
             visual.position = t.fromPosition;
-            visual.tint = getColorCached(options.resourceColors[t.resource] ?? "#ffffff");
+            const color = options.resourceColors[t.resource];
+            visual.tint = color ? getColorCached(color) : getTextColor();
             lookAt(visual, t.toPosition);
             this._transport.set(t.id, visual);
          }

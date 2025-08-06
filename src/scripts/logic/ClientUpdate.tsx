@@ -44,6 +44,7 @@ import { hasOpenModal, showModal, showToast } from "../ui/GlobalModal";
 import { makeObservableHook } from "../utilities/Hook";
 import { Singleton } from "../utilities/Singleton";
 import { playAgeUp, playDing, playLevelUp } from "../visuals/Sound";
+import { clientHeartbeat } from "./Heartbeat";
 import { onBuildingComplete } from "./OnBuildingComplete";
 import { onBuildingOrUpgradeComplete } from "./OnBuildingOrUpgradeComplete";
 import { onProductionComplete } from "./OnProductionComplete";
@@ -270,7 +271,7 @@ function postTickTiles(gs: GameState, offline: boolean) {
          saveGame().catch(console.error);
       }
       if (gs.tick % (heartbeatFreq * speed) === 0) {
-         Singleton().heartbeat.update(serializeSaveLite());
+         clientHeartbeat();
          client.queryRankUp().then((newRank) => {
             const user = getUser();
             if (user && newRank > user.level) {
