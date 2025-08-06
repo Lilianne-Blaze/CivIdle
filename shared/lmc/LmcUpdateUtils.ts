@@ -43,8 +43,8 @@ export function decayBuildingResources(xy: Tile, building: IBuildingData, gs: Ga
                const newAmount = (amount < -1000) ? (amount * GLOBAL_PARAMS.FIXES_DECAY_BUILDING_PERCENTAGE) : 0;
                building.resources[res] = newAmount;
             } else if (amount > 0) {
-               const newAmount = amount * GLOBAL_PARAMS.FIXES_DECAY_BUILDING_PERCENTAGE;
-               building.resources[res] = newAmount;
+               //const newAmount = amount * GLOBAL_PARAMS.FIXES_DECAY_BUILDING_PERCENTAGE;
+               //building.resources[res] = newAmount;
             }
          }
       }
@@ -52,8 +52,8 @@ export function decayBuildingResources(xy: Tile, building: IBuildingData, gs: Ga
       for (const res of resKeys) {
          const amount = building.resources[res];
          if (amount != null && amount > 0) {
-            const newAmount = amount * GLOBAL_PARAMS.FIXES_DECAY_BUILDING_PERCENTAGE;
-            building.resources[res] = newAmount;
+            //const newAmount = amount * GLOBAL_PARAMS.FIXES_DECAY_BUILDING_PERCENTAGE;
+            //building.resources[res] = newAmount;
          }
       }
    }

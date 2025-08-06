@@ -8,7 +8,6 @@ import { addSystemMessageSafe } from "./LmcScriptsShared";
 import { OnAtEndOfClearIntraTickCache, OnCheckMarketTrade } from "./LmcEvents";
 import type { GameState } from "../logic/GameState";
 import { atMostOncePerXSecs, ifZeroishThen } from "./MiscFuncs";
-import { clear } from "console";
 import { getGameState } from "../logic/GameStateLogic";
 import { getBuildingCost, isWorldWonder } from "../logic/BuildingLogic";
 import { getXyBuildings } from "../logic/IntraTickCache";
@@ -114,6 +113,20 @@ function initMarketTradesCache() {
       Number.MAX_SAFE_INTEGER,
    );
 
+   const manageRoverMats = lilModCli.isOption("marketsManageRoverMats");
+   const minRoverMats = ifZeroishThen(lilModCli.getOption("marketsDontSellRoverMatsIfBelow"), 0);
+   const maxRoverMats = ifZeroishThen(
+      lilModCli.getOption("marketsDontBuyRoverMatsIfAbove"),
+      Number.MAX_SAFE_INTEGER,
+   );
+
+   const manageBitcoinMats = lilModCli.isOption("marketsManageBitcoinMats");
+   const minBitcoinMats = ifZeroishThen(lilModCli.getOption("marketsDontSellBitcoinMatsIfBelow"), 0);
+   const maxBitcoinMats = ifZeroishThen(
+      lilModCli.getOption("marketsDontBuyBitcoinMatsIfAbove"),
+      Number.MAX_SAFE_INTEGER,
+   );
+
    const manageOthers = lilModCli.isOption("marketsManageOthers");
    const minOthers = ifZeroishThen(lilModCli.getOption("marketsDontSellOthersIfBelow"), 0);
    const maxOthers = ifZeroishThen(
@@ -169,6 +182,24 @@ function initMarketTradesCache() {
             lmcMarketsCache.dontBuy[res] = true;
          }
          // @ts-expect-error
+      } else if (manageBitcoinMats && ResourceIsBitcoinMat[res]) {
+         const amount = Tick.current.resourceAmount.get(res);
+         if ((amount ?? 0) < minBitcoinMats) {
+            lmcMarketsCache.dontSell[res] = true;
+         }
+         if ((amount ?? 0) > maxBitcoinMats) {
+            lmcMarketsCache.dontBuy[res] = true;
+         }
+         // @ts-expect-error
+      } else if (manageRoverMats && ResourceIsRoverMat[res]) {
+         const amount = Tick.current.resourceAmount.get(res);
+         if ((amount ?? 0) < minRoverMats) {
+            lmcMarketsCache.dontSell[res] = true;
+         }
+         if ((amount ?? 0) > maxRoverMats) {
+            lmcMarketsCache.dontBuy[res] = true;
+         }
+         // @ts-expect-error   
       } else if (manageUltimates && ResourceIsUltimate[res]) {
          // process ultimates before currencies, so if both are enabled Bitcoins will be processed as ultimates
          const amount = Tick.current.resourceAmount.get(res);

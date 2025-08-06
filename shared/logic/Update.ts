@@ -1,4 +1,4 @@
-import type { Building } from "../definitions/BuildingDefinitions";
+import { BuildingDefinitions, type Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
@@ -975,6 +975,14 @@ export function transportResource(
       // } else if (toBuildingType === "Market") {
       //    transportCapacity = transportCapacity * GLOBAL_PARAMS.MARKETS_TRANSPORT_CAPACITY_MULTI;
       // }
+
+      if (fromBuildingType === "SwissBank") {
+         if (lilModCli.isOption(lilModOption.swissBankExportsToCaravansOnly)) {
+            if (toBuildingType !== "Caravansary") {
+               continue;
+            }
+         }
+      }
 
       if (fromBuildingType === "Warehouse" || toBuildingType === "Warehouse") {
          if (gs.unlockedUpgrades.Liberalism3) {

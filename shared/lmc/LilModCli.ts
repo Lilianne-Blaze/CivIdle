@@ -81,6 +81,9 @@ export const lilModOption = {
 
    optoutCompetitive: "optoutCompetitive",
 
+   // 2025-08-04
+   swissBankExportsToCaravansOnly: "swissBankExportsToCaravansOnly",
+
 
 };
 gt.lilModOption = lilModOption;
@@ -236,6 +239,8 @@ export const lilModCli = {
 
 
       test: "Test.",
+
+      swissBankExportsToCaravansOnly: false,
    },
 
    isOption(optionName: string): boolean {

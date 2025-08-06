@@ -240,15 +240,53 @@ export function LmcTradeOptionPage(): React.ReactNode {
                      notifyGameOptionsUpdate(options);
                   }}
                />
-
                <LmcAmountOptionRowComponent
                   optionName="marketsDontSellUltimatesIfBelow"
                   label="Don't sell ultimates if amount is below"
                />
-
                <LmcAmountOptionRowComponent
                   optionName="marketsDontBuyUltimatesIfAbove"
                   label="Don't buy ultimates if amount is above"
+               />
+
+
+               <ToggleComponent
+                  title="Manage Planetary Rover materials"
+                  contentHTML=""
+                  value={lilModCli.isOption("marketsManageRoverMats")}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption("marketsManageRoverMats");
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontSellRoverMatsIfBelow"
+                  label="Don't sell Rover materials if amount is below"
+               />
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontBuyRoverMatsIfAbove"
+                  label="Don't buy Rover materials if amount is above"
+               />
+
+
+               <ToggleComponent
+                  title="Manage Bitcoin materials"
+                  contentHTML=""
+                  value={lilModCli.isOption("marketsManageBitcoinMats")}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption("marketsManageBitcoinMats");
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontSellBitcoinMatsIfBelow"
+                  label="Don't sell Bitcoin materials if amount is below"
+               />
+               <LmcAmountOptionRowComponent
+                  optionName="marketsDontBuyBitcoinMatsIfAbove"
+                  label="Don't buy Bitcoin materials if amount is above"
                />
 
 
@@ -273,6 +311,24 @@ export function LmcTradeOptionPage(): React.ReactNode {
                   label="Don't buy other goods if amount is above"
                />
             </fieldset>
+
+            <fieldset>
+
+               <legend>Swiss Bank</legend>
+
+               <ToggleComponent
+                  title="Export Koti to Caravansaries only"
+                  contentHTML="Useful if you want to use Koti for trading, but you want WHs to pull it from Caravansaries only, not Swiss Bank itself."
+                  value={lilModCli.isOption(lilModOption.swissBankExportsToCaravansOnly)}
+                  onValueChange={(value) => {
+                     playClick();
+                     lilModCli.toggleOption(lilModOption.swissBankExportsToCaravansOnly);
+                     notifyGameOptionsUpdate(options);
+                  }}
+               />
+
+            </fieldset>
+
          </div>
       </div>
    );
