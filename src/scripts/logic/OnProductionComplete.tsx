@@ -1,11 +1,11 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
-import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
 import {
    forEachMultiplier,
    generateScienceFromFaith,
    getBuildingCost,
    getCathedralOfBrasiliaResources,
+   getElectrificationBoost,
    getGreatWallRange,
    getMaxWarpStorage,
    getScienceFromWorkers,
@@ -84,7 +84,6 @@ import {
    pointToTile,
    round,
    safeAdd,
-   sizeOf,
    tileToPoint,
    type Tile,
 } from "../../../shared/utilities/Helper";
@@ -487,7 +486,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             const def = Config.GreatPerson[gp];
             if (def.age === "ClassicalAge") {
                if (inv.level > 0) {
-                  def.tick(def, 1, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
+                  def.tick(gp, 1, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
                }
             }
          });
@@ -674,7 +673,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("Hatshepsut", gs);
          if (total > 0) {
             Config.GreatPerson.Hatshepsut.tick(
-               Config.GreatPerson.Hatshepsut,
+               "Hatshepsut",
                total,
                `${buildingName}: ${Config.GreatPerson.Hatshepsut.name()}`,
                GreatPersonTickFlag.None,
@@ -831,7 +830,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("Confucius", gs);
          if (total > 0) {
             Config.GreatPerson.Confucius.tick(
-               Config.GreatPerson.Confucius,
+               "Confucius",
                total,
                `${buildingName}: ${Config.GreatPerson.Confucius.name()}`,
                GreatPersonTickFlag.None,
@@ -907,7 +906,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("ZhengHe", gs);
          if (total > 0) {
             Config.GreatPerson.ZhengHe.tick(
-               Config.GreatPerson.ZhengHe,
+               "ZhengHe",
                total,
                `${buildingName}: ${Config.GreatPerson.ZhengHe.name()}`,
                GreatPersonTickFlag.None,
@@ -921,7 +920,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             forEach(gs.greatPeople, (gp, level) => {
                if (level > 0) {
                   const def = Config.GreatPerson[gp];
-                  def.tick(def, 1, `${t(L.Festival)}: ${def.name()}`, GreatPersonTickFlag.Unstable);
+                  def.tick(gp, 1, `${t(L.Festival)}: ${def.name()}`, GreatPersonTickFlag.Unstable);
                }
             });
          }
@@ -1058,7 +1057,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             const def = Config.GreatPerson[gp];
             const total = getGreatPersonTotalEffect(gp, gs, options);
             if (total > 0) {
-               def.tick(def, total, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
+               def.tick(gp, total, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
             }
          });
          break;
@@ -1124,7 +1123,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("JohnDRockefeller", gs, options);
          if (total > 0) {
             Config.GreatPerson.JohnDRockefeller.tick(
-               Config.GreatPerson.JohnDRockefeller,
+               "JohnDRockefeller",
                total,
                `${buildingName}: ${Config.GreatPerson.JohnDRockefeller.name()}`,
                GreatPersonTickFlag.None,
@@ -1142,7 +1141,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("JPMorgan", gs, options);
          if (total > 0) {
             Config.GreatPerson.JPMorgan.tick(
-               Config.GreatPerson.JPMorgan,
+               "JPMorgan",
                total,
                `${buildingName}: ${Config.GreatPerson.JPMorgan.name()}`,
                GreatPersonTickFlag.None,
@@ -1171,7 +1170,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
       }
       case "ProphetsMosque": {
          Config.GreatPerson.HarunAlRashid.tick(
-            Config.GreatPerson.HarunAlRashid,
+            "HarunAlRashid",
             getGreatPersonTotalEffect("HarunAlRashid", gs, options),
             `${buildingName}: ${Config.GreatPerson.HarunAlRashid.name()}`,
             GreatPersonTickFlag.None,
@@ -1266,7 +1265,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const total = getGreatPersonTotalEffect("NebuchadnezzarII", gs, options);
          if (total > 0) {
             Config.GreatPerson.NebuchadnezzarII.tick(
-               Config.GreatPerson.NebuchadnezzarII,
+               "NebuchadnezzarII",
                total,
                `${buildingName}: ${Config.GreatPerson.NebuchadnezzarII.name()}`,
                GreatPersonTickFlag.None,
@@ -1359,7 +1358,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const level = 2 + building.level - 1;
          forEach(Config.GreatPerson, (p, def) => {
             if (def.age === "InformationAge") {
-               def.tick(def, level, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.None);
+               def.tick(p, level, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.None);
             }
          });
          break;
@@ -1374,7 +1373,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const currentAge = getCurrentAge(gs);
          forEach(Config.GreatPerson, (p, def) => {
             if (def.age === currentAge) {
-               def.tick(def, 1, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
+               def.tick(p, 1, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.Unstable);
             }
          });
          break;
@@ -1498,7 +1497,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          gps.forEach((level, gp) => {
             const def = Config.GreatPerson[gp];
             def.tick(
-               def,
+               gp,
                isFestival("Zugspitze", gs) ? level * 2 : level,
                `${buildingName}: ${def.name()}`,
                GreatPersonTickFlag.Unstable,
@@ -1538,7 +1537,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             getGreatPeopleForWisdom(age).forEach((gp) => {
                const greatPerson = Config.GreatPerson[gp];
                greatPerson.tick(
-                  greatPerson,
+                  gp,
                   1,
                   t(L.CambridgeUniversitySource, { age: Config.TechAge[age].name() }),
                   GreatPersonTickFlag.None,
@@ -1595,7 +1594,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             const ageWisdomLevel = options.ageWisdom[previousAge] ?? 0;
             getGreatPeopleForWisdom(previousAge).forEach((gp) => {
                const greatPerson = Config.GreatPerson[gp];
-               greatPerson.tick(greatPerson, ageWisdomLevel, t(L.DuneOfPilat), GreatPersonTickFlag.Unstable);
+               greatPerson.tick(gp, ageWisdomLevel, t(L.DuneOfPilat), GreatPersonTickFlag.Unstable);
             });
          }
          break;
@@ -1725,21 +1724,16 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          const swissBank = building as ISwissBankBuildingData;
          const resource = swissBank.resource;
          const price = resource ? Config.ResourcePrice[resource] : undefined;
-         const multiplier = totalMultiplierFor(xy, "output", 1, false, gs);
-
-         const warehouses: Tile[] = [];
-         for (const point of grid.getRange(tileToPoint(xy), 1)) {
-            const tile = pointToTile(point);
-            const building = gs.tiles.get(tile)?.building;
-            if (building && building.type === "Warehouse") {
-               warehouses.push(tile);
-            }
-         }
          if (resource && price) {
+            const multiplier = totalMultiplierFor(xy, "output", 1, false, gs);
+            const levelBoost = Tick.current.levelBoost.get(xy)?.reduce((acc, lb) => acc + lb.value, 0) ?? 0;
             const { amount } = deductResourceFrom(
                resource,
-               (10_000_000 * multiplier * building.level) / price,
-               warehouses,
+               (10_000_000 *
+                  multiplier *
+                  (building.level + getElectrificationBoost(building, gs) + levelBoost)) /
+                  price,
+               Array.from(Tick.current.playerTradeBuildings.keys()),
                gs,
             );
             if (amount > 0) {

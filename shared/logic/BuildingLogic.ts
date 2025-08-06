@@ -40,7 +40,7 @@ import {
    getGrid,
    getXyBuildings,
 } from "./IntraTickCache";
-import { getGreatPersonTotalEffect, getUpgradeCostFib } from "./RebirthLogic";
+import { getGreatPersonTotalEffect } from "./RebirthLogic";
 import { getBuildingsThatProduce, getResourcesValue } from "./ResourceLogic";
 import { getAgeForTech, getBuildingUnlockTech, getCurrentAge } from "./TechLogic";
 import {
@@ -695,10 +695,10 @@ export function getBuildingLevelLabel(xy: Tile, gs: GameState): string {
    if (!b) {
       return "";
    }
-   if (BuildingShowLevel.has(b.type)) {
-      return String(b.level);
-   }
-   if (Config.Building[b.type].special === BuildingSpecial.HQ || isWorldOrNaturalWonder(b.type)) {
+   if (
+      !BuildingShowLevel.has(b.type) &&
+      (Config.Building[b.type].special === BuildingSpecial.HQ || isWorldOrNaturalWonder(b.type))
+   ) {
       return "";
    }
    let levelBoost = getElectrificationBoost(b, gs);
@@ -916,6 +916,9 @@ export function getElectrificationBoost(building: IBuildingData, gs: GameState):
 }
 
 export function canBeElectrified(b: Building): boolean {
+   if (b === "SwissBank") {
+      return true;
+   }
    if (isSpecialBuilding(b)) {
       return false;
    }
@@ -1237,7 +1240,7 @@ export function getRandomEmptyTiles(count: number, gameState: GameState): Tile[]
          tile.building ||
          !isEmpty(tile.deposit) ||
          tile.explored ||
-         grid.isEdge(tileToPoint(xy), 2)
+         grid.isEdge(tileToPoint(xy), 3)
       ) {
          continue;
       }

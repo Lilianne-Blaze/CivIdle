@@ -68,11 +68,13 @@ export class GameState {
    isOffline = false;
    rebirthed = false;
    festival = false;
+   tradeValue = 0;
    favoriteTiles: Set<Tile> = new Set();
    claimedGreatPeople = 0;
    valueTrackers = new Map<ValueToTrack, IValueTracker>();
    speedUp = 1;
    pinStatPanel = false;
+   adaptiveGreatPeople = new Map<GreatPerson, Building>();
 }
 
 export type GreatPeopleChoice = GreatPerson[];
@@ -172,6 +174,10 @@ export const PremiumTileTextures: Partial<Record<TileTexture, true>> = {
    Tile15: true,
    Tile16: true,
 };
+
+export function getTextColor(): number {
+   return DarkTileTextures[getGameOptions().tileTexture] ? 0xffffff : 0x666666;
+}
 
 export const CursorOptions = {
    OldFashioned: () => t(L.CursorOldFashioned),
