@@ -44,6 +44,7 @@ import { hasOpenModal, showModal, showToast } from "../ui/GlobalModal";
 import { makeObservableHook } from "../utilities/Hook";
 import { Singleton } from "../utilities/Singleton";
 import { playAgeUp, playDing, playLevelUp } from "../visuals/Sound";
+import { clientHeartbeat } from "./Heartbeat";
 import { onBuildingComplete } from "./OnBuildingComplete";
 import { onBuildingOrUpgradeComplete } from "./OnBuildingOrUpgradeComplete";
 import { onProductionComplete } from "./OnProductionComplete";
@@ -136,7 +137,7 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
    forEach(gs.greatPeople, (person, level) => {
       const greatPerson = Config.GreatPerson[person];
       greatPerson.tick(
-         greatPerson,
+         person,
          getGreatPersonThisRunLevel(level),
          t(L.SourceGreatPerson, { person: greatPerson.name() }),
          GreatPersonTickFlag.None,
@@ -146,7 +147,7 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
    forEach(getGameOptions().greatPeople, (person, v) => {
       const greatPerson = Config.GreatPerson[person];
       greatPerson.tick(
-         greatPerson,
+         person,
          v.level,
          t(L.SourceGreatPersonPermanent, { person: greatPerson.name() }),
          GreatPersonTickFlag.None,
@@ -157,7 +158,7 @@ export function tickEverySecond(gs: GameState, offline: boolean) {
       getGreatPeopleForWisdom(age).forEach((gp) => {
          const greatPerson = Config.GreatPerson[gp];
          greatPerson.tick(
-            greatPerson,
+            gp,
             level,
             t(L.AgeWisdomSource, { age: Config.TechAge[age].name(), person: greatPerson.name() }),
             GreatPersonTickFlag.None,
@@ -270,7 +271,7 @@ function postTickTiles(gs: GameState, offline: boolean) {
          saveGame().catch(console.error);
       }
       if (gs.tick % (heartbeatFreq * speed) === 0) {
-         Singleton().heartbeat.update(serializeSaveLite());
+         clientHeartbeat();
          client.queryRankUp().then((newRank) => {
             const user = getUser();
             if (user && newRank > user.level) {

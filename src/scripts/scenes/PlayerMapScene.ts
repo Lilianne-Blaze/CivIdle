@@ -39,7 +39,7 @@ import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
 
-const GridSize = 100;
+export const GridSize = 100;
 
 export class PlayerMapScene extends Scene {
    private _width: number;

@@ -252,6 +252,8 @@ function _ChatWindow({
    );
 }
 
+let helloWorldAchievementUnlocked = false;
+
 function ChatInput({
    onChatSend,
    channel,
@@ -276,10 +278,21 @@ function ChatInput({
          addSystemMessage(`$ ${command}`);
          handleChatCommand(command).catch((e) => addSystemMessage(`${command}: ${e}`));
       } else {
-         client.chat(censor(chat), channel).catch((e) => {
-            playError();
-            showToast(String(e));
-         });
+         client
+            .chat(censor(chat), channel)
+            .then(() => {
+               if (!isSteam()) {
+                  return;
+               }
+               if (!helloWorldAchievementUnlocked) {
+                  helloWorldAchievementUnlocked = true;
+                  SteamClient.unlockAchievement("HelloWorld");
+               }
+            })
+            .catch((e) => {
+               playError();
+               showToast(String(e));
+            });
       }
       onChatSend(chat);
       setChat("");

@@ -52,6 +52,7 @@ import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShare
 import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
 
 const gt = globalThis as any;
+import { clientHeartbeat } from "./logic/Heartbeat";
 
 export async function resetToCity(city: City): Promise<void> {
    savedGame.current = new GameState();
@@ -377,17 +378,18 @@ if (import.meta.env.DEV) {
    };
 
    // @ts-expect-error
-   window.heartbeat = () => {
-      Singleton().heartbeat.update(serializeSaveLite());
-   };
-
-   // @ts-expect-error
    window.tickGameState = (tick: number) => {
       const gs = getGameState();
       for (let i = 0; i < tick; i++) {
          tickEverySecond(gs, true);
       }
    };
+
+   // @ts-expect-error
+   window.clientHeartbeat = () => {
+      clientHeartbeat();
+   };
+
    // @ts-expect-error
    window.benchmarkTick = (tick: number) => {
       console.time(`TickGameState(${tick})`);

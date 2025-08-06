@@ -31,7 +31,7 @@ import type { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { isGameDataCompatible, loadGame, syncFontSizeScale, syncSidePanelWidth, syncUITheme } from "./Global";
 import type { RouteChangeEvent } from "./Route";
 import { tickEverySecond } from "./logic/ClientUpdate";
-import { Heartbeat } from "./logic/Heartbeat";
+import { clientHeartbeat } from "./logic/Heartbeat";
 import { getFullVersion } from "./logic/Version";
 import { getBuildingTexture, getTileTexture } from "./logic/VisualLogic";
 import type { MainBundleAssets } from "./main";
@@ -122,7 +122,6 @@ export async function startGame(
       sceneManager: new SceneManager(context),
       routeTo,
       ticker: new GameTicker(app.ticker, gameState),
-      heartbeat: new Heartbeat(serializeSaveLite()),
       textures,
    });
    setCityOverride(gameState);
@@ -190,8 +189,6 @@ export async function startGame(
       showModal(<ChooseGreatPersonModal permanent={true} />);
    }
 
-   Singleton().heartbeat.init();
-
    // We tick first before loading scene, making sure city-specific overrides are applied!
    tickEverySecond(gameState, false);
 
@@ -224,6 +221,7 @@ export async function startGame(
    notifyGameStateUpdate();
    notifyGameOptionsUpdate();
    Singleton().ticker.start();
+   clientHeartbeat();
 }
 
 // This method is called after server time is synced!
