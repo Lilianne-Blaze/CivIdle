@@ -1,16 +1,26 @@
 import { SmoothGraphics } from "@pixi/graphics-smooth";
-import type { ColorSource, FederatedPointerEvent, IPointData, Texture } from "pixi.js";
-import { BitmapText, Container, LINE_CAP, LINE_JOIN, ParticleContainer, Sprite } from "pixi.js";
+import {
+   Container,
+   LINE_CAP,
+   LINE_JOIN,
+   ParticleContainer,
+   Sprite,
+   Texture,
+   type ColorSource,
+   type FederatedPointerEvent,
+   type IPointData,
+} from "pixi.js";
+import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import WorldMap from "../../../shared/definitions/WorldMap.json";
-import { isTileReserved } from "../../../shared/logic/PlayerTradeLogic";
+import { OnWorldTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
+import { getGameState } from "../../../shared/logic/GameStateLogic";
 import {
    MAP_MAX_X,
    MAP_MAX_Y,
-   UserColorsMapping,
    type IClientMapEntry,
    type IClientTrade,
 } from "../../../shared/utilities/Database";
-import { forEach, formatPercent, mapSafeAdd, sizeOf, xyToPoint } from "../../../shared/utilities/Helper";
+import { forEach, mapSafeAdd, sizeOf, xyToPoint } from "../../../shared/utilities/Helper";
 import type { Disposable } from "../../../shared/utilities/TypedEvent";
 import { getTexture } from "../logic/VisualLogic";
 import {
@@ -23,26 +33,17 @@ import {
    getUser,
 } from "../rpc/RPCClient";
 import { PlayerMapPage } from "../ui/PlayerMapPage";
-import { AccountLevelImages } from "../ui/TextureSprites";
-import { getColorCached } from "../utilities/CachedColor";
 import { Scene, destroyAllChildren, type ISceneContext } from "../utilities/SceneManager";
 import { Singleton } from "../utilities/Singleton";
-import { Fonts } from "../visuals/Fonts";
 import { Easing } from "../utilities/pixi-actions/Easing";
 import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { findPath, getOwnedTradeTile } from "./PathFinder";
 import { PlayerTile } from "./PlayerTile";
-import { type TileSelectedEvent, OnWorldTileSelected } from "../../../shared/lmc/LmcEvents";
-import { getGameState } from "../../../shared/logic/GameStateLogic";
-import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
-import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
-import { Easing } from "../utilities/pixi-actions/Easing";
-import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
 
-const GridSize = 100;
+export const GridSize = 100;
 
 export class PlayerMapScene extends Scene {
    private _width: number;
@@ -77,26 +78,6 @@ export class PlayerMapScene extends Scene {
          const sprite = this._landTiles.addChild(new Sprite(this.context.textures.Misc_100x100));
          sprite.tint = 0x3498db;
          sprite.position.set(point.x * GridSize, point.y * GridSize);
-
-
-         // LMCBOOKMARK add coords to world map tiles
-         if (lilModCli.isOption(lilModOption.worldMapShowCoords)) {
-            const coordsTxt = this._landTiles.addChild(
-               new BitmapText(`${point.x}, ${point.y}`, {
-                  fontName: Fonts.Cabin,
-                  fontSize: 16,
-                  tint: 0xffffff,
-               }),
-            );
-            coordsTxt.anchor.set(0.5, 0.5);
-            coordsTxt.position.set(
-               point.x * GridSize + 0.5 * GridSize,
-               point.y * GridSize + 0.5 * GridSize + 40,
-            );
-            coordsTxt.alpha = 1;
-            coordsTxt.text = `${point.x}, ${point.y}`;
-         }
-
       });
 
       this._path = this.viewport.addChild(new Container());
