@@ -1,10 +1,13 @@
 import { getGameState } from "../logic/GameStateLogic";
-import { ITileData } from "../logic/Tile";
-import { pointToTile, Tile } from "../utilities/Helper";
-import { OnCityTileSelected, OnWorldTileSelected, TileSelectedEvent } from "./LmcEvents";
+import type { ITileData } from "../logic/Tile";
+import { pointToTile, type Tile } from "../utilities/Helper";
+import { OnCityTileSelected, OnWorldTileSelected, type TileSelectedEvent } from "./LmcEvents";
 import { addSystemMessageSafe } from "./LmcScriptsShared";
 
 const gt = globalThis as any;
+
+export function preloadLmcMaps() { }
+gt.preloadLmcMaps = preloadLmcMaps;
 
 export const lmcCityMap = {
    lastClickedTileX: -1,
@@ -16,8 +19,7 @@ export const lmcCityMap = {
       this.lastClickedTileY = event.tileY;
       try {
          this.lastClickedTileNum = pointToTile({ x: event.tileX, y: event.tileY });
-      }
-      catch (err) {
+      } catch (err) {
          this.lastClickedTileNum = -1;
       }
       // addSystemMessageSafe(`City tile ${event.tileX}, ${event.tileY} clicked.`);
@@ -32,9 +34,8 @@ export const lmcCityMap = {
    },
 
    hasValidLastClickedTile(): boolean {
-      return this.lastClickedTileX >= 0 && this.lastClickedTileY >= 0
+      return this.lastClickedTileX >= 0 && this.lastClickedTileY >= 0;
    },
-
 };
 
 gt.lmcCityMap = lmcCityMap;
@@ -81,10 +82,11 @@ OnCityTileSelected.on((event) => {
 // }
 
 export function lmcMapsDebug() {
-   addSystemMessageSafe(`Last clicked city tile: ${lmcCityMap.lastClickedTileX}, ${lmcCityMap.lastClickedTileY} / ${lmcCityMap.lastClickedTileNum}`);
+   addSystemMessageSafe(
+      `Last clicked city tile: ${lmcCityMap.lastClickedTileX}, ${lmcCityMap.lastClickedTileY} / ${lmcCityMap.lastClickedTileNum}`,
+   );
    addSystemMessageSafe(
       `Last clicked world tile: ${lmcWorldMap.lastClickedTileX}, ${lmcWorldMap.lastClickedTileY}`,
    );
 }
 gt.lmcMapsDebug = lmcMapsDebug;
-

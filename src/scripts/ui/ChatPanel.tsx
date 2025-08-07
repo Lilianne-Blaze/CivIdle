@@ -1,7 +1,7 @@
 import Tippy from "@tippyjs/react";
 import classNames from "classnames";
 import type React from "react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
    getGameOptions,
    notifyGameOptionsUpdate,
@@ -34,6 +34,7 @@ import {
    type IClientChat,
    type LocalChat,
 } from "../rpc/RPCClient";
+import { SteamClient, isSteam } from "../rpc/SteamClient";
 import { getCountryName } from "../utilities/CountryCode";
 import { useTypedEvent } from "../utilities/Hook";
 import { openUrl } from "../utilities/Platform";

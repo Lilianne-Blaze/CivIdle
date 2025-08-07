@@ -26,6 +26,8 @@ import { getGameOptions, notifyGameOptionsUpdate } from "./GameStateLogic";
 import type { IShortcutConfig, Shortcut } from "./Shortcut";
 import { PRIORITY_MIN, type IBuildingData, type ITileData } from "./Tile";
 
+const gt = globalThis as any;
+
 export interface ITransportationDataV2 {
    id: number;
    fromXy: Tile;
@@ -102,16 +104,20 @@ export function resetThemeColor() {
    getGameOptions().themeColors = { ...DefaultThemeColors };
    notifyGameOptionsUpdate();
 }
+gt.resetThemeColor = resetThemeColor;
 
 export function resetThemeBuildingColors() {
    getGameOptions().buildingColors = {};
    notifyGameOptionsUpdate();
 }
+gt.resetThemeBuildingColors = resetThemeBuildingColors;
 
 export function resetThemeResourceColors() {
    getGameOptions().resourceColors = {};
    notifyGameOptionsUpdate();
 }
+gt.resetThemeResourceColors = resetThemeResourceColors;
+
 
 export const ThemeColorNames: Record<keyof typeof DefaultThemeColors, () => string> = {
    ResearchBackground: () => t(L.ThemeColorResearchBackground),
@@ -178,6 +184,8 @@ export const PremiumTileTextures: Partial<Record<TileTexture, true>> = {
 export function getTextColor(): number {
    return DarkTileTextures[getGameOptions().tileTexture] ? 0xffffff : 0x666666;
 }
+gt.getTextColor = getTextColor;
+
 
 export const CursorOptions = {
    OldFashioned: () => t(L.CursorOldFashioned),

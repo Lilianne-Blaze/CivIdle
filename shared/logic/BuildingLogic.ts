@@ -5,6 +5,10 @@ import type { IUnlockableMultipliers } from "../definitions/ITechDefinition";
 import type { Religion } from "../definitions/ReligionDefinitions";
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tradition } from "../definitions/TraditionDefinitions";
+import { lilModCli, lilModOption } from "../lmc/LilModCli";
+import { StarterBuildings } from "../lmc/LmcConstsEarly";
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
+import { getBuildingStatsByType } from "../lmc/LmcScriptsShared";
 import {
    clamp,
    forEach,
@@ -40,7 +44,7 @@ import {
    getGrid,
    getXyBuildings,
 } from "./IntraTickCache";
-import { getGreatPersonTotalEffect, getUpgradeCostFib } from "./RebirthLogic";
+import { getGreatPersonTotalEffect } from "./RebirthLogic";
 import { getBuildingsThatProduce, getResourcesValue } from "./ResourceLogic";
 import { getAgeForTech, getBuildingUnlockTech, getCurrentAge } from "./TechLogic";
 import {
@@ -66,10 +70,6 @@ import {
    type IResourceImportBuildingData,
    type ITileData,
 } from "./Tile";
-import { lilModCli, lilModOption } from "../lmc/LilModCli";
-import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
-import { StarterBuildings } from "../lmc/LmcConstsEarly";
-import { addSystemMessageSafe, countBuildingByType, countBuildingLevelsByType, getBuildingStatsByType } from "../lmc/LmcScriptsShared";
 
 const gt = globalThis as any;
 
@@ -674,18 +674,15 @@ export function getBuildingValue(building: IBuildingData): number {
 gt.getBuildingValue = getBuildingValue;
 
 export function getCurrentPriority(building: IBuildingData, gs: GameState): number {
+   const balancedTransportsEnabled = lilModCli.isOption(lilModOption.balancedTransports);
+   const adjustment = balancedTransportsEnabled ? (Math.random() - 0.5) * 0.9 : 0;
+
    if (!hasFeature(GameFeature.BuildingProductionPriority, gs)) {
-      return PRIORITY_MIN;
+      return PRIORITY_MIN + adjustment;
    }
 
    building.constructionPriority = clamp(building.constructionPriority, PRIORITY_MIN, PRIORITY_MAX);
    building.productionPriority = clamp(building.productionPriority, PRIORITY_MIN, PRIORITY_MAX);
-
-   // const balancedTransportsEnabledDefault = false;
-   // const balancedTransportsEnabled =
-   //    savedGame?.options?.lilModCli?.enableBalancedTransports ?? balancedTransportsEnabledDefault;
-   const balancedTransportsEnabled = lilModCli.isOption(lilModOption.balancedTransports);
-   const adjustment = balancedTransportsEnabled ? (Math.random() - 0.5) * 0.9 : 0;
 
    switch (building.status) {
       case "building":
@@ -771,10 +768,10 @@ export function getBuildingLevelLabel(xy: Tile, gs: GameState): string {
    if (!b) {
       return "";
    }
-   if (BuildingShowLevel.has(b.type)) {
-      return String(b.level);
-   }
-   if (Config.Building[b.type].special === BuildingSpecial.HQ || isWorldOrNaturalWonder(b.type)) {
+   if (
+      !BuildingShowLevel.has(b.type) &&
+      (Config.Building[b.type].special === BuildingSpecial.HQ || isWorldOrNaturalWonder(b.type))
+   ) {
       return "";
    }
    let levelBoost = getElectrificationBoost(b, gs);

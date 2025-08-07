@@ -3,6 +3,9 @@ import type { Application } from "pixi.js";
 import type { City } from "../../shared/definitions/CityDefinitions";
 import { NoPrice, NoStorage } from "../../shared/definitions/ResourceDefinitions";
 import type { TechAge } from "../../shared/definitions/TechDefinitions";
+import { lilModCli, lilModOption } from "../../shared/lmc/LilModCli";
+import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
+import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShared";
 import { exploreTile, getBuildingCost } from "../../shared/logic/BuildingLogic";
 import { Config } from "../../shared/logic/Config";
 import type { GameOptions, SavedGame } from "../../shared/logic/GameState";
@@ -16,8 +19,7 @@ import {
    notifyGameStateUpdate,
    replacer,
    savedGame,
-   serializeSave,
-   serializeSaveLite,
+   serializeSave
 } from "../../shared/logic/GameStateLogic";
 import { initializeGameState } from "../../shared/logic/InitializeGameState";
 import {
@@ -38,6 +40,7 @@ import {
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { migrateSavedGame } from "./MigrateSavedGame";
 import { tickEverySecond } from "./logic/ClientUpdate";
+import { clientHeartbeat } from "./logic/Heartbeat";
 import { CLIENT_ID, client, getChatMessages, getTrades } from "./rpc/RPCClient";
 import { SteamClient, isSteam } from "./rpc/SteamClient";
 import { WorldScene } from "./scenes/WorldScene";
@@ -47,12 +50,8 @@ import { makeObservableHook } from "./utilities/Hook";
 import { isAndroid, isIOS } from "./utilities/Platforms";
 import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
-import { lilModCli, lilModOption } from "../../shared/lmc/LilModCli";
-import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShared";
-import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
 
 const gt = globalThis as any;
-import { clientHeartbeat } from "./logic/Heartbeat";
 
 export async function resetToCity(city: City): Promise<void> {
    savedGame.current = new GameState();

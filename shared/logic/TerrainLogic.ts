@@ -1,7 +1,4 @@
 import { BUILDING_DEFAULT_VISION } from "../definitions/BuildingDefinitions";
-import type { Grid } from "../utilities/Grid";
-import { type IPointData, pointToTile, tileToPoint, type Tile } from "../utilities/Helper";
-import { v2 } from "../utilities/Vector2";
 import { pointToTile, tileToPoint, type Tile } from "../utilities/Helper";
 import { exploreTile, isNaturalWonder } from "./BuildingLogic";
 import { Config } from "./Config";

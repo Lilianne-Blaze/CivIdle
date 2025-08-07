@@ -2,6 +2,7 @@ import type { City } from "../definitions/CityDefinitions";
 import { GreatPersonType, type GreatPerson } from "../definitions/GreatPersonDefinitions";
 import { NoPrice, type Resource } from "../definitions/ResourceDefinitions";
 import type { TechAge } from "../definitions/TechDefinitions";
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
 import {
    AccountLevel,
    AccountLevelGreatPeopleLevel,
@@ -134,7 +135,7 @@ export function addPermanentGreatPerson(gp: GreatPerson, amount: number): void {
    } else {
       options.greatPeople[gp] =
          Config.GreatPerson[gp].type === GreatPersonType.Normal ||
-         Config.GreatPerson[gp].type === GreatPersonType.Adaptive
+            Config.GreatPerson[gp].type === GreatPersonType.Adaptive
             ? { level: 1, amount: amount - 1 }
             : { level: 0, amount };
    }
@@ -222,9 +223,9 @@ gt.DEFAULT_GREAT_PEOPLE_CHOICE_COUNT = DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
 export function getGreatPeopleChoiceCount(gs: GameState): number {
    const yct = Tick.current.specialBuildings.get("YellowCraneTower");
    if (yct) {
-      return 1 + DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
+      return 1 + DEFAULT_GREAT_PEOPLE_CHOICE_COUNT + GLOBAL_PARAMS.REBIRTH_BONUS_GP_CHOICE;
    }
-   return DEFAULT_GREAT_PEOPLE_CHOICE_COUNT;
+   return DEFAULT_GREAT_PEOPLE_CHOICE_COUNT + GLOBAL_PARAMS.REBIRTH_BONUS_GP_CHOICE;
 }
 gt.getGreatPeopleChoiceCount = getGreatPeopleChoiceCount;
 
@@ -270,7 +271,7 @@ export function sortGreatPeople(a: GreatPerson, b: GreatPerson): number {
 }
 gt.sortGreatPeople = sortGreatPeople;
 
-export function getFreeCityThisWeek(offset: number = 0): City {
+export function getFreeCityThisWeek(offset = 0): City {
    const candidates: City[] = [];
    forEach(Config.City, (city, def) => {
       if (def.requireSupporterPack) {

@@ -5,7 +5,6 @@
 // Keep only basic consts in LmcConstsEarly.ts to avoid messing up deps order
 // What's safe: TypedEvent, Node.js modules
 
-import { addSystemMessageSafe } from "./LmcScriptsShared";
 import { requireSafeFallback } from "./MiscFuncs";
 
 const gt = globalThis as any;
@@ -13,14 +12,14 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 213; // 2025-08-04
+export const LMC_MINOR_VER = 225; // 2025-08-04
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;
 export const LMC_VER_NUMBER = LMC_MAJOR_VER * 1000 + LMC_MINOR_VER;
 gt.LMC_VER_NUMBER = LMC_VER_NUMBER;
 
-export const LMC_FOR_BUILD = 664; // 2025-07-26
+export const LMC_FOR_BUILD = 675; // 2025-08-04
 gt.LMC_FOR_BUILD = LMC_FOR_BUILD;
 
 export const LMC_VER_NOTE = "internal alpha";
@@ -103,7 +102,7 @@ gt.net = net;
 export const tls = requireSafeFallback("tls");
 gt.tls = tls;
 
-import mqtt from 'mqtt'
+import mqtt from 'mqtt';
 gt.mqtt = mqtt;
 
 // export const electron = require("electron");

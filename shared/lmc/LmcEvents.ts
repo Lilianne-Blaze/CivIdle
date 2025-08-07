@@ -1,12 +1,11 @@
-
 // ===== ===== =====
 // LmcEvents.ts
 
 import type { GameState } from "../logic/GameState";
-import { ChatChannel, IUser } from "../utilities/Database";
-import { Tile } from "../utilities/Helper";
+import type { ChatChannel, IUser } from "../utilities/Database";
+import type { Tile } from "../utilities/Helper";
 import { TypedEvent } from "../utilities/TypedEvent";
-import { CheckMarketTradeEvent } from "./LmcMarkets";
+import type { CheckMarketTradeEvent } from "./LmcMarkets";
 
 const gt = globalThis as any;
 
@@ -42,7 +41,6 @@ export const OnWorldTileSelected = new TypedEvent<TileSelectedEvent>();
 gt.OnWorldTileSelected = OnWorldTileSelected;
 
 // =====
-
 
 export const OnEveryHour = new TypedEvent<GameStateAndOfflineFlagEvent>();
 gt.OnEveryHour = OnEveryHour;

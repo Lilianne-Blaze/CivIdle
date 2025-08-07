@@ -2,8 +2,15 @@ import type { SmoothGraphics } from "@pixi/graphics-smooth";
 import type { IDestroyOptions, IPointData } from "pixi.js";
 import { BitmapText, Container, Rectangle, Sprite } from "pixi.js";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+import { zeroAllButThreeHighestDigits } from "../../../shared/lmc/MiscFuncs";
 import { getBuildingLevelLabel, getBuildingPercentage } from "../../../shared/logic/BuildingLogic";
-import { DarkTileTextures, type GameOptions, type GameState } from "../../../shared/logic/GameState";
+import {
+   DarkTileTextures,
+   getTextColor,
+   type GameOptions,
+   type GameState,
+} from "../../../shared/logic/GameState";
 import { getGameOptions, getGameState } from "../../../shared/logic/GameStateLogic";
 import { getGrid } from "../../../shared/logic/IntraTickCache";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
@@ -17,9 +24,7 @@ import {
    layoutCenter,
    pointToTile,
    pointToXy,
-   sizeOf,
-   xyToPoint,
-   type Tile,
+   sizeOf, type Tile
 } from "../../../shared/utilities/Helper";
 import { v2 } from "../../../shared/utilities/Vector2";
 import { getBuildingTexture, getNotProducingTexture, getTexture, getTileTexture } from "../logic/VisualLogic";
@@ -29,8 +34,6 @@ import { Actions } from "../utilities/pixi-actions/Actions";
 import { Easing } from "../utilities/pixi-actions/Easing";
 import { Fonts } from "../visuals/Fonts";
 import type { WorldScene } from "./WorldScene";
-import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
-import { zeroAllButThreeHighestDigits } from "../../../shared/lmc/MiscFuncs";
 
 const statusBuildingColor = 0x00ff88;
 const statusUpgradingColor = 0x88ff00;
@@ -122,12 +125,14 @@ export class TileVisual extends Container {
       this._construction.position.set(-25, -5);
       this._construction.anchor.set(0, 1);
       this._construction.scale.set(0.5);
+      this._construction.tint = getTextColor();
       this._construction.visible = false;
 
       this._notProducing = this.addChild(new Sprite());
       this._notProducing.position.set(-20, -20);
       this._notProducing.anchor.set(0.5, 0.5);
       this._notProducing.scale.set(0.5);
+      this._notProducing.tint = getTextColor();
       this._notProducing.visible = false;
 
       this._constructionAnimation = Actions.repeat(
@@ -142,6 +147,7 @@ export class TileVisual extends Container {
       this._upgrade.anchor.set(0, 1);
       this._upgrade.scale.set(0.5);
       this._upgrade.alpha = 0;
+      this._upgrade.tint = getTextColor();
       this._upgrade.visible = false;
 
       this._upgradeAnimation = Actions.repeat(
@@ -159,7 +165,7 @@ export class TileVisual extends Container {
          new BitmapText("", {
             fontName: this.getTextFont(),
             fontSize: 16,
-            tint: this.getTextColor(),
+            tint: getTextColor(),
          }),
       );
       this._level.anchor.set(0.5, 0.5);
@@ -168,7 +174,7 @@ export class TileVisual extends Container {
       this._level.cullable = true;
 
       this._bottomText = this.addChild(
-         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: this.getTextColor(), align: "center" }),
+         new BitmapText("", { fontName: this.getTextFont(), fontSize: 12, tint: getTextColor(), align: "center" }),
       );
       this._bottomText.anchor.set(0.5, 0.5);
       this._bottomText.position.set(0, 35);
@@ -201,10 +207,6 @@ export class TileVisual extends Container {
       return rect.intersects(this._aabb);
    }
 
-   public getTextColor(): number {
-      return DarkTileTextures[getGameOptions().tileTexture] ? 0xffffff : 0x666666;
-   }
-
    public getTextFont(): string {
       return DarkTileTextures[getGameOptions().tileTexture] ? Fonts.Cabin : `${Fonts.Cabin}NoShadow`;
    }
@@ -221,14 +223,15 @@ export class TileVisual extends Container {
 
    public updateDepositColor(options: GameOptions) {
       this._deposits.forEach((sprite, deposit) => {
-         sprite.tint = getColorCached(options.resourceColors[deposit] ?? "#ffffff");
+         const color = options.resourceColors[deposit];
+         sprite.tint = color ? getColorCached(color) : getTextColor();
       });
       const texture = getTexture(`Misc_${options.tileTexture}`, this._world.context.textures);
       if (this._bg.texture !== texture) {
          this._bg.texture = texture;
       }
       const font = this.getTextFont();
-      const color = this.getTextColor();
+      const color = getTextColor();
 
       if (this._level.fontName !== font) {
          this._level.fontName = font;
@@ -261,7 +264,7 @@ export class TileVisual extends Container {
    public flushFloater(speed: number): void {
       if (this._floaterValue <= 0 || !this.isInViewport()) return;
       const t = this._world.tooltipPool.allocate();
-      t.tint = this.getTextColor();
+      t.tint = getTextColor();
       t.fontName = this.getTextFont();
       t.text = `+${formatNumber(this._floaterValue)}`;
       this._floaterValue = 0;
@@ -316,9 +319,9 @@ export class TileVisual extends Container {
          if (!mapBetterStatusIcons) { this._notProducing.tint = c; }
          this._spinner.tint = c;
       } else {
-         this._building.tint = 0xffffff;
-         if (!mapBetterStatusIcons) { this._notProducing.tint = 0xffffff; }
-         this._spinner.tint = 0xffffff;
+         this._building.tint = getTextColor();
+         if (!mapBetterStatusIcons) { this._notProducing.tint = getTextColor(); }
+         this._spinner.tint = getTextColor();
       }
       if (this._tile.building.status !== "completed") {
          return;
@@ -554,7 +557,7 @@ export class TileVisual extends Container {
 
    private bottomTextMakeWhite(): void {
       try {
-         this._bottomText.tint = getColorCached("#ffffff");
+         this._bottomText.tint = getTextColor();
       } catch (err) { }
    }
 

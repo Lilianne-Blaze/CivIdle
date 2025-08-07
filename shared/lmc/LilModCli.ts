@@ -1,12 +1,12 @@
-//
-
-import { LMC_MAJOR_VER, LMC_MINOR_VER, LMC_FOR_BUILD } from "./LmcConstsEarly";
-import { isTruthyStringSafe, isFalsyStringSafe, atMostOncePerXSecs } from "./MiscFuncs";
 import { getGameOptions } from "../logic/GameStateLogic";
 import { getAppDataRoaming } from "./CiScripts";
-//import { lmcEnsureMapsReady } from "./LmcMaps";
+import { LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER } from "./LmcConstsEarly";
+import { preloadLmcMaps } from "./LmcMaps";
+import { isTruthyStringSafe } from "./MiscFuncs";
 
 const gt = globalThis as any;
+
+preloadLmcMaps();
 
 export const lilModOption = {
 

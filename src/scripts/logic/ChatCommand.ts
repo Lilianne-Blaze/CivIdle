@@ -1,4 +1,7 @@
 import { MAX_TECH_AGE } from "../../../shared/definitions/TechDefinitions";
+import { decodeTextFromBase64, isValidBase64EncodedData } from "../../../shared/lmc/LmcCodecs";
+import { fs, isFsLoaded, LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER, LMC_VER_NOTE } from "../../../shared/lmc/LmcConstsEarly";
+import { getUserScriptsPath } from "../../../shared/lmc/LmcScriptsShared";
 import { Config } from "../../../shared/logic/Config";
 import { getGameOptions, getGameState, savedGame } from "../../../shared/logic/GameStateLogic";
 import {
@@ -12,23 +15,19 @@ import {
    type ChatChannel,
 } from "../../../shared/utilities/Database";
 import {
-   HOUR,
-   MINUTE,
-   SECOND,
    clamp,
    firstKeyOf,
    formatHM,
    formatNumber,
    hasFlag,
+   HOUR,
+   MINUTE,
    safeParseInt,
+   SECOND,
    sizeOf,
    uuid4,
 } from "../../../shared/utilities/Helper";
 import { compressSave, decompressSave, overwriteSaveGame, resetToCity, saveGame } from "../Global";
-import { decodeTextFromBase64, isValidBase64EncodedData } from "../../../shared/lmc/LmcCodecs";
-import { fs, isFsLoaded, LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER, LMC_VER_NOTE } from "../../../shared/lmc/LmcConstsEarly";
-import { lmcMapsDebug } from "../../../shared/lmc/LmcMaps";
-import { getUserScriptsPath } from "../../../shared/lmc/LmcScriptsShared";
 import {
    addSystemMessage,
    canEarnGreatPeopleFromReborn,
