@@ -2,6 +2,8 @@ import Tippy from "@tippyjs/react";
 import classNames from "classnames";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
+import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
 import {
    getGameOptions,
    notifyGameOptionsUpdate,
@@ -45,8 +47,6 @@ import { RenderHTML } from "./RenderHTMLComponent";
 import { SelectChatChannelModal } from "./SelectChatChannelModal";
 import { ResourcesTab } from "./StatisticsBuildingBody";
 import { AccountLevelComponent, MiscTextureComponent, PlayerFlagComponent } from "./TextureSprites";
-import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "../../../shared/lmc/LmcEvents";
-import { lilModCli, lilModOption } from "../../../shared/lmc/LilModCli";
 
 import CustomBlackCalculator_png from "../../images/custom-black-calculator.png";
 import CustomNukeDove100_png from "../../images/custom-nukedove100.png";
@@ -397,11 +397,11 @@ function ChatMessage({
                      <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
                   </Tippy>
                ) : null}
-               {isBrokie ? (
+               {/*isBrokie ? (
                   <Tippy content={"Makes server hamster cry"}>
                      <img src={CustomBlackCalculator_png} className="player-flag" />
                   </Tippy>
-               ) : null}
+               ) : null*/}
             </div>
          ) : (
             <div className="row text-small text-desc">
@@ -434,11 +434,11 @@ function ChatMessage({
                      <MiscTextureComponent name="AccountLevelMod" scale={0.15} />
                   </Tippy>
                ) : null}
-               {isBrokie ? (
+               {/*isBrokie ? (
                   <Tippy content={"Makes server hamster cry"}>
                      <img src={CustomBlackCalculator_png} className="player-flag" />
                   </Tippy>
-               ) : null}
+               ) : null*/}
                <div className="f1"></div>
 
                <Tippy content={dateTimeStr}>

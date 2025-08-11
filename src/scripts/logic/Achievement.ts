@@ -12,9 +12,7 @@ import { getPermanentGreatPeopleLevel } from "../../../shared/logic/RebirthLogic
 import type { ICentrePompidouBuildingData } from "../../../shared/logic/Tile";
 import { OnTechUnlocked } from "../../../shared/logic/Update";
 import { HOUR, SECOND, forEach, sizeOf } from "../../../shared/utilities/Helper";
-import { isAllyWith } from "../rpc/RPCClient";
 import { SteamClient, isSteam } from "../rpc/SteamClient";
-import { getNeighboringPlayers } from "../scenes/PathFinder";
 
 OnTechUnlocked.on((tech) => {
    if (!isSteam()) return;
@@ -274,18 +272,5 @@ export function checkRebirthAchievements(extraGP: number, gs: GameState): void {
 
    if (wonderLevels >= 50) {
       SteamClient.unlockAchievement("CivitasMirabilis");
-   }
-
-   const allies = new Set<string>();
-   getNeighboringPlayers().forEach((player) => {
-      player.forEach(([xy, tile]) => {
-         if (isAllyWith(tile)) {
-            allies.add(tile.userId);
-         }
-      });
-   });
-
-   if (allies.size > 0) {
-      SteamClient.unlockAchievement("DeclareFriendship");
    }
 }

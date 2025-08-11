@@ -1,5 +1,6 @@
 import { SmoothGraphics } from "@pixi/graphics-smooth";
 import {
+   BitmapText,
    Container,
    LINE_CAP,
    LINE_JOIN,

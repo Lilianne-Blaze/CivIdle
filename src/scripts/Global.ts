@@ -19,7 +19,8 @@ import {
    notifyGameStateUpdate,
    replacer,
    savedGame,
-   serializeSave
+   serializeSave,
+   serializeSaveLite,
 } from "../../shared/logic/GameStateLogic";
 import { initializeGameState } from "../../shared/logic/InitializeGameState";
 import {
@@ -40,8 +41,7 @@ import {
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { migrateSavedGame } from "./MigrateSavedGame";
 import { tickEverySecond } from "./logic/ClientUpdate";
-import { clientHeartbeat } from "./logic/Heartbeat";
-import { CLIENT_ID, client, getChatMessages, getTrades } from "./rpc/RPCClient";
+import { CLIENT_ID, client } from "./rpc/RPCClient";
 import { SteamClient, isSteam } from "./rpc/SteamClient";
 import { WorldScene } from "./scenes/WorldScene";
 import { showToast } from "./ui/GlobalModal";
@@ -52,6 +52,7 @@ import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
 
 const gt = globalThis as any;
+import { clientHeartbeat } from "./logic/Heartbeat";
 
 export async function resetToCity(city: City): Promise<void> {
    savedGame.current = new GameState();

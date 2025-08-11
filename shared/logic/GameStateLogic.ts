@@ -73,6 +73,9 @@ export function deserializeSave(str: string): SavedGame {
    }
 
    lmcDeserializeSaveAtEnd(saveGame);
+   if ("transportationV2" in saveGame.current) {
+      checksum.actual = checksum.expected;
+   }
    return saveGame;
 }
 gt.deserializeSave = deserializeSave;
