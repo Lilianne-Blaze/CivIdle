@@ -20,12 +20,9 @@ import {
    formatHM,
    formatNumber,
    hasFlag,
-   HOUR,
-   MINUTE,
-   safeParseInt,
-   SECOND,
-   sizeOf,
-   uuid4,
+   HOUR, MINUTE, safeParseInt,
+   SECOND, sizeOf,
+   uuid4
 } from "../../../shared/utilities/Helper";
 import { compressSave, decompressSave, overwriteSaveGame, resetToCity, saveGame } from "../Global";
 import {

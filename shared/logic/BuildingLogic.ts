@@ -35,7 +35,7 @@ import { L, t } from "../utilities/i18n";
 import { Config } from "./Config";
 import { MANAGED_IMPORT_RANGE, MAX_PETRA_SPEED_UP } from "./Constants";
 import { GameFeature, hasFeature } from "./FeatureLogic";
-import type { GameOptions, GameState } from "./GameState";
+import { Transports, type GameOptions, type GameState } from "./GameState";
 import { getGameOptions, getGameState } from "./GameStateLogic";
 import {
    getBuildingIO,
@@ -474,7 +474,7 @@ export function addTransportation(
    const fromPosition = grid.xyToPosition(fromXy);
    const toPosition = grid.xyToPosition(toXy);
    useWorkers(fuelResource, fuelPerTick, null);
-   gs.transportationV2.push({
+   Transports.push({
       id: ++gs.transportId,
       fromXy,
       fromPosition,
@@ -669,7 +669,11 @@ export function getWonderBaseBuilderCapacity(type: Building): number {
 gt.getWonderBaseBuilderCapacity = getWonderBaseBuilderCapacity;
 
 export function getBuildingValue(building: IBuildingData): number {
-   return getResourcesValue(getTotalBuildingCost(building, 0, building.level));
+   let level = building.level;
+   if (building.type === "Petra") {
+      level = 1;
+   }
+   return getResourcesValue(getTotalBuildingCost(building, 0, level));
 }
 gt.getBuildingValue = getBuildingValue;
 
@@ -774,10 +778,13 @@ export function getBuildingLevelLabel(xy: Tile, gs: GameState): string {
    ) {
       return "";
    }
-   let levelBoost = getElectrificationBoost(b, gs);
-   Tick.current.levelBoost.get(xy)?.forEach((lb) => {
-      levelBoost += lb.value;
-   });
+   let levelBoost = 0;
+   if (canBeElectrified(b.type)) {
+      levelBoost += getElectrificationBoost(b, gs);
+      Tick.current.levelBoost.get(xy)?.forEach((lb) => {
+         levelBoost += lb.value;
+      });
+   }
    if (levelBoost > 0) {
       return `${b.level}+${levelBoost}`;
    }

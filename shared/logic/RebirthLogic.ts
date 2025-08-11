@@ -230,13 +230,14 @@ export function getGreatPeopleChoiceCount(gs: GameState): number {
 gt.getGreatPeopleChoiceCount = getGreatPeopleChoiceCount;
 
 export function getPermanentGreatPeopleLevel(options: GameOptions): number {
-   return reduceOf(
-      options.greatPeople,
-      (prev, gp, inv) => {
-         return prev + inv.level + (options.ageWisdom[Config.GreatPerson[gp].age] ?? 0);
-      },
-      0,
-   );
+   let level = 0;
+   forEach(options.greatPeople, (gp, inv) => {
+      level += inv.level;
+      if (isEligibleForWisdom(gp)) {
+         level += options.ageWisdom[Config.GreatPerson[gp].age] ?? 0;
+      }
+   });
+   return level;
 }
 gt.getPermanentGreatPeopleLevel = getPermanentGreatPeopleLevel;
 
@@ -345,10 +346,7 @@ export function getEligibleRank(user: IUser): AccountLevel {
       return AccountLevel.Tribune;
    }
    let level = user.level;
-   let greatPeopleLevel = 0;
-   if (user.empireValues.length > 0) {
-      greatPeopleLevel = user.empireValues[user.empireValues.length - 1].totalGreatPeopleLevel ?? 0;
-   }
+   const greatPeopleLevel = user.heartbeatData?.greatPeopleLevel ?? 0;
    forEach(AccountLevel, (k, v) => {
       if (
          user.totalPlayTime * 1000 >= AccountLevelPlayTime[v] &&

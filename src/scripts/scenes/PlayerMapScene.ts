@@ -1,7 +1,14 @@
 import { SmoothGraphics } from "@pixi/graphics-smooth";
-import type { ColorSource, FederatedPointerEvent, IPointData, Texture } from "pixi.js";
 import {
-   BitmapText, Container, LINE_CAP, LINE_JOIN, ParticleContainer, Sprite
+   Container,
+   LINE_CAP,
+   LINE_JOIN,
+   ParticleContainer,
+   Sprite,
+   Texture,
+   type ColorSource,
+   type FederatedPointerEvent,
+   type IPointData,
 } from "pixi.js";
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import WorldMap from "../../../shared/definitions/WorldMap.json";
@@ -10,8 +17,9 @@ import { OnWorldTileSelected, type TileSelectedEvent } from "../../../shared/lmc
 import { getGameState } from "../../../shared/logic/GameStateLogic";
 import {
    MAP_MAX_X,
-   MAP_MAX_Y, type IClientMapEntry,
-   type IClientTrade
+   MAP_MAX_Y,
+   type IClientMapEntry,
+   type IClientTrade,
 } from "../../../shared/utilities/Database";
 import { forEach, mapSafeAdd, sizeOf, xyToPoint } from "../../../shared/utilities/Helper";
 import type { Disposable } from "../../../shared/utilities/TypedEvent";

@@ -11,6 +11,7 @@ import {
    type FederatedPointerEvent,
    type IPointData,
 } from "pixi.js";
+import { OnCityTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
 import {
    applyBuildingDefaults,
    checkBuildingMax,
@@ -23,6 +24,7 @@ import { MANAGED_IMPORT_RANGE } from "../../../shared/logic/Constants";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
 import {
    DarkTileTextures,
+   Transports,
    getTextColor,
    type GameOptions,
    type GameState,
@@ -58,7 +60,6 @@ import { CustomAction } from "../utilities/pixi-actions/actions/CustomAction";
 import { Fonts } from "../visuals/Fonts";
 import { playError } from "../visuals/Sound";
 import { TileVisual } from "./TileVisual";
-import { OnCityTileSelected, type TileSelectedEvent } from "../../../shared/lmc/LmcEvents";
 
 let viewportCenter: IPointData | null = null;
 let viewportZoom: number | null = null;
@@ -215,10 +216,15 @@ export class WorldScene extends Scene {
             break;
          }
          case 1: {
-            this.copyBuilding(grid, gs);
+            if (!getGameOptions().useRightClickCopy) {
+               this.copyBuilding(grid, gs);
+            }
             break;
          }
          case 2: {
+            if (getGameOptions().useRightClickCopy) {
+               this.copyBuilding(grid, gs);
+            }
             break;
          }
       }
@@ -488,7 +494,7 @@ export class WorldScene extends Scene {
       }
       this._transportLines.clear();
       const lines: Record<string, true> = {};
-      gs.transportationV2.forEach((t) => {
+      Transports.forEach((t) => {
          if (t.fromXy !== xy && t.toXy !== xy) {
             return;
          }
@@ -551,7 +557,7 @@ export class WorldScene extends Scene {
       }
       const worldRect = this.viewport.visibleWorldRect();
       this._ticked.clear();
-      gs.transportationV2.forEach((t) => {
+      Transports.forEach((t) => {
          Vector2.lerp(
             t.fromPosition,
             t.toPosition,

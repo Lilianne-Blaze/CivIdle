@@ -1,7 +1,5 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
-
-
 import {
    forEachMultiplier,
    generateScienceFromFaith,
@@ -92,6 +90,7 @@ import {
 import { srand } from "../../../shared/utilities/Random";
 import { L, t } from "../../../shared/utilities/i18n";
 import { TileBuildings, client, isAllyWith, populateTileBuildings } from "../rpc/RPCClient";
+import { SteamClient, isSteam } from "../rpc/SteamClient";
 import { getNeighboringPlayers, getOwnedOrOccupiedTiles } from "../scenes/PathFinder";
 import { ChooseGreatPersonModal } from "../ui/ChooseGreatPersonModal";
 import { hasOpenModal, showModal } from "../ui/GlobalModal";
@@ -104,6 +103,7 @@ let votedBoost: IGetVotedBoostResponse | null = null;
 let lastVotedBoostUpdatedAt = 0;
 let lastFujiGeneratedAt = Date.now();
 let fujiTick = 0;
+let declareFriendshipAchievementUnlocked = false;
 
 export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boolean }): void {
    const gs = getGameState();
@@ -155,11 +155,14 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             }
          });
 
+         let hasAlly = false;
+
          getNeighboringPlayers().forEach((player) => {
             player.forEach(([xy, tile]) => {
                const building = TileBuildings.get(xy);
                if (building) {
                   if (isAllyWith(tile)) {
+                     hasAlly = true;
                      addMultiplier(
                         building,
                         { output: TRADE_TILE_ALLY_BONUS },
@@ -175,6 +178,11 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
                }
             });
          });
+
+         if (isSteam() && hasAlly && !declareFriendshipAchievementUnlocked) {
+            SteamClient.unlockAchievement("DeclareFriendship");
+            declareFriendshipAchievementUnlocked = true;
+         }
 
          if (!offline) {
             gs.speedUp = clamp(gs.speedUp, 1, getMaxWarpStorage(gs));

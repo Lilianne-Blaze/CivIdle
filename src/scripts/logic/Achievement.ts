@@ -59,7 +59,11 @@ export function checkAgeAchievements(currentAge: TechAge): void {
             if (data.building && isNaturalWonder(data.building.type) && data.explored) {
                ++discoveredNaturalWonders;
             }
-            if (data.building && isWorldWonder(data.building.type)) {
+            if (
+               data.building &&
+               isWorldWonder(data.building.type) &&
+               data.building.type !== "CentrePompidou"
+            ) {
                ++builtWonders;
             }
          });
@@ -168,7 +172,7 @@ export function checkRebirthAchievements(extraGP: number, gs: GameState): void {
 
    const options = getGameOptions();
    forEach(Config.TechAge, (age) => {
-      if (age === "BronzeAge") {
+      if (age === "StoneAge") {
          return;
       }
       const level = options.ageWisdom[age] ?? 0;
