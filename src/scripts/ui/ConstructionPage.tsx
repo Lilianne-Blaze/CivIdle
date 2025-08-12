@@ -1,5 +1,6 @@
 import Tippy from "@tippyjs/react";
 import classNames from "classnames";
+import { getBuildingStatsByTypeShortString } from "../../../shared/lmc/LmcBuildingScriptsShared";
 import { isSpecialBuilding, isWorldWonder } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
@@ -21,8 +22,6 @@ import { MenuComponent } from "./MenuComponent";
 import { RenderHTML } from "./RenderHTMLComponent";
 import { TitleBarComponent } from "./TitleBarComponent";
 import { WarningComponent } from "./WarningComponent";
-import { countBuildingByType, countBuildingLevelsByType, getBuildingStatsByType, getBuildingStatsByTypeShortString } from "../../../shared/lmc/LmcScriptsShared";
-import { FormatNumber } from "./HelperComponents";
 
 export function ConstructionPage({ tile }: { tile: ITileData }): React.ReactNode {
    const building = tile.building;

@@ -597,3 +597,22 @@ export function mergeTimedGuid48(timeMillis: number, uuid: string): string {
 gt.mergeTimedGuid48 = mergeTimedGuid48;
 
 // =====
+
+export function addToSet<T>(firstSet: Set<T>, secondSet: Set<T>): void {
+   for (const item of secondSet) {
+      firstSet.add(item);
+   }
+}
+gt.addToSet = addToSet;
+
+/**
+ * Returns a new set, containing value if condition is met.
+ */
+export function newSetValueIf<T>(condition: boolean, value: T): Set<NonNullable<T>> {
+   const result = new Set<NonNullable<T>>();
+   if (condition) {
+      result.add(value as NonNullable<T>);
+   }
+   return result;
+}
+gt.newSetValueIf = newSetValueIf;

@@ -12,7 +12,7 @@ const gt = globalThis as any;
 export const LMC_MAJOR_VER = 23;
 gt.LMC_MAJOR_VER = LMC_MAJOR_VER;
 
-export const LMC_MINOR_VER = 239; // 2025-08-04
+export const LMC_MINOR_VER = 253; // 2025-08-04
 gt.LMC_MINOR_VER = LMC_MINOR_VER;
 
 //export const LMC_VER_NUMBER = LMC_MAJOR_VER * 10000 + LMC_MINOR_VER * 100 + 0;

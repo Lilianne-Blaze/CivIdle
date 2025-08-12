@@ -2,7 +2,7 @@ import Tippy from "@tippyjs/react";
 import { Fragment, useEffect, useState } from "react";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
 import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
-import { getBuildingStatsByType } from "../../../shared/lmc/LmcScriptsShared";
+import { getBuildingStatsByType } from "../../../shared/lmc/LmcBuildingScriptsShared";
 import {
    getStorageFor,
    getTotalBuildingCost,
@@ -34,7 +34,7 @@ import { Singleton } from "../utilities/Singleton";
 import { playClick, playError, playSuccess } from "../visuals/Sound";
 import type { IBuildingComponentProps } from "./BuildingPage";
 import { hideToast, showToast } from "./GlobalModal";
-import type { WarningComponent } from "./WarningComponent";
+import { WarningComponent } from "./WarningComponent";
 
 //export type UpgradeState = "all" | "active" | "disabled";
 

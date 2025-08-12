@@ -114,6 +114,9 @@ export function getBuildingUnlockAge(building: Building): TechAge {
 }
 gt.getBuildingUnlockAge = getBuildingUnlockAge;
 
+/**
+ * Returns current age as string.
+ */
 export function getCurrentAge(gs: GameState): TechAge {
    const tech = getMostAdvancedTech(gs);
    if (!tech) {

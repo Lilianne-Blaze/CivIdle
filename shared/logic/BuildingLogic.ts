@@ -6,9 +6,9 @@ import type { Religion } from "../definitions/ReligionDefinitions";
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tradition } from "../definitions/TraditionDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
+import { getBuildingStatsByType } from "../lmc/LmcBuildingScriptsShared";
 import { StarterBuildings } from "../lmc/LmcConstsEarly";
 import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
-import { getBuildingStatsByType } from "../lmc/LmcScriptsShared";
 import {
    clamp,
    forEach,

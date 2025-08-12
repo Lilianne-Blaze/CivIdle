@@ -1,11 +1,9 @@
-import mqtt from "mqtt";
 import { getGameOptions } from "../logic/GameStateLogic";
-import { fs, isFsLoaded, CHANNEL_GUID_ROOT } from "./LmcConstsEarly";
+import { lilModCli } from "./LilModCli";
+import { fs, isFsLoaded } from "./LmcConstsEarly";
 import { OnAfterWelcomeMessageProcessed, OnAtEndOfSetCityOverride, OnUserIdChanged } from "./LmcEvents";
 import { addSystemMessageSafe, getUserScriptsPath } from "./LmcScriptsShared";
 import { atMostOnce, atMostOncePerXSecs, sha1Hex } from "./MiscFuncs";
-import { lilModCli } from "./LilModCli";
-import { log } from "console";
 
 const gt = globalThis as any;
 

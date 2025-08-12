@@ -2,13 +2,16 @@ import Tippy from "@tippyjs/react";
 import classNames from "classnames";
 import { useEffect, useRef, useState } from "react";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
+import { getFestivalPoints } from "../../../shared/lmc/CiScripts";
+import { formatFestivalPoints } from "../../../shared/lmc/LmcFormattersParsers";
+import { getEmpireValueDeltaSmoothed, getNextGpMilestones, getScienceDeltaSmoothed } from "../../../shared/lmc/LmcScriptsShared";
+import { formatMillisToYMDHM } from "../../../shared/lmc/MiscFuncs";
 import {
    getMaxWarpSpeed,
    getScienceFromWorkers,
    isSpecialBuilding,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
-import { FESTIVAL_CONVERSION_RATE } from "../../../shared/logic/Constants";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
 import { GameStateChanged, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
 import { getHappinessIcon } from "../../../shared/logic/HappinessLogic";
@@ -19,22 +22,18 @@ import {
    getValueRequiredForGreatPeople,
 } from "../../../shared/logic/RebirthLogic";
 import { getResourceAmount } from "../../../shared/logic/ResourceLogic";
+import { getScienceAmount } from "../../../shared/logic/TechLogic";
 import { NotProducingReason, Tick } from "../../../shared/logic/TickLogic";
 import {
-   HOUR,
    Rounding,
-   clamp,
-   forEach,
-   formatHMS,
+   clamp, formatHMS,
    formatNumber,
    formatPercent,
-   mapCount,
-   mapOf,
-   mathSign,
+   mapCount, mathSign,
    range,
    round,
    tileToPoint,
-   type Tile,
+   type Tile
 } from "../../../shared/utilities/Helper";
 import { L, t } from "../../../shared/utilities/i18n";
 import { FloatingModeChanged, useFloatingMode, useGameOptions, useGameState } from "../Global";
@@ -50,12 +49,9 @@ import { playClick, playError } from "../visuals/Sound";
 import { showToast } from "./GlobalModal";
 import { FormatNumber } from "./HelperComponents";
 import { LoadingPage, LoadingPageStage } from "./LoadingPage";
+import { ResourceHappinessTooltip } from "./ResourceHappinessTooltip";
+import { ResourceTechTooltip } from "./ResourceTechTooltip";
 import { TilePage } from "./TilePage";
-import { getEmpireValueDeltaSmoothed, getNextGpMilestones, getScienceDeltaSmoothed, getTechsOfInterestTable } from "../../../shared/lmc/LmcScriptsShared";
-import { getScienceAmount, getTotalTechUnlockCost } from "../../../shared/logic/TechLogic";
-import { formatMillisToYMDHM, zeroAllButXHighestDigits } from "../../../shared/lmc/MiscFuncs";
-import { formatFestivalPoints } from "../../../shared/lmc/LmcFormattersParsers";
-import { getFestivalPoints } from "../../../shared/lmc/CiScripts";
 
 const gt = globalThis as any;
 
@@ -225,39 +221,46 @@ export function ResourcePanel(): React.ReactNode {
          )}
          <div className="separator-vertical" />
          {tick.happiness ? (
-            <div
-               className="section pointer"
-               onClick={() => {
-                  const xy = Tick.current.specialBuildings.get("Headquarter")?.tile;
-                  if (xy) {
-                     Singleton().sceneManager.getCurrent(WorldScene)?.lookAtTile(xy, LookAtMode.Select);
-                     Singleton().routeTo(TilePage, { xy, expandHappiness: true });
-                  }
-               }}
-            >
-               <div
-                  className={classNames({
-                     "m-icon": true,
-                     "text-red": tick.happiness.value < 0,
-                     "text-green": tick.happiness.value > 0,
-                  })}
-               >
-                  {getHappinessIcon(tick.happiness.value)}
-               </div>
+            <>
                <Tippy
                   placement="bottom"
-                  content={options.resourceBarShowUncappedHappiness ? t(L.HappinessUncapped) : t(L.Happiness)}
+                  content={
+                     <ResourceHappinessTooltip />
+                  }
                >
-                  <div style={{ width: "4rem" }}>
-                     {round(
-                        options.resourceBarShowUncappedHappiness
-                           ? tick.happiness.uncapped
-                           : tick.happiness.value,
-                        0,
-                     )}
+
+                  <div
+                     className="section pointer"
+                     onClick={() => {
+                        const xy = Tick.current.specialBuildings.get("Headquarter")?.tile;
+                        if (xy) {
+                           Singleton().sceneManager.getCurrent(WorldScene)?.lookAtTile(xy, LookAtMode.Select);
+                           Singleton().routeTo(TilePage, { xy, expandHappiness: true });
+                        }
+                     }}
+                  >
+                     <div
+                        className={classNames({
+                           "m-icon": true,
+                           "text-red": tick.happiness.value < 0,
+                           "text-green": tick.happiness.value > 0,
+                        })}
+                     >
+                        {getHappinessIcon(tick.happiness.value)}
+                     </div>
+
+                     <div style={{ width: "4rem" }}>
+                        {round(
+                           options.resourceBarShowUncappedHappiness
+                              ? tick.happiness.uncapped
+                              : tick.happiness.value,
+                           0,
+                        )}
+                     </div>
                   </div>
+
                </Tippy>
-            </div>
+            </>
          ) : null}
          <div className="separator-vertical" />
 
@@ -336,43 +339,7 @@ export function ResourcePanel(): React.ReactNode {
          <Tippy
             placement="bottom"
             content={
-               <div style={{ minWidth: 180 }}>
-                  <div>
-                     <b>{t(L.Science)}</b>
-                  </div>
-                  <div className="row text-small">
-                     <FormatNumber value={scienceDelta} />
-                     &nbsp;sci/sec
-                  </div>
-                  <div className="row text-small">
-                     <FormatNumber value={scienceDelta * 3600} />
-                     &nbsp;sci/hour
-                  </div>
-                  <div className="row text-small">
-                     <FormatNumber value={scienceDelta * 3600 * 24} />
-                     &nbsp;sci/day
-                  </div>
-
-                  <div>&nbsp;</div>
-                  <div>Time remaining:</div>
-                  {Object.entries(getTechsOfInterestTable(gs)).map(([k, v]) => {
-
-
-                     const techName = k;
-                     const unlockCost = getTotalTechUnlockCost(k, gs).totalScience;
-                     const hasEnoughScience = scienceAvailable >= unlockCost;
-                     const remainingUnlockCost = unlockCost - scienceAvailable;
-                     const remainingUnlockCostMillis = remainingUnlockCost / scienceDelta * 1000;
-                     const unlockCostFormatted = (scienceDelta <= 0) ? "unknown" : hasEnoughScience ? "available" : formatMillisToYMDHM(remainingUnlockCostMillis);
-
-                     return (
-                        <div className="row text-small">
-                           {techName} - {unlockCostFormatted}
-                        </div>
-                     );
-                  })}
-
-               </div>
+               <ResourceTechTooltip />
             }
             interactive={true} // if you want to allow selection/copying
          >

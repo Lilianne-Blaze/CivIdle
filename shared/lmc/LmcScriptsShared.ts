@@ -1,6 +1,6 @@
 
-import mqtt from 'mqtt'
 
+import { getGameOptions, getGameState, savedGame } from "../logic/GameStateLogic";
 import {
    atMostOnce,
    atMostOncePerXSecs,
@@ -8,27 +8,23 @@ import {
    ceilTo,
    shuffleMap,
    sortMapByValue,
-   zeroAllButXHighestDigits,
+   zeroAllButXHighestDigits
 } from "./MiscFuncs";
-import { getGameOptions, getGameState, savedGame } from "../logic/GameStateLogic";
 
-import { calcAtMostOncePerXSeconds } from "./MiscFuncs";
-import { clamp, forEach, keysOf, tileToPoint } from "../utilities/Helper";
-import { getXyBuildings, unlockedResources } from "../logic/IntraTickCache";
 import { NoPrice, NoStorage } from "../definitions/ResourceDefinitions";
+import { isSpecialBuilding, isWorldOrNaturalWonder } from '../logic/BuildingLogic';
+import { getXyBuildings, unlockedResources } from "../logic/IntraTickCache";
+import { getRebirthGreatPeopleCount } from "../logic/RebirthLogic";
 import { combineResources } from "../logic/ResourceLogic";
 import { Tick } from "../logic/TickLogic";
-import { lilModCli, lilModOption } from "./LilModCli";
-import { getAppDataRoaming, getCiSteamIdNumber, getEffectiveGpLevel } from "./CiScripts";
-import { Config } from "../logic/Config";
-import type { GameState } from "../logic/GameState";
-import type { Tech } from "../definitions/TechDefinitions";
-import { getTotalTechUnlockCost } from "../logic/TechLogic";
-import { type GameStateAndOfflineFlagEvent, OnAtBottomOfTickEverySecond } from "./LmcEvents";
-import { BuildingIsPowerPlant, BuildingIsPureProducer, BuildingIsStorage, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path, PrimaryWonders, SecondaryWonders } from "./LmcConstsEarly";
-import { getRebirthGreatPeopleCount } from "../logic/RebirthLogic";
 import { IUser } from '../utilities/Database';
-import { isSpecialBuilding, isWorldOrNaturalWonder } from '../logic/BuildingLogic';
+import { clamp, keysOf, tileToPoint } from "../utilities/Helper";
+import { getAppDataRoaming, getCiSteamIdNumber, getEffectiveGpLevel } from "./CiScripts";
+import { lilModCli, lilModOption } from "./LilModCli";
+import { hasCompletedOrUpgradingSwissBank } from "./LmcBuildingScriptsShared";
+import { BuildingIsPowerPlant, BuildingIsPureProducer, BuildingIsStorage, fs, isFsLoaded, LONG_TERM_BACKUPS_EVERY_X_SECONDS, path, PrimaryWonders, SecondaryWonders } from "./LmcConstsEarly";
+import { OnAtBottomOfTickEverySecond, type GameStateAndOfflineFlagEvent } from "./LmcEvents";
+import { calcAtMostOncePerXSeconds } from "./MiscFuncs";
 
 const gt = globalThis as any;
 
@@ -525,90 +521,6 @@ export function atMostOncePerRebirthPerSession(name: string) {
    return atMostOncePerXSecs(cacheKey, Number.MAX_SAFE_INTEGER);
 }
 
-// =====
-
-/**
- * Get next unlockable techs, the ones with all direct prereqs unlocked, usually 4, can be 0-6 (?).
- */
-export function getNextUnlockableTechs(gs: GameState = getGameState()): Tech[] {
-   const result: Tech[] = [];
-   forEach(Config.Tech, (tech, def) => {
-      if (gs.unlockedTech[tech]) {
-         return;
-      }
-      if (def.requireTech.every((t) => gs.unlockedTech[t])) {
-         if (!result.includes(tech)) {
-            result.push(tech);
-         }
-      }
-   });
-   return result;
-}
-gt.getNextUnlockableTechs = getNextUnlockableTechs;
-
-/**
- * Get techs of interest, ie some preselected ones commonly considered milestones,
- * and optionally the next unlockable techs.
- */
-export function getTechsOfInterest(gs: GameState = getGameState(), includeUnlockable = true): string[] {
-   const result: string[] = [];
-   if (includeUnlockable) {
-      forEach(Config.Tech, (techName, def) => {
-         if (gs.unlockedTech[techName]) {
-            return;
-         }
-         if (def.requireTech.every((t) => gs.unlockedTech[t])) {
-            if (!result.includes(techName)) {
-               result.push(techName);
-            }
-         }
-      });
-   }
-
-   const specialTechs = [
-      "Democracy",
-      "Capitalism",
-      "Skyscraper",
-      "MonetarySystem",
-      "Software",
-      "Future"];
-
-   for (const techName of specialTechs) {
-      if (gs.unlockedTech[techName]) {
-         continue;
-      }
-      if (!result.includes(techName)) {
-         result.push(techName);
-      }
-   }
-
-   return result;
-}
-gt.getTechsOfInterest = getTechsOfInterest;
-
-export function getTechsOfInterestTable(gs: GameState = getGameState(), includeUnlockable = true) {
-   const cacheSecs = 1;
-   const cacheKey = `getTechsOfInterestTable,includeUnlockable=${includeUnlockable}`;
-   const result = calcAtMostOncePerXSeconds(
-      cacheKey, cacheSecs,
-      () => {
-         return getTechsOfInterestTable0(gs, includeUnlockable);
-      });
-   return result;
-}
-gt.getTechsOfInterestTable = getTechsOfInterestTable;
-
-function getTechsOfInterestTable0(gs: GameState = getGameState(), includeUnlockable = true) {
-   const names = getTechsOfInterest(gs, includeUnlockable);
-   const result: Record<string, number> = {};
-   for (const techName of names) {
-      result[techName] = getTotalTechUnlockCost(techName, gs).totalScience;
-   };
-   return result;
-}
-
-// =====
-
 declare const TimeSeries: any;
 
 export function getTimeSeriesSafe(): any | null {
@@ -702,15 +614,6 @@ export function getNextGpMilestones(currentGpAtRb = getRebirthGreatPeopleCount()
    return result;
 }
 
-// =====
-
-export function isTechUnlocked(tech: string, gs: GameState = getGameState()): boolean {
-   return gs.unlockedTech[tech as keyof typeof Config.Tech] === true;
-}
-gt.isTechUnlocked = isTechUnlocked;
-
-// =====
-
 declare function getUser(): IUser | null;
 
 export function getUserSafe(): IUser | null {
@@ -721,139 +624,3 @@ export function getUserSafe(): IUser | null {
 }
 gt.getUserSafe = getUserSafe;
 
-// =====
-
-export function hasSwissBank(): boolean {
-   try {
-      const sbTile = Tick.current.specialBuildings.get("SwissBank");
-      return !!sbTile;
-   } catch (err) {
-      return false;
-   }
-}
-gt.hasSwissBank = hasSwissBank;
-
-export function hasNonEmptySwissBank(): boolean {
-   try {
-      const sbTile = Tick.current.specialBuildings.get("SwissBank");
-      const sbBuilding = sbTile?.building;
-      return (sbBuilding?.resources?.Koti ?? 0) > 0;
-   } catch (err) {
-      return false;
-   }
-}
-gt.hasNonEmptySwissBank = hasNonEmptySwissBank;
-
-export function hasCompletedOrUpgradingSwissBank(): boolean {
-   try {
-      const sbTile = Tick.current.specialBuildings.get("SwissBank");
-      const sbBuilding = sbTile?.building;
-      return sbBuilding?.status === "completed" || sbBuilding?.status === "upgrading";
-   } catch (err) {
-      return false;
-   }
-}
-gt.hasCompletedOrUpgradingSwissBank = hasCompletedOrUpgradingSwissBank;
-
-// =====
-
-export function countBuildingByType(type: keyof typeof Config.Building, gs = getGameState()): number {
-   const mapXyBuilding = getXyBuildings(gs);
-   let count = 0;
-   for (const building of mapXyBuilding.values()) {
-      if (building.type === type) {
-         count++;
-      }
-   }
-   return count;
-}
-gt.countBuildingByType = countBuildingByType;
-
-export function countBuildingLevelsByType(type: keyof typeof Config.Building, gs = getGameState()): number {
-   const mapXyBuilding = getXyBuildings(gs);
-   let count = 0;
-   for (const building of mapXyBuilding.values()) {
-      if (building.type === type) {
-         count += building.level;
-      }
-   }
-   return count;
-}
-gt.countBuildingLevelsByType = countBuildingLevelsByType;
-
-export type LmcBuildingStats = {
-   count: number;
-   countWorking: number;
-   countUpgrading: number;
-   countPaused: number;
-   levelSum: number;
-   levelAvg: number;
-   levelMin: number;
-   levelMax: number;
-   levelsWorking: number;
-   levelsUpgrading: number;
-   levelsPaused: number;
-}
-
-export function newEmptyLmcBuildingStats(): LmcBuildingStats {
-   return {
-      count: 0,
-      countWorking: 0,
-      countUpgrading: 0,
-      countPaused: 0,
-      levelSum: 0,
-      levelAvg: 0,
-      levelMin: 0,
-      levelMax: 0,
-      levelsWorking: 0,
-      levelsUpgrading: 0,
-      levelsPaused: 0,
-   };
-}
-gt.newEmptyLmcBuildingStats = newEmptyLmcBuildingStats;
-
-export function getBuildingStatsByType(
-   type: keyof typeof Config.Building,
-   gs = getGameState(),
-): LmcBuildingStats {
-   const retVal = newEmptyLmcBuildingStats();
-   try {
-      const mapXyBuilding = getXyBuildings(gs);
-      for (const building of mapXyBuilding.values()) {
-         if (building.type === type) {
-            retVal.count++;
-            retVal.levelSum += building.level;
-            if (building.capacity == 0) {
-               retVal.levelsPaused += building.level;
-               retVal.countPaused++;
-            } else if (building.status === "upgrading" || building.status === "building") {
-               retVal.levelsUpgrading += building.level;
-               retVal.countUpgrading++;
-            } else if (building.status === "completed") {
-               retVal.levelsWorking += building.level;
-               retVal.countWorking++;
-            }
-            if (retVal.levelMin === 0 || building.level < retVal.levelMin) {
-               retVal.levelMin = building.level;
-            }
-            if (building.level > retVal.levelMax) {
-               retVal.levelMax = building.level;
-            }
-         }
-      }
-      retVal.levelAvg = retVal.count > 0 ? retVal.levelSum / retVal.count : 0;
-   } catch (err) { }
-   return retVal;
-}
-gt.getBuildingStatsByType = getBuildingStatsByType;
-
-export function getBuildingStatsByTypeShortString(
-   type: keyof typeof Config.Building,
-   gs = getGameState(),
-): string {
-   const stats = getBuildingStatsByType(type, gs);
-   //return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelAvg.toFixed(2)} avg, ${stats.levelMin} min, ${stats.levelMax} max`;
-   // return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelMin}-${stats.levelMax} / ${stats.levelAvg.toFixed(2)} m-m/a`;
-   return `${stats.count} blds, ${stats.levelSum} lvls, ${stats.levelMin} - ${stats.levelMax} / ${stats.levelAvg.toFixed(2)} m-m/a`;
-}
-gt.getBuildingStatsByTypeShortString = getBuildingStatsByTypeShortString;

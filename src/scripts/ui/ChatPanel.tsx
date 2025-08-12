@@ -319,7 +319,7 @@ function ChatInput({
                   setShowChatChannel(!showChatChannel);
                }}
             >
-               {channel.toUpperCase()}
+               {channel.toUpperCase() ?? channel}
             </div>
          </Tippy>
          <input
@@ -359,6 +359,13 @@ function ChatMessage({
       : false;
    const timeStr = new Date(chat.time ?? 0).toLocaleTimeString();
    const dateTimeStr = new Date(chat.time ?? 0).toLocaleString();
+
+   if (!chat.name || chat.name.length === 0) {
+      chat.name = "Unknown";
+   }
+   if (!chat.flag) {
+      chat.flag = "EARTH";
+   }
 
    return (
       <div
