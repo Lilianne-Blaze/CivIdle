@@ -780,12 +780,10 @@ export function getBuildingLevelLabel(xy: Tile, gs: GameState): string {
       return "";
    }
    let levelBoost = 0;
-   if (canBeElectrified(b.type)) {
-      levelBoost += getElectrificationBoost(b, gs);
-      Tick.current.levelBoost.get(xy)?.forEach((lb) => {
-         levelBoost += lb.value;
-      });
-   }
+   levelBoost += Tick.current.electrified.get(xy) ?? 0;
+   Tick.current.levelBoost.get(xy)?.forEach((lb) => {
+      levelBoost += lb.value;
+   });
    if (levelBoost > 0) {
       return `${b.level}+${levelBoost}`;
    }
@@ -1000,27 +998,20 @@ gt.ST_PETERS_FAITH_MULTIPLIER = ST_PETERS_FAITH_MULTIPLIER;
 export const ST_PETERS_STORAGE_MULTIPLIER = 10 * 60 * 60;
 gt.ST_PETERS_STORAGE_MULTIPLIER = ST_PETERS_STORAGE_MULTIPLIER;
 
-export function getPowerRequired(building: IBuildingData): number {
-   if (building.electrification <= 0) {
+export function getPowerRequired(building: IBuildingData, gs: GameState): number {
+   const level = getElectrificationLevel(building, gs);
+   if (level <= 0) {
       return 0;
    }
-   return Math.round(Math.pow(4, building.electrification));
+   return Math.round(Math.pow(4, level));
 }
 gt.getPowerRequired = getPowerRequired;
 
-export function getElectrificationBoost(building: IBuildingData, gs: GameState): number {
+export function getElectrificationLevel(building: IBuildingData, gs: GameState): number {
    if (!hasFeature(GameFeature.Electricity, gs) || !canBeElectrified(building.type)) {
       return 0;
    }
-   building.electrification = clamp(building.electrification, 0, building.level);
-   let result = building.electrification;
-   if (Config.Building[building.type].power) {
-      result += 5;
-   }
-   if (gs.unlockedUpgrades.Liberalism5) {
-      result += 5;
-   }
-   return result;
+   return clamp(building.electrification, 0, building.level);
 }
 
 export function canBeElectrified(b: Building): boolean {
@@ -1176,6 +1167,9 @@ export function applyBuildingDefaults(building: IBuildingData, options: GameOpti
    }
    if (isNullOrUndefined(toApply.stockpileMax)) {
       toApply.stockpileMax = options.defaultStockpileMax;
+   }
+   if (isNullOrUndefined(toApply.electrification)) {
+      toApply.electrification = options.defaultElectrificationLevel;
    }
    if (isNullOrUndefined(toApply.constructionPriority)) {
       toApply.constructionPriority = options.defaultConstructionPriority;

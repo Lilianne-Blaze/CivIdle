@@ -16,14 +16,13 @@ import {
 } from "../utilities/Helper";
 import type { PartialSet, PartialTabulate } from "../utilities/TypeDefinitions";
 import {
-   getElectrificationBoost,
+   getElectrificationLevel,
    getMarketBaseSellAmount,
    getMarketBuyAmount,
    getMarketSellAmount,
    getResourceImportCapacity,
    getStorageFor,
-   IOFlags,
-   totalMultiplierFor,
+   IOFlags, totalMultiplierFor
 } from "./BuildingLogic";
 import { Config } from "./Config";
 import { SCIENCE_VALUE } from "./Constants";
@@ -228,7 +227,7 @@ export function getBuildingIO(
          if (hasFlag(options, IOFlags.IgnoreElectrification)) {
             level = b.level;
          } else if (hasFlag(options, IOFlags.TheoreticalElectrification)) {
-            level = b.level + getElectrificationBoost(b, gs);
+            level = b.level + getElectrificationLevel(b, gs);
          } else {
             level = b.level + (Tick.current.electrified.get(xy) ?? 0);
          }

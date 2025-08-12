@@ -27,6 +27,7 @@ import type { IShortcutConfig, Shortcut } from "./Shortcut";
 import { PRIORITY_MIN, type IBuildingData, type ITileData } from "./Tile";
 
 const gt = globalThis as any;
+
 export interface IValueTracker {
    accumulated: number;
    history: number[];
@@ -209,6 +210,7 @@ export class GameOptions {
    defaultConstructionPriority = PRIORITY_MIN;
    defaultStockpileCapacity = 1;
    defaultStockpileMax = 5;
+   defaultElectrificationLevel = 0;
    defaultBuildingLevel = 1;
    porcelainTowerMaxPickPerRoll = false;
    greedyTransport = false;

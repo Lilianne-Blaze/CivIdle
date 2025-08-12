@@ -483,20 +483,22 @@ export function ResourcePanel(): React.ReactNode {
 
          <div className="separator-vertical" />
          <div className="section app-region-none" style={{ padding: "0 0.5rem" }}>
-            <select
-               value={gs.speedUp}
-               onChange={(e) => {
-                  gs.speedUp = clamp(Number.parseInt(e.target.value, 10), 1, getMaxWarpSpeed(gs));
-                  notifyGameStateUpdate();
-               }}
-               style={{ paddingRight: "2.5rem" }}
-            >
-               {range(1, getMaxWarpSpeed(gs) + 1).map((i) => (
-                  <option key={i} value={i}>
-                     {i}x
-                  </option>
-               ))}
-            </select>
+            <Tippy content={t(L.WarpSpeed)}>
+               <select
+                  value={gs.speedUp}
+                  onChange={(e) => {
+                     gs.speedUp = clamp(Number.parseInt(e.target.value, 10), 1, getMaxWarpSpeed(gs));
+                     notifyGameStateUpdate();
+                  }}
+                  style={{ paddingRight: "2.5rem" }}
+               >
+                  {range(1, getMaxWarpSpeed(gs) + 1).map((i) => (
+                     <option key={i} value={i}>
+                        {i}x
+                     </option>
+                  ))}
+               </select>
+            </Tippy>
          </div>
       </div>
    );

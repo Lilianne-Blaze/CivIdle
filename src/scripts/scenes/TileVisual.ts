@@ -323,6 +323,11 @@ export class TileVisual extends Container {
          if (!mapBetterStatusIcons) { this._notProducing.tint = getTextColor(); }
          this._spinner.tint = getTextColor();
       }
+
+      if (!mapBetterStatusIcons) {
+         this._notProducing.tint = getTextColor();
+      }
+
       if (this._tile.building.status !== "completed") {
          return;
       }
