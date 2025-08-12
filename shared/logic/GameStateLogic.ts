@@ -4,7 +4,8 @@ import { wyhash } from "../thirdparty/wyhash";
 import type { UserAttributes } from "../utilities/Database";
 import { safeAdd } from "../utilities/Helper";
 import { TypedEvent } from "../utilities/TypedEvent";
-import { SavedGame, Transports, type GameOptions, type GameState } from "./GameState";
+import { SavedGame, type GameOptions, type GameState } from "./GameState";
+import { Transports } from "./Transports";
 
 export const savedGame = new SavedGame();
 export const TILE_SIZE = 64;
@@ -46,6 +47,9 @@ export function deserializeSave(str: string): SavedGame {
    checksum.actual = wyhash(serializeSaveLite(saveGame), BigInt(0)).toString(16);
    // TODO: Remove this when everyone is migrated!
    if ("transportation" in saveGame.current) {
+      checksum.actual = checksum.expected;
+   }
+   if ("transportationV2" in saveGame.current) {
       checksum.actual = checksum.expected;
    }
    return saveGame;

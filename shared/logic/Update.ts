@@ -41,7 +41,7 @@ import {
    getBuildingCost,
    getBuildingValue,
    getCurrentPriority,
-   getElectrificationBoost,
+   getElectrificationLevel,
    getInputMode,
    getMarketBuyAmount,
    getMarketSellAmount,
@@ -68,7 +68,7 @@ import {
 import { Config } from "./Config";
 import { MANAGED_IMPORT_RANGE } from "./Constants";
 import { GameFeature, hasFeature } from "./FeatureLogic";
-import { Transports, type GameState, type ITransportationDataV2 } from "./GameState";
+import type { GameState } from "./GameState";
 import { getGameOptions } from "./GameStateLogic";
 import {
    getBuildingIO,
@@ -98,6 +98,7 @@ import {
    type ITileData,
    type IWarehouseBuildingData,
 } from "./Tile";
+import { Transports, type ITransportationDataV2 } from "./Transports";
 
 export const OnPriceUpdated = new TypedEvent<GameState>();
 export const OnBuildingComplete = new TypedEvent<Tile>();
@@ -609,8 +610,12 @@ export function transportAndConsumeResources(
    }
 
    ////////// Storage + Partial Production (when storage is full)
+   // 2025.8.12: We skip storage check for Headquarter. This is due to a bug that can cause Headquarter to
+   // have some random resources. The bug has been fixed but some players might still have bad save files.
+   // Bugfix: https://github.com/fishpondstudio/CivIdle/commit/0b1d5623c3756056f2ebee87290ed5728a8996e9#diff-9035467b2d27a7d3e12912f854e205363860aae7c38dfac1695e23fadab17499R43
+   const skipStorageCheck = isEmpty(output) || building.type === "Headquarter";
    const hasEnoughStorage =
-      isEmpty(output) ||
+      skipStorageCheck ||
       used + getStorageRequired(output) + getStorageRequired(input) * getStockpileCapacity(building) <= total;
    if (!hasEnoughStorage) {
       const nonTransportables = filterNonTransportable(output);
@@ -645,11 +650,16 @@ export function transportAndConsumeResources(
 
    ////////// Electrification
    if (hasFeature(GameFeature.Electricity, gs) && canBeElectrified(building.type)) {
-      const electrification = getElectrificationBoost(building, gs);
-      const requiredPower = getPowerRequired(building);
+      const requiredPower = getPowerRequired(building, gs);
       if (getAvailableWorkers("Power") >= requiredPower) {
          useWorkers("Power", requiredPower, xy);
-         Tick.next.electrified.set(xy, electrification);
+         Tick.next.electrified.set(xy, getElectrificationLevel(building, gs));
+      }
+      if (Config.Building[building.type].power) {
+         mapSafePush(Tick.next.levelBoost, xy, { value: 5, source: t(L.PoweredBuilding) });
+      }
+      if (gs.unlockedUpgrades.Liberalism5) {
+         mapSafePush(Tick.next.levelBoost, xy, { value: 5, source: Config.Upgrade.Liberalism5.name() });
       }
    }
 
