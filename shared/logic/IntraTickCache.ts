@@ -2,7 +2,7 @@ import type { Building, IBuildingDefinition } from "../definitions/BuildingDefin
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { OnAtEndOfClearIntraTickCache, OnCheckMarketTrade } from "../lmc/LmcEvents";
-import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
+import { CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { Grid } from "../utilities/Grid";
 import {
    clamp,
@@ -16,18 +16,18 @@ import {
 } from "../utilities/Helper";
 import type { PartialSet, PartialTabulate } from "../utilities/TypeDefinitions";
 import {
-   IOFlags,
    getElectrificationBoost,
    getMarketBaseSellAmount,
    getMarketBuyAmount,
    getMarketSellAmount,
    getResourceImportCapacity,
    getStorageFor,
+   IOFlags,
    totalMultiplierFor,
 } from "./BuildingLogic";
 import { Config } from "./Config";
 import { SCIENCE_VALUE } from "./Constants";
-import { Transports, type GameState } from "./GameState";
+import type { GameState } from "./GameState";
 import { TILE_SIZE } from "./GameStateLogic";
 import { NotProducingReason, Tick, type MultiplierType, type MultiplierWithSource } from "./TickLogic";
 import type {
@@ -37,6 +37,7 @@ import type {
    IResourceImportBuildingData,
    ITileData,
 } from "./Tile";
+import { Transports } from "./Transports";
 
 const gt = globalThis as any;
 

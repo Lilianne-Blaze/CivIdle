@@ -1,4 +1,4 @@
-import { BuildingDefinitions, type Building } from "../definitions/BuildingDefinitions";
+import type { Building } from "../definitions/BuildingDefinitions";
 import type { IUnlockable } from "../definitions/ITechDefinition";
 import { NoPrice, NoStorage, type Resource } from "../definitions/ResourceDefinitions";
 import type { Tech } from "../definitions/TechDefinitions";
@@ -6,7 +6,7 @@ import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { POTATO_TRANSPORTS1_DIVIDER } from "../lmc/LmcConstsEarly";
 import { OnCheckMarketTrade } from "../lmc/LmcEvents";
 import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
-import { checkMarketTrade, CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
+import { CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { getSeenResourcesTable } from "../lmc/LmcScriptsShared";
 import { decayBuildingResources } from "../lmc/LmcUpdateUtils";
 import { shuffleObjectProps } from "../lmc/MiscFuncs";
@@ -76,7 +76,7 @@ import {
 import { Config } from "./Config";
 import { MANAGED_IMPORT_RANGE } from "./Constants";
 import { GameFeature, hasFeature } from "./FeatureLogic";
-import { Transports, type GameState, type ITransportationDataV2 } from "./GameState";
+import type { GameState } from "./GameState";
 import { getGameOptions } from "./GameStateLogic";
 import {
    getBuildingIO,
@@ -84,8 +84,7 @@ import {
    getFuelByTarget,
    getGrid,
    getStorageFullBuildings,
-   getXyBuildings,
-   unlockedResources,
+   getXyBuildings
 } from "./IntraTickCache";
 import { calculateEmpireValue } from "./RebirthLogic";
 import { getAmountInTransit } from "./ResourceLogic";
@@ -106,6 +105,7 @@ import {
    type ITileData,
    type IWarehouseBuildingData,
 } from "./Tile";
+import { Transports, type ITransportationDataV2 } from "./Transports";
 
 const gt = globalThis as any;
 
@@ -691,8 +691,12 @@ export function transportAndConsumeResources(
    }
 
    ////////// Storage + Partial Production (when storage is full)
+   // 2025.8.12: We skip storage check for Headquarter. This is due to a bug that can cause Headquarter to
+   // have some random resources. The bug has been fixed but some players might still have bad save files.
+   // Bugfix: https://github.com/fishpondstudio/CivIdle/commit/0b1d5623c3756056f2ebee87290ed5728a8996e9#diff-9035467b2d27a7d3e12912f854e205363860aae7c38dfac1695e23fadab17499R43
+   const skipStorageCheck = isEmpty(output) || building.type === "Headquarter";
    const hasEnoughStorage =
-      isEmpty(output) ||
+      skipStorageCheck ||
       used + getStorageRequired(output) + getStorageRequired(input) * getStockpileCapacity(building) <= total;
    if (!hasEnoughStorage) {
       const nonTransportables = filterNonTransportable(output);

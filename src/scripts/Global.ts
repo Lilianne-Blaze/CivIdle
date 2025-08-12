@@ -6,7 +6,7 @@ import type { TechAge } from "../../shared/definitions/TechDefinitions";
 import { lilModCli, lilModOption } from "../../shared/lmc/LilModCli";
 import { lmcSaveGameAtStart } from "../../shared/lmc/LmcSavedGame";
 import { atMostOncePerRebirthPerSession } from "../../shared/lmc/LmcScriptsShared";
-import { exploreTile, getBuildingCost } from "../../shared/logic/BuildingLogic";
+import { exploreTile, findSpecialBuilding, getBuildingCost } from "../../shared/logic/BuildingLogic";
 import { Config } from "../../shared/logic/Config";
 import type { GameOptions, SavedGame } from "../../shared/logic/GameState";
 import { GameState } from "../../shared/logic/GameState";
@@ -20,7 +20,6 @@ import {
    replacer,
    savedGame,
    serializeSave,
-   serializeSaveLite,
 } from "../../shared/logic/GameStateLogic";
 import { initializeGameState } from "../../shared/logic/InitializeGameState";
 import {
@@ -29,22 +28,15 @@ import {
    rollPermanentGreatPeople,
 } from "../../shared/logic/RebirthLogic";
 import { Tick } from "../../shared/logic/TickLogic";
-import {
-   base64ToBytes,
-   bytesToBase64,
-   clamp,
-   forEach,
-   rejectIn,
-   safeAdd,
-   sizeOf,
-} from "../../shared/utilities/Helper";
+import { Transports } from "../../shared/logic/Transports";
+import { base64ToBytes, bytesToBase64, clamp, forEach, safeAdd, sizeOf } from "../../shared/utilities/Helper";
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import { migrateSavedGame } from "./MigrateSavedGame";
 import { tickEverySecond } from "./logic/ClientUpdate";
-import { CLIENT_ID, client } from "./rpc/RPCClient";
+import { clientHeartbeat } from "./logic/Heartbeat";
+import { CLIENT_ID, getChatMessages, getTrades } from "./rpc/RPCClient";
 import { SteamClient, isSteam } from "./rpc/SteamClient";
 import { WorldScene } from "./scenes/WorldScene";
-import { showToast } from "./ui/GlobalModal";
 import { idbDel, idbGet, idbSet } from "./utilities/BrowserStorage";
 import { makeObservableHook } from "./utilities/Hook";
 import { isAndroid, isIOS } from "./utilities/Platforms";
@@ -52,20 +44,11 @@ import { Singleton } from "./utilities/Singleton";
 import { compress, decompress } from "./workers/Compress";
 
 const gt = globalThis as any;
-import { clientHeartbeat } from "./logic/Heartbeat";
-
 export async function resetToCity(city: City): Promise<void> {
+   Transports.length = 0;
    savedGame.current = new GameState();
    savedGame.current.city = city;
    initializeGameState(savedGame.current, savedGame.options);
-   try {
-      await Promise.race([
-         client.tickV2(savedGame.current.id, savedGame.current.tick),
-         rejectIn(10, "Connection timeout"),
-      ]);
-   } catch (e) {
-      showToast(String(e));
-   }
 }
 gt.resetToCity = resetToCity;
 
@@ -413,5 +396,5 @@ if (import.meta.env.DEV) {
    window.Config = Config;
 
    // @ts-expect-error
-   window.hq = () => Tick.current.specialBuildings.get("Headquarter");
+   window.hq = () => findSpecialBuilding("Headquarter", getGameState());
 }

@@ -24,7 +24,6 @@ import { MANAGED_IMPORT_RANGE } from "../../../shared/logic/Constants";
 import { GameFeature, hasFeature } from "../../../shared/logic/FeatureLogic";
 import {
    DarkTileTextures,
-   Transports,
    getTextColor,
    type GameOptions,
    type GameState,
@@ -36,6 +35,7 @@ import {
    makeBuilding,
    type IResourceImportBuildingData,
 } from "../../../shared/logic/Tile";
+import { Transports } from "../../../shared/logic/Transports";
 import {
    clamp,
    hasFlag,

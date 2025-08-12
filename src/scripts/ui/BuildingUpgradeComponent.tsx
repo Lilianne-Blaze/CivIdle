@@ -1,13 +1,13 @@
 import Tippy from "@tippyjs/react";
 import { Fragment, useEffect, useState } from "react";
 import type { Resource } from "../../../shared/definitions/ResourceDefinitions";
+import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
+import { getBuildingStatsByType } from "../../../shared/lmc/LmcScriptsShared";
 import {
    getStorageFor,
    getTotalBuildingCost,
    getUpgradeTargetLevels,
-   isHeadquarter,
    isSpecialBuilding,
-   isWorldOrNaturalWonder,
 } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { getGameState, notifyGameStateUpdate } from "../../../shared/logic/GameStateLogic";
@@ -34,9 +34,7 @@ import { Singleton } from "../utilities/Singleton";
 import { playClick, playError, playSuccess } from "../visuals/Sound";
 import type { IBuildingComponentProps } from "./BuildingPage";
 import { hideToast, showToast } from "./GlobalModal";
-import { getAllNeighborTiles, getAllNeighborTilesSameType } from "../../../shared/lmc/CiScripts";
-import { WarningComponent } from "./WarningComponent";
-import { getBuildingStatsByType } from "../../../shared/lmc/LmcScriptsShared";
+import type { WarningComponent } from "./WarningComponent";
 
 //export type UpgradeState = "all" | "active" | "disabled";
 
