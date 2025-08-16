@@ -79,6 +79,7 @@ const DefaultThemeColors = {
    ResearchLockedColor: "#666666",
    ResearchUnlockedColor: "#ffffff",
    ResearchHighlightColor: "#ffff99",
+   BuildingStatusIconAlpha: 1,
 };
 
 export function resetThemeColor() {
@@ -103,6 +104,7 @@ export const ThemeColorNames: Record<keyof typeof DefaultThemeColors, () => stri
    ResearchLockedColor: () => t(L.ThemeResearchLockedColor),
    ResearchUnlockedColor: () => t(L.ThemeResearchUnlockedColor),
    ResearchHighlightColor: () => t(L.ThemeResearchHighlightColor),
+   BuildingStatusIconAlpha: () => t(L.ThemeBuildingStatusIconAlpha),
 };
 
 export const ExtraTileInfoTypes = {
@@ -217,6 +219,7 @@ export class GameOptions {
    buildNumber = 0;
    constructionGridView = false;
    useRightClickCopy = false;
+   buildingStatusIconFollowBuildingColor = false;
 }
 
 export enum RebirthFlags {
@@ -235,7 +238,7 @@ export interface RebirthInfo {
    time: number;
 }
 
-export const Languages: Record<string, Record<string, string>> = {
+export const Languages = {
    en: EN,
    es: ES,
    cz: CZ,
@@ -248,6 +251,21 @@ export const Languages: Record<string, Record<string, string>> = {
    tr: TR,
    zh_CN: ZH_CN,
    zh_TW: ZH_TW,
+} as const;
+
+export const LanguageToChatChannel: Record<keyof typeof Languages, ChatChannel> = {
+   en: "en",
+   es: "es",
+   cz: "en",
+   fr: "fr",
+   de: "de",
+   kr: "kr",
+   nl: "en",
+   pt_BR: "pt",
+   ru: "ru",
+   tr: "en",
+   zh_CN: "zh",
+   zh_TW: "zh",
 } as const;
 
 let translatePercentage = 1;
