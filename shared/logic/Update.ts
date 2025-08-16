@@ -436,7 +436,11 @@ export function transportAndConsumeResources(
             const b = gs.tiles.get(nxy)?.building;
             if (b?.status === "completed") {
                // LMCBOOKMARK 2025-06-xx allow Caravansaries to use Markets too
-               if (b?.type === "Warehouse" || b?.type === "Market") {
+               if (b?.type === "Warehouse") {
+                  Tick.next.playerTradeBuildings.set(nxy, b);
+               } else if (GLOBAL_PARAMS.CARAVANSARIES_USE_EVERYTHING && !isSpecialBuilding(b?.type)) {
+                  Tick.next.playerTradeBuildings.set(nxy, b);
+               } else if (b?.type === "Market" && GLOBAL_PARAMS.CARAVANSARIES_USE_MARKETS) {
                   Tick.next.playerTradeBuildings.set(nxy, b);
                }
             }
@@ -570,9 +574,9 @@ export function transportAndConsumeResources(
    if (building.type === "Market") {
       const market = building as IMarketBuildingData;
       let totalBought = 0;
-      const shuffledSellResources = shuffleObjectProps(market.sellResources);
-      forEach(shuffledSellResources, function marketProduction(sellResource) {
-         // forEach(market.sellResources, function marketProduction(sellResource) {
+      const useShuffled = false;
+      const marketSellResources = useShuffled ? shuffleObjectProps(market.sellResources) : market.sellResources;
+      forEach(marketSellResources, function marketProduction(sellResource) {
          const buyResource = market.availableResources[sellResource];
          if (!buyResource) {
             delete market.sellResources[sellResource];

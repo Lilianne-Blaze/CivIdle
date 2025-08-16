@@ -2,6 +2,7 @@ import type { Building, IBuildingDefinition } from "../definitions/BuildingDefin
 import { NoPrice, NoStorage, type Deposit, type Resource } from "../definitions/ResourceDefinitions";
 import { lilModCli, lilModOption } from "../lmc/LilModCli";
 import { OnAtEndOfClearIntraTickCache, OnCheckMarketTrade } from "../lmc/LmcEvents";
+import { GLOBAL_PARAMS } from "../lmc/LmcGlobalParams";
 import { CheckMarketTradeEvent, CheckMarketTradeParams } from "../lmc/LmcMarkets";
 import { Grid } from "../utilities/Grid";
 import {
@@ -247,6 +248,9 @@ export function getBuildingIO(
             } else {
                value *= totalMultiplierFor(xy, type, 1, stableOnly, gs);
             }
+         }
+         if (k === "Worker") {
+            value = value * GLOBAL_PARAMS.WORKERS_OUTPUT_MULTI;
          }
          safeAdd(result, k, value);
       });

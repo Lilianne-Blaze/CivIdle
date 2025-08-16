@@ -1,17 +1,16 @@
 import type React from "react";
 import type { FunctionComponent } from "react";
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
-import { getBuildingStatsByTypeShortString } from "../../../shared/lmc/LmcBuildingScriptsShared";
 import { isSpecialBuilding } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import type { GameState } from "../../../shared/logic/GameState";
+import { getTypeBuildings } from "../../../shared/logic/IntraTickCache";
 import type { ITileData } from "../../../shared/logic/Tile";
 import type { Tile } from "../../../shared/utilities/Helper";
 import { useGameState } from "../Global";
 import { Singleton } from "../utilities/Singleton";
 import { BritishMuseumBuildingBody } from "./BritishMuseumBuildingBody";
 import { BroadwayBuildingBody } from "./BroadwayBuildingBody";
-import { CathedralOfBrasiliaBuildingBody } from "./CathedralOfBrasiliaBuildingBody";
 import { CentrePompidouBuildingBody } from "./CentrePompidouBuildingBody";
 import { DefaultBuildingBody } from "./DefaultBuildingBody";
 import { EastIndiaCompanyBuildingBody } from "./EastIndiaCompanyBuildingBody";
@@ -19,8 +18,8 @@ import { EuphratesRiverBuildingBody } from "./EuphratesRiverBuildingBody";
 import { GrandBazaarBuildingBody } from "./GrandBazaarBuildingBody";
 import { HagiaSophiaBuildingBody } from "./HagiaSophiaBuildingBody";
 import { HeadquarterBuildingBody } from "./HeadquarterBuildingBody";
+import { FormatNumber } from "./HelperComponents";
 import { IdeologyBuildingBody } from "./IdeologyBuildingBody";
-import { ItaipuDamBuildingBody } from "./ItaipuDamBuildingBody";
 import { LoadingPage, LoadingPageStage } from "./LoadingPage";
 import { LouvreBuildingBody } from "./LouvreBuildingBody";
 import { MarketBuildingBody } from "./MarketBuildingBody";
@@ -31,7 +30,6 @@ import { PlayerTradeBuildingBody } from "./PlayerTradeBuildingBody";
 import { ReligionBuildingBody } from "./ReligionBuildingBody";
 import { ScienceProductionWonderBuildingBody } from "./ScienceProductionWonderBuildingBody";
 import { StatisticsBuildingBody } from "./StatisticsBuildingBody";
-import { SwissBankBuildingBody } from "./SwissBankBuildingBody";
 import { TheMetBuildingBody } from "./TheMetBuildingBody";
 import { TitleBarComponent } from "./TitleBarComponent";
 import { ToggleWonderBuildingBody } from "./ToggleableWonderBuildingBody";
@@ -41,6 +39,9 @@ import { UnitedNationsBuildingBody } from "./UnitedNationsBuildingBody";
 import { UpgradableWonderBuildingBody } from "./UpgradableWonderBuildingBody";
 import { WarehouseBuildingBody } from "./WarehouseBuildingBody";
 import { ZugspitzeBuildingBody } from "./ZugspitzeBuildingBody";
+import { SwissBankBuildingBody } from "./SwissBankBuildingBody";
+import { ItaipuDamBuildingBody } from "./ItaipuDamBuildingBody";
+import { CathedralOfBrasiliaBuildingBody } from "./CathedralOfBrasiliaBuildingBody";
 
 const BuildingBodyOverride: Partial<Record<Building, FunctionComponent<IBuildingComponentProps>>> = {
    Headquarter: HeadquarterBuildingBody,
@@ -97,12 +98,12 @@ export function BuildingPage(props: { tile: ITileData }): React.ReactNode {
    const gs = useGameState();
    const definition = Config.Building[building.type];
    const Body = BuildingBodyOverride[building.type] ?? DefaultBuildingBody;
-
    let titleBarContent = null;
    if (!isSpecialBuilding(building.type)) {
-      titleBarContent = <span>({getBuildingStatsByTypeShortString(building.type, gs)})</span>;
+      const buildingByType = getTypeBuildings(gs);
+      const buildingCount = buildingByType.get(building.type)?.size ?? 0;
+      titleBarContent = <span>({<FormatNumber value={buildingCount} />})</span>;
    }
-
    return (
       <div className="window">
          <TitleBarComponent>

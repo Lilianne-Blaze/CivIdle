@@ -1634,9 +1634,13 @@ export const EN = {
    NeilArmstrong: "Neil Armstrong",
    SidMeier: "Sid Meier",
    RemapMiddleClickToRightClickHTML: "Remap <b>middle click</b> to <b>right click</b>",
+   AccountTypeShowDetailsTribune: "Eligible for Quaestor Rank, click for more details",
    ElectrificationStatusDescV2: "Both buildings that require power and buildings that do not require power can be electrified. However, buildings that require power gets +5 Building Level Boost for free",
    PoweredBuilding: "Powered Building",
    LiberalismLevel5DescHTMLV3: "All buildings that can be electrified get <b>+5 Building Level Boost</b> for free",
    ActualElectrificationLevel: "Actual Level <b>(capped by Building Level)</b>",
    DefaultElectrificationLevel: "Default Electrification Level",
+   ThemeBuildingStatusIconAlpha: "Building Status Icon Alpha",
+   ThemeBuildingStatusIconFollowBuildingColor: "Building Status Icons Follow Building Color",
+   ThemeBuildingStatusIconFollowBuildingColorDescHTML: "Building status icons (on the top left of the building) will follow the color of the building",
 };

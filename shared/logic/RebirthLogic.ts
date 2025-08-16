@@ -43,9 +43,9 @@ gt.getValueRequiredForGreatPeople = getValueRequiredForGreatPeople;
 export function getGreatPersonThisRunLevel(amount: number): number {
    let result = 0;
    for (let i = 1; i <= amount; ++i) {
-      result += 1 / i;
+      result += 1 / (i / 2);
    }
-   return Math.round(result * 100) / 100;
+   return Math.round(result * 100) / 100 * GLOBAL_PARAMS.GP_CURRENT_RUN_MULTI;
 }
 gt.getGreatPersonThisRunLevel = getGreatPersonThisRunLevel;
 

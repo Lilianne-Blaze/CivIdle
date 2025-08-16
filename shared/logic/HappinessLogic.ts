@@ -84,7 +84,7 @@ export function calculateHappiness(gs: GameState) {
             }),
          )
             ? prev
-            : prev + 1;
+            : prev + (1 * GLOBAL_PARAMS.HAPPINESS_WELLSTOCKED_MULTI);
       },
       0,
    );
