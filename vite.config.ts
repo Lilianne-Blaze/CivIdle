@@ -17,12 +17,23 @@ export default defineConfig(({ command }) => {
          buildAtlas("misc", command === "serve"),
       ],
       server: {
-         port: 3000,
+         port: 3020,
          host: true,
+         allowedHosts: true,
       },
       build: {
-         sourcemap: true,
+         rollupOptions: {
+            // don't add hashes
+            output: {
+               entryFileNames: `assets/[name].js`,
+               chunkFileNames: `assets/[name].js`,
+               assetFileNames: `assets/[name][extname]`,
+            },
+         },
+         // not needed with minify=false
+         //sourcemap: true,
          target: "es2015",
+         minify: false, // DON'T.
       },
       test: {
          browser: {
