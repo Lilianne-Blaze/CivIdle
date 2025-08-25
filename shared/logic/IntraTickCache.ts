@@ -251,7 +251,12 @@ export function getBuildingIO(
          }
          if (k === "Worker") {
             value = value * GLOBAL_PARAMS.WORKERS_OUTPUT_MULTI;
+         } else if (k === "Science") {
+            value = value * GLOBAL_PARAMS.SCIENCE_OUTPUT_MULTI;
+         } else if (!NoStorage[k] && !NoPrice[k]) {
+            value = value * GLOBAL_PARAMS.PHYSICAL_GOODS_MULTI;
          }
+
          safeAdd(result, k, value);
       });
    }

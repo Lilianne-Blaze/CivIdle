@@ -556,48 +556,6 @@ gt.copyMissingProps = copyMissingProps;
 
 // =====
 
-export function newTimedGuid48(timeMillis = Date.now()) {
-   let timeHex = timeMillis.toString(16).padStart(16, '0').slice(-16);
-   let uuidHex = crypto.randomUUID().replace(/-/g, '');
-   return timeHex + uuidHex;
-}
-gt.newTimedGuid48 = newTimedGuid48;
-
-/**
- * Splits a timed GUID (created by newTimedGuid48) into its timestamp (as a number)
- * and UUID (in standard 8-4-4-4-12 notation).
- */
-export function splitTimedGuid48(timedGuid: string): { timeMillis: number; uuid: string } {
-   const timeHex = timedGuid.slice(0, 16);
-   const uuidHex = timedGuid.slice(16, 48);
-
-   // Format UUID hex into standard UUID notation: 8-4-4-4-12
-   const uuid = [
-      uuidHex.slice(0, 8),
-      uuidHex.slice(8, 12),
-      uuidHex.slice(12, 16),
-      uuidHex.slice(16, 20),
-      uuidHex.slice(20, 32)
-   ].join('-');
-
-   const timeMillis = parseInt(timeHex, 16);
-
-   return { timeMillis, uuid };
-}
-gt.splitTimedGuid48 = splitTimedGuid48;
-
-/**
- * Merges a timestamp (as number) and a UUID (in standard notation) into a timed GUID.
- */
-export function mergeTimedGuid48(timeMillis: number, uuid: string): string {
-   const timeHex = timeMillis.toString(16).padStart(16, '0').slice(-16);
-   const uuidHex = uuid.replace(/-/g, '');
-   return timeHex + uuidHex;
-}
-gt.mergeTimedGuid48 = mergeTimedGuid48;
-
-// =====
-
 export function addToSet<T>(firstSet: Set<T>, secondSet: Set<T>): void {
    for (const item of secondSet) {
       firstSet.add(item);

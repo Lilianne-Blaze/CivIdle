@@ -1,4 +1,5 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { ipcRenderer } from "electron";
+
 
 const gt = globalThis as any;
 

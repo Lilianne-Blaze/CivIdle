@@ -1,5 +1,6 @@
 import type { Building } from "../../../shared/definitions/BuildingDefinitions";
 import { GreatPersonTickFlag, type GreatPerson } from "../../../shared/definitions/GreatPersonDefinitions";
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
 import {
    forEachMultiplier,
    generateScienceFromFaith,
@@ -1307,7 +1308,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
       }
       case "InternationalSpaceStation": {
          Tick.next.globalMultipliers.storage.push({
-            value: 5 + (building.level - 1),
+            value: 5 + (building.level - 1) * GLOBAL_PARAMS.ISS_MULTI,
             source: buildingName,
          });
          break;
@@ -1328,14 +1329,14 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
       }
       case "AldersonDisk": {
          Tick.next.globalMultipliers.happiness.push({
-            value: 25 + 5 * (building.level - 1),
+            value: 25 + 5 * (building.level - 1) * GLOBAL_PARAMS.ALDERSON_DISK_MULTI,
             source: buildingName,
          });
          break;
       }
       case "DysonSphere": {
          Tick.next.globalMultipliers.output.push({
-            value: 5 + 1 * (building.level - 1),
+            value: 5 + 1 * (building.level - 1) * GLOBAL_PARAMS.DYSON_SPHERE_MULTI,
             source: buildingName,
          });
          break;
@@ -1366,7 +1367,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          break;
       }
       case "LargeHadronCollider": {
-         const level = 2 + building.level - 1;
+         const level = 2 + (building.level - 1) * GLOBAL_PARAMS.LHC_MULTI;
          forEach(Config.GreatPerson, (p, def) => {
             if (def.age === "InformationAge") {
                def.tick(p, level, `${buildingName}: ${def.name()}`, GreatPersonTickFlag.None);
@@ -1398,7 +1399,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             const hq = Tick.current.specialBuildings.get("Headquarter");
             if (hq && petra) {
                const total = getMaxWarpStorage(gs);
-               const amount = isFestival("MountFuji", gs) ? 40 : 20;
+               const amount = (isFestival("MountFuji", gs) ? 40 : 20) * GLOBAL_PARAMS.MOUNT_FUJI_MULTI;
                if (total - (hq.building.resources.Warp ?? 0) >= amount) {
                   safeAdd(hq.building.resources, "Warp", amount);
                }
@@ -1558,7 +1559,8 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
          break;
       }
       case "TowerBridge": {
-         safeAdd(building.resources, "Cycle", (isFestival("TowerBridge", gs) ? 1.2 : 1) * building.level);
+         const valueAdd = (isFestival("TowerBridge", gs) ? 1.2 : 1) * building.level * GLOBAL_PARAMS.TOWER_BRIDGE_MULTI;
+         safeAdd(building.resources, "Cycle", valueAdd);
          let hasGreatPeople = false;
          while ((building.resources.Cycle ?? 0) >= TOWER_BRIDGE_GP_PER_CYCLE) {
             safeAdd(building.resources, "Cycle", -TOWER_BRIDGE_GP_PER_CYCLE);
@@ -1587,7 +1589,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
                }
                grid.getNeighbors(tileToPoint(xy)).forEach((p) => {
                   mapSafePush(Tick.next.tileMultipliers, pointToTile(p), {
-                     output: isFestival("EastIndiaCompany", gs) ? building.level : 0.5 * building.level,
+                     output: (isFestival("EastIndiaCompany", gs) ? building.level : 0.5 * building.level) * GLOBAL_PARAMS.EIC_MULTI,
                      source: buildingName,
                      unstable: true,
                   });
@@ -1658,7 +1660,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
       }
       case "CentrePompidou": {
          const pompidou = building as ICentrePompidouBuildingData;
-         const multiplier = isFestival("CentrePompidou", gs) ? 2 : 1;
+         const multiplier = (isFestival("CentrePompidou", gs) ? 2 : 1) * GLOBAL_PARAMS.POMPIDOU_MULTI;
          const cities = pompidou.cities.size + 1;
          Tick.next.globalMultipliers.output.push({
             value: multiplier * cities,
@@ -1740,7 +1742,7 @@ export function onProductionComplete({ xy, offline }: { xy: Tile; offline: boole
             const levelBoost = Tick.current.levelBoost.get(xy)?.reduce((acc, lb) => acc + lb.value, 0) ?? 0;
             const { amount } = deductResourceFrom(
                resource,
-               (10_000_000 *
+               (10_000_000 * GLOBAL_PARAMS.SWISS_BANK_MULTI *
                   multiplier *
                   (building.level + (Tick.current.electrified.get(xy) ?? 0) + levelBoost)) /
                price,

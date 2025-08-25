@@ -1,0 +1,84 @@
+                                                                                                                    ###############################################################################
+# Global defaults
+###############################################################################
+# Let Git treat text files as text and normalize them in the object database.
+# (Normalization removes CR on commit; checkout respects per-path eol rules.)
+*           text=auto
+
+# Never try to diff known binary types
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.7z        binary
+*.rar       binary
+*.jar       binary
+*.war       binary
+*.ear       binary
+*.class     binary
+*.keystore  binary
+*.p12       binary
+
+###############################################################################
+# Force LF for source & config (both on commit and checkout)
+###############################################################################
+# Java / JVM ecosystem
+*.java      text eol=lf
+*.kt        text eol=lf
+*.kts       text eol=lf
+*.gradle    text eol=lf
+gradlew     text eol=lf
+*.groovy    text eol=lf
+*.scala     text eol=lf
+
+# Build / metadata
+*.xml       text eol=lf
+*.xsd       text eol=lf
+*.xsl       text eol=lf
+*.properties text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.ini       text eol=lf
+
+# JavaScript / TypeScript / Web
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.jsx       text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+*.scss      text eol=lf
+*.sass      text eol=lf
+*.vue       text eol=lf
+*.svelte    text eol=lf
+
+# Scripts
+*.sh        text eol=lf
+*.ps1       text eol=lf
+*.py        text eol=lf
+*.rb        text eol=lf
+
+# Docs / misc text
+*.md        text eol=lf
+*.txt       text eol=lf
+*.csv       text eol=lf
+*.tsv       text eol=lf
+*.sql       text eol=lf
+.gitattributes text eol=lf
+.gitignore  text eol=lf
+.editorconfig text eol=lf
+
+###############################################################################
+# Keep Windows batch files CRLF if you use them (they can be picky)
+###############################################################################
+*.bat       text eol=crlf
+*.cmd       text eol=crlf

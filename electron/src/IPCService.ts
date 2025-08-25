@@ -1,6 +1,7 @@
 import { app, shell, type BrowserWindow } from "electron";
 import { exists, outputFile, readFile, unlink } from "fs-extra";
 import { rename } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { deflateRaw } from "node:zlib";
@@ -10,13 +11,51 @@ const gt = globalThis as any;
 
 const BACKUP_FREQ = 1000 * 60 * 10;
 
+function newClientEnvData(steam: SteamClient) {
+   return {
+      isSteam: true,
+
+      processPid: process.pid,
+      processPlatform: process.platform,
+      processArch: process.arch,
+
+      steamAppId: steam.utils.getAppId(),
+      //steamUserId: steam.localplayer.getSteamId().steamId64, // not serializable
+      steamUserIdStr: steam.localplayer.getSteamId().steamId64.toString(),
+      steamUserName: steam.localplayer.getName(),
+      steamUserLevel: steam.localplayer.getLevel(),
+      steamIpCountry: steam.localplayer.getIpCountry(),
+
+      appData: app.getPath("appData"),
+      appExe: app.getPath("exe"),
+      appUserData: app.getPath("userData"),
+      appTempData: app.getPath("temp"),
+
+      userName: os.userInfo().username,
+      userHome: os.homedir(),
+
+      osType: os.type(),
+      osArch: os.arch(),
+      osPlatform: os.platform(),
+      osRelease: os.release(),
+
+      hostName: os.hostname(),
+
+      cwd: process.cwd(),
+   }
+
+}
+
 export class IPCService {
    private _client: SteamClient;
    private _mainWindow: BrowserWindow;
+   private _clientEnvDataJson: string;
 
    constructor(steam: SteamClient, mainWindow: BrowserWindow) {
       this._client = steam;
       this._mainWindow = mainWindow;
+
+      this._clientEnvDataJson = JSON.stringify(newClientEnvData(steam));
    }
 
    public async fileWrite(name: string, content: string): Promise<void> {
@@ -72,6 +111,10 @@ export class IPCService {
 
    public getSteamId(): string {
       return this._client.localplayer.getSteamId().steamId64.toString();
+   }
+
+   public getClientEnvDataJson(): string {
+      return this._clientEnvDataJson;
    }
 
    public async getAuthSessionTicket(): Promise<string> {

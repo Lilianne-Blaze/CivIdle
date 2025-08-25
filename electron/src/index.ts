@@ -1,8 +1,9 @@
 import { init, type Client } from "@fishpondstudio/steamworks.js";
 import { BrowserWindow, Menu, app, dialog, ipcMain } from "electron";
-import { existsSync, renameSync } from "node:fs";
 import path from "node:path";
 import { IPCService } from "./IPCService";
+
+import { existsSync, renameSync } from "node:fs";
 
 const gt = globalThis as any;
 gt.electronApp = app;
@@ -16,12 +17,18 @@ app.commandLine.appendSwitch("enable-logging", "file");
 const logPath = path.join(getLocalGameSavePath(), "CivIdle.log");
 if (existsSync(logPath)) {
    //renameSync(logPath, path.join(getLocalGameSavePath(), "CivIdle-prev.log"));
-
    // LMCBOOKMARK
    const cem = getCurrentEpochMillis();
    const fs = epochToFilestamp(cem);
    renameSync(logPath, path.join(getLocalGameSavePath(), `CivIdle-${fs}.log`));
 }
+
+// const mainPid = process.pid;
+// const cem = getCurrentEpochMillis();
+// const fs = epochToFilestamp(cem);
+// const logName = `CivIdle-${fs}-${mainPid}.log`;
+// const logPath = path.join(getLocalGameSavePath(), logName);
+
 
 app.commandLine.appendSwitch("log-file", logPath);
 app.commandLine.appendSwitch("enable-experimental-web-platform-features");
@@ -42,9 +49,13 @@ export const MIN_HEIGHT = 480;
 const disableFloatingMode = !app.isPackaged || process.argv.includes("--disable-floating-mode");
 // const enableDevTools = process.argv.includes("--enable-dev-tools");
 
+
+const steam = init();
+
 const createWindow = async () => {
    try {
-      const steam = init();
+      // const steam = init();
+
       const mainWindow = new BrowserWindow({
          webPreferences: {
             preload: path.join(__dirname, "preload.js"),

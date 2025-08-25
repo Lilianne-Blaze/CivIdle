@@ -1,12 +1,12 @@
 
-import { getUserId } from "./CiScripts";
-import { CHANNEL_GUID_NDS, CHANNEL_GUID_ROOT, CHANNEL_GUID_TEST1, CHANNEL_GUID_TEST2 } from "./LmcConstsEarly";
-import { OnBeforeChatMessageSend, BeforeChatMessageSendEvent } from "./LmcEvents";
-import { addSystemMessageSafe, getUserSafe, showToastSafe } from "./LmcScriptsShared";
-import { ChatMessagePayload, LmcMqttPackage, newMqttPublishOptions, newUserDataPayload } from "./LmcMqttTypes";
-import { atMostOnce, newTimedGuid48 } from "./MiscFuncs";
-import { lmcMqtt } from "./LmcMqtt";
+import { newTimedGuid48 } from "../modfri/TimedGuid48";
 import { ChatAttributes, UserAttributes } from "../utilities/Database";
+import { CHANNEL_GUID_NDS, CHANNEL_GUID_ROOT, CHANNEL_GUID_TEST1, CHANNEL_GUID_TEST2 } from "./LmcConstsEarly";
+import { BeforeChatMessageSendEvent, OnBeforeChatMessageSend } from "./LmcEvents";
+import { lmcMqtt } from "./LmcMqtt";
+import { ChatMessagePayload, LmcMqttPackage, newMqttPublishOptions } from "./LmcMqttTypes";
+import { getUserSafe } from "./LmcScriptsShared";
+import { atMostOnce } from "./MiscFuncs";
 
 const gt = globalThis as any;
 (globalThis as any).temp = (globalThis as any).temp + Math.random();

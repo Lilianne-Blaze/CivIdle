@@ -4,13 +4,13 @@ import { atMostOnce } from "./MiscFuncs";
 const gt = globalThis as any;
 (globalThis as any).temp = (globalThis as any).temp + Math.random();
 
-
-import mqttImported, { type IClientOptions, type MqttClient, type IClientPublishOptions, type IPublishPacket, type IClientSubscribeOptions } from "mqtt";
-import { OnEveryFiveMins, OnSoonAfterGameStartedOrLoaded } from "./LmcEvents";
-import { CHANNEL_GUID_BASIC_STATE, CHANNEL_GUID_MOD_VER, CHANNEL_GUID_NDS, CHANNEL_GUID_ROOT, CHANNEL_GUID_TEST1 } from "./LmcConstsEarly";
+import mqttImported, { type IClientOptions, type IClientPublishOptions, type IClientSubscribeOptions, type IPublishPacket, type MqttClient } from "mqtt";
+import { newTimedGuid48 } from "../modfri/TimedGuid48";
 import { getUserId } from "./CiScripts";
-import { type LmcMqttPackage, newModVersionPayload, newMqttPublishOptions, newUserDataPayload, newBasicStatePayload, type ChatMessagePayload, LmcMqttEnvelope } from "./LmcMqttTypes";
 import { lilModCli, lilModOption } from "./LilModCli";
+import { CHANNEL_GUID_BASIC_STATE, CHANNEL_GUID_MOD_VER, CHANNEL_GUID_NDS, CHANNEL_GUID_ROOT, CHANNEL_GUID_TEST1 } from "./LmcConstsEarly";
+import { OnEveryFiveMins, OnSoonAfterGameStartedOrLoaded } from "./LmcEvents";
+import { type ChatMessagePayload, type LmcMqttPackage, newBasicStatePayload, newModVersionPayload, newMqttPublishOptions, newUserDataPayload } from "./LmcMqttTypes";
 
 
 export const mqtt = mqttImported;
@@ -24,10 +24,11 @@ OnEveryFiveMins.on(() => {
     lmcSendMqttVersionMessage();
     lmcSendMqttBasicStateMessage();
 
-
 });
 
 export const MQTT_BROKER_URL_MAIN = "wss://test.mosquitto.org:8081";
+// export const MQTT_BROKER_URL_MAIN = "mqtt://broker.hivemq.com:1883";
+// export const MQTT_BROKER_URL_MAIN = "wss://broker.hivemq.com:8884/mqtt";
 
 declare function pushChatMessage(chatMessage: {}, vacuum: boolean): void;
 declare function pushChatMessage(chatMessage: {}): void;
@@ -74,7 +75,7 @@ export const lmcMqtt = {
     },
 
     sendPacketAsync(packet: { topic: string, payloadString: string, options: {} | undefined }) {
-        this.mainMqttClient?.publishAsync(
+        (this.mainMqttClient as any)?.publishAsync?.(
             packet.topic,
             packet.payloadString,
             packet.options as IClientPublishOptions
@@ -83,8 +84,18 @@ export const lmcMqtt = {
     connect() {
         console.debug("[MQTT]", "Connecting to MQTT broker at", MQTT_BROKER_URL_MAIN);
         const opts: IClientOptions = {
+
             protocolVersion: 5,
-            keepalive: 55,
+            clean: true,
+            keepalive: 40,
+            // reconnectPeriod: 3000,
+
+            clientId: newTimedGuid48(),
+
+            // Logically treat slow/blocked connections as timeouts after 30s
+            connectTimeout: 30_000,
+            // Retry reconnect every 5s when offline
+            reconnectPeriod: 5_000,
 
         };
         this.mainMqttClient = mqtt.connect(MQTT_BROKER_URL_MAIN, opts);
@@ -95,11 +106,34 @@ export const lmcMqtt = {
         });
 
         this.mainMqttClient.on("error", (err) => {
-            console.error("[MQTT]", "Connection error", err);
+            const e = err as any;
+            console.error("[MQTT]", "Connection error", e?.code ?? "", e?.message ?? e, err);
             // optionally clean up on failure
             //this.mainMqttClient?.end(true);
             //this.mainMqttClient = null;
         });
+
+        // Additional visibility into timeout-like states
+        this.mainMqttClient.on("offline", () => {
+            console.warn("[MQTT]", "Offline (keepalive missed or network down) — likely timeout");
+        });
+        this.mainMqttClient.on("close", () => {
+            console.warn("[MQTT]", "Connection closed");
+        });
+        this.mainMqttClient.on("reconnect", () => {
+            console.info("[MQTT]", "Reconnecting…");
+        });
+        this.mainMqttClient.on("end", () => {
+            console.info("[MQTT]", "Client ended");
+        });
+        // Some transports expose an underlying stream 'timeout' event (Node TCP)
+        try {
+            (this.mainMqttClient as any).stream?.on?.("timeout", () => {
+                console.warn("[MQTT]", "Underlying stream timeout");
+            });
+        } catch {
+            // ignore if transport does not support a stream timeout
+        }
     },
 
     disconnect() {

@@ -1,13 +1,10 @@
-import { IClientPublishOptions } from "mqtt";
-import { QoS } from "mqtt";
-import { getCurrentCity, getUserId, getUserName, hasSupporterPack } from "./CiScripts";
-import { LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER, LMC_VER_NOTE, LMC_VER_NUMBER, MQTT_DEFAULT_EXPIRY_SECONDS } from "./LmcConstsEarly";
-import { getLastKnownUserId, getLastKnownUserIdHash } from "./LmcUserScripts";
-import { newTimedGuid48, splitTimedGuid48 } from "./MiscFuncs";
+import { IClientPublishOptions, QoS } from "mqtt";
 import { getGameState } from "../logic/GameStateLogic";
 import { getCurrentAge } from "../logic/TechLogic";
-import { get } from "http";
-import { time } from "console";
+import { newTimedGuid48, splitTimedGuid48, type TimedGuid48 } from "../modfri/TimedGuid48";
+import { getCurrentCity, getUserHandle, getUserId, getUserName, hasSupporterPack } from "./CiScripts";
+import { LMC_FOR_BUILD, LMC_MAJOR_VER, LMC_MINOR_VER, LMC_VER_NOTE, LMC_VER_NUMBER, MQTT_DEFAULT_EXPIRY_SECONDS } from "./LmcConstsEarly";
+import { getLastKnownUserIdHash } from "./LmcUserScripts";
 
 const gt = globalThis as any;
 
@@ -19,7 +16,7 @@ export class LmcMqttPackage {
         public topic: string,
         public payloadString: string,
         public userId?: string | null,
-        public timedGuid48?: string | null,
+        public timedGuid48?: TimedGuid48 | null,
         public timeMillis?: number | null,
         public options: IClientPublishOptions = newMqttPublishOptions(),
     ) {
@@ -68,7 +65,7 @@ export interface ChatMessagePayload {
     userHandle?: string | null, // should never be null, but just in case
     userId?: string | null,
     time?: number | null,
-    timedGuid48?: string | null,
+    timedGuid48?: TimedGuid48 | null,
     flag?: string | null, // e.g. "GB" for Great Britain
     level?: number | null, // 0-4
     attr?: number | null,

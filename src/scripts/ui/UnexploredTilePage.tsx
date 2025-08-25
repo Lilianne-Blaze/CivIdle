@@ -1,3 +1,4 @@
+import { GLOBAL_PARAMS } from "../../../shared/lmc/LmcGlobalParams";
 import { exploreTile, getExplorerRange } from "../../../shared/logic/BuildingLogic";
 import { Config } from "../../../shared/logic/Config";
 import { getGrid } from "../../../shared/logic/IntraTickCache";
@@ -41,7 +42,7 @@ export function UnexploredTilePage({ xy, gameState }: IBuildingComponentProps): 
       exploreTile(xy, gameState);
       Singleton().sceneManager.enqueue(WorldScene, (s) => s.revealTile(xy));
       getGrid(gameState)
-         .getRange(tileToPoint(xy), getExplorerRange(gameState))
+         .getRange(tileToPoint(xy), getExplorerRange(gameState) + GLOBAL_PARAMS.EXTRA_EXPLORER_RANGE)
          .forEach((neighbor) => {
             const neighborXy = pointToTile(neighbor);
             exploreTile(neighborXy, gameState);

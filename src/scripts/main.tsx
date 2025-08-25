@@ -1,7 +1,7 @@
-import * as Sentry from "@sentry/browser";
 import type { Texture } from "pixi.js";
 import { Application, Assets, BitmapFont, Spritesheet } from "pixi.js";
 import { createRoot } from "react-dom/client";
+import { fillClientEnvData } from "../../shared/modfri/ClientEnvData";
 import { TypedEvent } from "../../shared/utilities/TypedEvent";
 import "../css/Main.css";
 import CabinMedium from "../fonts/CabinMedium.ttf?url";
@@ -23,13 +23,13 @@ import { startGame } from "./Bootstrap";
 import { BG_COLOR } from "./Colors";
 import type { RouteChangeEvent } from "./Route";
 import { Route } from "./Route";
-import { build } from "./Version.json";
+import { SteamClient } from "./rpc/SteamClient";
 import { ChatPanel } from "./ui/ChatPanel";
 import { GlobalModal, GlobalToast } from "./ui/GlobalModal";
+import { PatchNotesPanel } from "./ui/PatchNotesPanel";
 import { ResourcePanel } from "./ui/ResourcePanel";
 import { TradeMapPanel } from "./ui/TradeMapPanel";
 import { Fonts } from "./visuals/Fonts";
-import { PatchNotesPanel } from "./ui/PatchNotesPanel";
 
 // if (!import.meta.env.DEV) {
 //    Sentry.init({
@@ -72,6 +72,11 @@ export type MainBundle = keyof typeof mainBundle;
 export type MainBundleAssets = Record<MainBundle, any>;
 
 if (canvas) {
+   SteamClient.getClientEnvDataJson().then((jsonData) => {
+      fillClientEnvData(jsonData);
+      console.log("[ClientEnvDataAsJson]", jsonData)
+   });
+
    const app = new Application({
       resizeTo: canvas,
       backgroundColor: BG_COLOR,
